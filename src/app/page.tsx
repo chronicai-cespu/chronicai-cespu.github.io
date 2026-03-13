@@ -85,7 +85,7 @@ export default function Home() {
 
       <footer className="py-12 bg-white/80 border-t mt-auto">
         <div className="max-w-7xl mx-auto px-4 text-center text-muted-foreground">
-          <p className="mb-2 font-bold">© 2024 ChronicAI Health. Todos os direitos reservados.</p>
+          <p className="mb-2 font-bold">© 2026 ChronicAI Health. Todos os direitos reservados.</p>
           <p className="text-sm">Aviso Médico: O ChronicAI fornece informações informativas e não substitui uma consulta médica profissional.</p>
         </div>
       </footer>

@@ -4,19 +4,19 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%; /* Branco puro para máximo contraste */
+    --background: 197 71% 73%; /* Azul Céu */
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 190 90% 30%; /* Azul mais escuro e saturado para texto branco ser legível */
+    --primary: 190 90% 30%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 220 80% 45%; /* Azul secundário mais forte */
+    --secondary: 220 80% 45%;
     --secondary-foreground: 210 40% 98%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 49 88% 60%; /* Amarelo com melhor visibilidade */
+    --accent: 45 100% 45%; /* Amarelo Torrado */
     --accent-foreground: 222 47% 11%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
@@ -38,7 +38,7 @@
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 49 88% 70%;
+    --accent: 45 100% 55%;
     --accent-foreground: 222 47% 11%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;

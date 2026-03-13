@@ -25,7 +25,9 @@ export function Navigation() {
               <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border">
                 <AppLogo className="w-7 h-7" />
               </div>
-              <span className="font-bold text-xl text-primary font-headline hidden sm:block">ChronicAI</span>
+              <span className="font-bold text-xl font-headline hidden sm:block bg-gradient-to-br from-[#FFD700] to-[#FF8C00] bg-clip-text text-transparent">
+                ChronicAI
+              </span>
             </Link>
           </div>
           <div className="flex space-x-2 sm:space-x-4 md:space-x-8">

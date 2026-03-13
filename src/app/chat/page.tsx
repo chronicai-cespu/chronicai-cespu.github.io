@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useRef, useEffect } from 'react';
@@ -92,11 +91,13 @@ export default function ChatPage() {
     <div className="flex flex-col h-[calc(100vh-64px)] bg-background">
       <div className="bg-primary/5 py-4 px-6 border-b flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-sm">
+          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-white shadow-sm">
             <AppLogo className="w-7 h-7" />
           </div>
           <div>
-            <h2 className="font-bold text-lg">Assistente ChronicAI</h2>
+            <h2 className="font-bold text-lg">
+              Assistente <span className="bg-gradient-to-br from-[#FFD700] to-[#FF8C00] bg-clip-text text-transparent">ChronicAI</span>
+            </h2>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Disponível para aconselhamento PT-PT
             </p>

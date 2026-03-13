@@ -1,4 +1,3 @@
-
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -31,7 +30,7 @@ export default function Home() {
             </div>
           </div>
           <h1 className="text-5xl md:text-7xl font-bold mb-6 font-headline leading-tight text-white">
-            Gira a sua Saúde com <span className="text-[#004d66]">ChronicAI</span>
+            Gira a sua Saúde com <span className="bg-gradient-to-br from-[#FFD700] to-[#FF8C00] bg-clip-text text-transparent">ChronicAI</span>
           </h1>
           <p className="text-xl md:text-2xl mb-10 text-white font-bold max-w-2xl mx-auto">
             Um companheiro de saúde dedicado aos seniores. Monitorize sinais vitais, gira a medicação e fale com a IA para aconselhamento personalizado.

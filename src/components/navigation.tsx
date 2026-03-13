@@ -10,10 +10,34 @@ export function Navigation() {
   const pathname = usePathname();
 
   const navItems = [
-    { href: '/dashboard', label: 'Início', icon: LayoutDashboard },
-    { href: '/chat', label: 'Assistente IA', icon: MessageCircle },
-    { href: '/logs', label: 'Registos', icon: ClipboardList },
-    { href: '/profile', label: 'Perfil', icon: User },
+    { 
+      href: '/dashboard', 
+      label: 'Início', 
+      icon: LayoutDashboard,
+      activeColor: "border-primary text-primary",
+      hoverColor: "hover:text-primary hover:border-primary"
+    },
+    { 
+      href: '/chat', 
+      label: 'Assistente IA', 
+      icon: MessageCircle,
+      activeColor: "border-accent text-accent-foreground font-bold",
+      hoverColor: "hover:text-accent hover:border-accent"
+    },
+    { 
+      href: '/logs', 
+      label: 'Registos', 
+      icon: ClipboardList,
+      activeColor: "border-secondary text-secondary",
+      hoverColor: "hover:text-secondary hover:border-secondary"
+    },
+    { 
+      href: '/profile', 
+      label: 'Perfil', 
+      icon: User,
+      activeColor: "border-primary text-primary",
+      hoverColor: "hover:text-primary hover:border-primary"
+    },
   ];
 
   return (
@@ -41,8 +65,8 @@ export function Navigation() {
                   className={cn(
                     "inline-flex items-center px-1 pt-1 text-sm font-medium transition-colors border-b-2 h-full gap-2",
                     isActive 
-                      ? "border-primary text-primary" 
-                      : "border-transparent text-muted-foreground hover:text-secondary hover:border-secondary"
+                      ? item.activeColor 
+                      : cn("border-transparent text-muted-foreground", item.hoverColor)
                   )}
                 >
                   <Icon className="w-5 h-5" />

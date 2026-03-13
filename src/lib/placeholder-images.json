@@ -1,3 +1,22 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "health-hero",
+      "description": "Uma cena calma que representa saúde e bem-estar",
+      "imageUrl": "https://picsum.photos/seed/chronic-health-1/1200/600",
+      "imageHint": "health wellness"
+    },
+    {
+      "id": "elderly-wellness",
+      "description": "Estilo de vida saudável para seniores",
+      "imageUrl": "https://picsum.photos/seed/senior-fit/800/600",
+      "imageHint": "active senior"
+    },
+    {
+      "id": "avatar-default",
+      "description": "Um avatar de perfil amigável",
+      "imageUrl": "https://picsum.photos/seed/user-avatar-1/150/150",
+      "imageHint": "person portrait"
+    }
+  ]
 }

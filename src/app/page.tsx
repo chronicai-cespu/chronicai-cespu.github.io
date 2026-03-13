@@ -17,20 +17,20 @@ export default function Home() {
             src={heroImage.imageUrl}
             alt={heroImage.description}
             fill
-            className="object-cover brightness-50"
+            className="object-cover brightness-[0.4]" /* Escurecido para melhorar contraste do texto branco */
             priority
             data-ai-hint={heroImage.imageHint}
           />
         )}
         <div className="relative z-10 px-4 max-w-4xl mx-auto text-white">
           <h1 className="text-5xl md:text-7xl font-bold mb-6 font-headline leading-tight">
-            Gira a sua Saúde com <span className="text-primary">ChronicAI</span>
+            Gira a sua Saúde com <span className="text-primary-foreground brightness-125">ChronicAI</span>
           </h1>
           <p className="text-xl md:text-2xl mb-10 text-gray-100 max-w-2xl mx-auto">
             Um companheiro de saúde dedicado aos seniores. Monitorize sinais vitais, gira a medicação e fale com a IA para aconselhamento personalizado.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="text-lg px-10 h-14 rounded-full bg-primary hover:bg-primary/90">
+            <Button asChild size="lg" className="text-lg px-10 h-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground">
               <Link href="/dashboard">Ir para o Meu Painel</Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="text-lg px-10 h-14 rounded-full bg-white/10 backdrop-blur-md text-white border-white/30 hover:bg-white/20">
@@ -57,7 +57,7 @@ export default function Home() {
               description="Registe facilmente a sua pressão arterial, atividade e peso com botões grandes e simples."
             />
             <FeatureCard 
-              icon={<Sparkles className="w-10 h-10 text-accent-foreground" />}
+              icon={<Sparkles className="w-10 h-10 text-accent" />}
               title="Conselhos com IA"
               description="Obtenha recomendações personalizadas e respostas às suas perguntas de saúde instantaneamente."
             />
@@ -71,7 +71,7 @@ export default function Home() {
       </section>
 
       {/* Call to Action */}
-      <section className="py-20 bg-accent/20">
+      <section className="py-20 bg-accent/10 border-y">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-6">Pronto para assumir o controlo da sua saúde?</h2>
           <p className="text-lg text-muted-foreground mb-10">
@@ -83,7 +83,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="py-12 bg-card border-t mt-auto">
+      <footer className="py-12 bg-white border-t mt-auto">
         <div className="max-w-7xl mx-auto px-4 text-center text-muted-foreground">
           <p className="mb-2">© 2024 ChronicAI Health. Todos os direitos reservados.</p>
           <p className="text-sm">Aviso Médico: O ChronicAI fornece informações informativas e não substitui uma consulta médica profissional.</p>
@@ -95,7 +95,7 @@ export default function Home() {
 
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
   return (
-    <Card className="border-none shadow-lg hover:shadow-xl transition-shadow bg-card">
+    <Card className="border shadow-md hover:shadow-lg transition-shadow bg-card">
       <CardContent className="pt-10 pb-10 px-8 text-center">
         <div className="mb-6 flex justify-center">{icon}</div>
         <h3 className="text-2xl font-bold mb-4">{title}</h3>

@@ -4,25 +4,25 @@
 
 @layer base {
   :root {
-    --background: 197 9% 95%; /* #F0F3F4 */
+    --background: 0 0% 100%; /* Branco puro para máximo contraste */
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 190 71% 55%; /* #3CC1DD */
+    --primary: 190 90% 30%; /* Azul mais escuro e saturado para texto branco ser legível */
     --primary-foreground: 210 40% 98%;
-    --secondary: 220 80% 60%; /* #477EEA */
+    --secondary: 220 80% 45%; /* Azul secundário mais forte */
     --secondary-foreground: 210 40% 98%;
-    --muted: 210 40% 92%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 49 88% 70%; /* #F7E06E */
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 49 88% 60%; /* Amarelo com melhor visibilidade */
     --accent-foreground: 222 47% 11%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 190 71% 55%;
+    --ring: 190 90% 30%;
     --radius: 1rem;
   }
   .dark {

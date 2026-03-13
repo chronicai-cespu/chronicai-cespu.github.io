@@ -24,7 +24,7 @@ export function Navigation() {
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <Activity className="text-white w-5 h-5" />
               </div>
-              <span className="font-bold text-xl text-secondary font-headline hidden sm:block">ChronicAI</span>
+              <span className="font-bold text-xl text-primary font-headline hidden sm:block">ChronicAI</span>
             </Link>
           </div>
           <div className="flex space-x-2 sm:space-x-4 md:space-x-8">

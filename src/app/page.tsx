@@ -23,10 +23,10 @@ export default function Home() {
           />
         )}
         <div className="relative z-10 px-4 max-w-4xl mx-auto">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 font-headline leading-tight text-secondary">
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 font-headline leading-tight text-white">
             Gira a sua Saúde com <span className="text-primary brightness-75">ChronicAI</span>
           </h1>
-          <p className="text-xl md:text-2xl mb-10 text-secondary font-bold max-w-2xl mx-auto">
+          <p className="text-xl md:text-2xl mb-10 text-white font-bold max-w-2xl mx-auto">
             Um companheiro de saúde dedicado aos seniores. Monitorize sinais vitais, gira a medicação e fale com a IA para aconselhamento personalizado.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

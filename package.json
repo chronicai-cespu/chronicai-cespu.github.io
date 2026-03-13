@@ -1,6 +1,7 @@
 {
-  "name": "nextn",
+  "name": "chronic-ai",
   "version": "0.1.0",
+  "description": "Assistente de saúde inteligente para seniores com condições crónicas.",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 9002",

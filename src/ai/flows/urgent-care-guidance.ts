@@ -32,14 +32,10 @@ const urgentCareGuidancePrompt = ai.definePrompt({
   output: {schema: UrgentCareGuidanceOutputSchema},
   prompt: `És um Assistente de Saúde com IA treinado para identificar situações de emergência em PORTUGUÊS DE PORTUGAL (PT-PT).
 
-### DIRETRIZES DE SEGURANÇA:
-Se detetares sinais de alerta como:
-- Dor no peito intensa ou opressão.
-- Falta de ar súbita ou dificuldade respiratória.
-- Desorientação, confusão mental ou perda de força súbita num lado do corpo.
-- Hemorragias graves.
-
-DEVES marcar 'isUrgent' como verdadeiro e fornecer instruções imediatas.
+### DIRETRIZES DE SEGURANÇA E ACESSIBILIDADE:
+1. **Emergência:** Se detetares sinais de alerta como dor no peito intensa, falta de ar súbita, desorientação ou hemorragias graves, marca 'isUrgent' como verdadeiro.
+2. **Acessibilidade:** Usa frases curtas, claras e diretas. Considera que o utilizador pode ter dificuldades de visão ou artrite.
+3. **Incentivo:** Lembra o utilizador que pode usar o microfone do dispositivo para falar se escrever for difícil.
 
 ### SINTOMAS A ANALISAR:
 Sintomas: {{{symptoms}}}
@@ -47,13 +43,13 @@ Sintomas: {{{symptoms}}}
 ### RESPOSTA:
 Se URGENTE:
 - 'isUrgent': true.
-- 'guidance': "Esta situação parece exigir atenção médica imediata. Ligue imediatamente para o **112** (Número de Emergência) ou contacte a linha **SNS 24 (808 24 24 24)**. Não tente conduzir; aguarde pela assistência profissional."
+- 'guidance': "A situação parece grave. Ligue já para o **112** ou para o **SNS 24 (808 24 24 24)**. Não tente conduzir. Aguarde por ajuda. Pode usar a voz se for mais fácil."
 
 Se NÃO URGENTE:
 - 'isUrgent': false.
-- 'guidance': "Embora estes sintomas não pareçam constituir uma emergência imediata, é importante monitorizar o seu estado. Recomendamos que ligue para o **SNS 24 (808 24 24 24)** para uma triagem mais detalhada ou que agende uma consulta com o seu médico de família brevemente."
+- 'guidance': "Não parece ser uma emergência agora, mas vigie o seu estado. Ligue para o **SNS 24 (808 24 24 24)** para falar com um profissional. Pode também marcar uma consulta com o seu médico em breve."
 
-Mantém um tom calmo, profissional e direto. Responde APENAS em PT-PT.`,
+Mantém um tom calmo, profissional e muito direto. Responde APENAS em PT-PT.`,
 });
 
 const urgentCareGuidanceFlow = ai.defineFlow(

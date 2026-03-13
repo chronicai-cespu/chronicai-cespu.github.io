@@ -1,6 +1,7 @@
 'use server';
 /**
- * @fileOverview This file implements the Urgent Care Guidance Genkit flow in Portuguese.
+ * @fileOverview This file implements the Urgent Care Guidance Genkit flow in Portuguese (PT-PT),
+ * strictly adhering to emergency protocols.
  *
  * - urgentCareGuidance - A function that assesses user-provided symptoms for urgency and provides appropriate guidance.
  * - UrgentCareGuidanceInput - The input type for the urgentCareGuidance function.
@@ -29,20 +30,30 @@ const urgentCareGuidancePrompt = ai.definePrompt({
   name: 'urgentCareGuidancePrompt',
   input: {schema: UrgentCareGuidanceInputSchema},
   output: {schema: UrgentCareGuidanceOutputSchema},
-  prompt: `És um Assistente de Saúde com IA concebido para identificar situações de saúde urgentes com base nos sintomas fornecidos pelo utilizador e fornecer instruções imediatas e claras EM PORTUGUÊS.
+  prompt: `És um Assistente de Saúde com IA treinado para identificar situações de emergência em PORTUGUÊS DE PORTUGAL (PT-PT).
 
-Analisa os seguintes sintomas:
+### DIRETRIZES DE SEGURANÇA:
+Se detetares sinais de alerta como:
+- Dor no peito intensa ou opressão.
+- Falta de ar súbita ou dificuldade respiratória.
+- Desorientação, confusão mental ou perda de força súbita num lado do corpo.
+- Hemorragias graves.
+
+DEVES marcar 'isUrgent' como verdadeiro e fornecer instruções imediatas.
+
+### SINTOMAS A ANALISAR:
 Sintomas: {{{symptoms}}}
 
-Com base nestes sintomas, determina se a situação requer atenção médica urgente (por exemplo, ligar para os serviços de emergência, ir a uma urgência).
+### RESPOSTA:
+Se URGENTE:
+- 'isUrgent': true.
+- 'guidance': "Esta situação parece exigir atenção médica imediata. Ligue imediatamente para o **112** (Número de Emergência) ou contacte a linha **SNS 24 (808 24 24 24)**. Não tente conduzir; aguarde pela assistência profissional."
 
-Se a situação for urgente:
-Define 'isUrgent' como verdadeiro.
-Fornece instruções claras e acionáveis em 'guidance' EM PORTUGUÊS para contactar os serviços de emergência imediatamente (por exemplo, "Ligue para o 112 ou para o número de emergência local imediatamente. Não espere que os sintomas piorem. Procure assistência médica imediata.") e o que fazer enquanto espera por ajuda. Enfatiza que não deve haver atrasos.
+Se NÃO URGENTE:
+- 'isUrgent': false.
+- 'guidance': "Embora estes sintomas não pareçam constituir uma emergência imediata, é importante monitorizar o seu estado. Recomendamos que ligue para o **SNS 24 (808 24 24 24)** para uma triagem mais detalhada ou que agende uma consulta com o seu médico de família brevemente."
 
-Se a situação NÃO for urgente:
-Define 'isUrgent' como falso.
-Fornece conselhos gerais e tranquilizadores em 'guidance' EM PORTUGUÊS, sugerindo que consultem o seu médico de família ou uma clínica de saúde local para preocupações não urgentes, e que monitorizem os seus sintomas. NÃO forneças diagnósticos específicos ou planos de tratamento.`,
+Mantém um tom calmo, profissional e direto. Responde APENAS em PT-PT.`,
 });
 
 const urgentCareGuidanceFlow = ai.defineFlow(

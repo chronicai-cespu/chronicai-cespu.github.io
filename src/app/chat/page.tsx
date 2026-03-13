@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
-import { MessageCircle, Send, User, Bot, AlertTriangle, Loader2, Sparkles } from 'lucide-react';
+import { MessageCircle, Send, User, Bot, AlertTriangle, Loader2, Sparkles, PhoneCall } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -26,7 +26,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: `Olá ${userProfile.name}! Eu sou o seu Assistente de Saúde com IA. Como posso ajudar hoje? Pode perguntar-me sobre as suas condições, medicação ou qualquer sintoma que sinta.`
+      content: `Olá ${userProfile.name}. Sou o seu Assistente de Saúde. Como se sente hoje? Estou aqui para o ouvir com paciência e respeito. Pode contar-me sobre os seus sintomas ou dúvidas sobre a sua saúde.`
     }
   ]);
   const [isLoading, setIsLoading] = useState(false);
@@ -82,7 +82,7 @@ export default function ChatPage() {
       console.error(error);
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: "Lamento, estou com dificuldades em ligar-me agora. Por favor, tente novamente ou consulte o seu médico se tiver preocupações urgentes."
+        content: "Lamento, ocorreu um erro na ligação. Se tiver uma preocupação urgente, por favor ligue para o SNS 24 (808 24 24 24) ou 112."
       }]);
     } finally {
       setIsLoading(false);
@@ -97,14 +97,14 @@ export default function ChatPage() {
             <Sparkles className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="font-bold text-lg">Assistente IA</h2>
+            <h2 className="font-bold text-lg">Assistente ChronicAI</h2>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Online e pronto a ajudar
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Disponível para aconselhamento PT-PT
             </p>
           </div>
         </div>
         <div className="hidden sm:block text-xs text-muted-foreground max-w-xs text-right">
-          Aviso: O conselho da IA é informativo e não um diagnóstico médico.
+          Em caso de emergência, ligue 112 ou 808 24 24 24.
         </div>
       </div>
 
@@ -130,9 +130,10 @@ export default function ChatPage() {
                 msg.role === 'user' ? "items-end" : "items-start"
               )}>
                 {msg.isUrgent && (
-                  <Alert variant="destructive" className="mb-2 bg-destructive/10 border-destructive/20">
-                    <AlertTriangle className="h-5 w-5" />
-                    <AlertTitle className="font-bold">Situação Urgente Detetada</AlertTitle>
+                  <Alert variant="destructive" className="mb-2 bg-destructive/10 border-destructive/20 animate-pulse">
+                    <PhoneCall className="h-5 w-5" />
+                    <AlertTitle className="font-bold">Ação Necessária Imediata</AlertTitle>
+                    <AlertDescription>Siga as instruções de emergência abaixo.</AlertDescription>
                   </Alert>
                 )}
 
@@ -149,7 +150,7 @@ export default function ChatPage() {
                 {msg.recommendations && msg.recommendations.length > 0 && (
                   <div className="bg-accent/10 border border-accent/20 p-4 rounded-xl w-full">
                     <h4 className="font-bold text-sm mb-2 text-accent-foreground flex items-center gap-2">
-                      <Sparkles className="w-4 h-4" /> Passos Recomendados:
+                      <Sparkles className="w-4 h-4" /> Sugestões de Bem-estar:
                     </h4>
                     <ul className="list-disc list-inside space-y-1 text-sm text-accent-foreground">
                       {msg.recommendations.map((rec, i) => (
@@ -174,7 +175,7 @@ export default function ChatPage() {
               </div>
               <div className="bg-white border p-4 rounded-2xl rounded-tl-none flex items-center gap-2 shadow-sm">
                 <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                <span className="text-muted-foreground italic">O assistente está a pensar...</span>
+                <span className="text-muted-foreground italic">O assistente está a analisar com cuidado...</span>
               </div>
             </div>
           )}
@@ -187,7 +188,7 @@ export default function ChatPage() {
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Escreva a sua pergunta de saúde ou sintoma aqui..."
+            placeholder="Descreva como se sente ou faça uma pergunta..."
             className="flex-1 h-14 text-lg rounded-full px-6 border-2 focus-visible:ring-primary"
             disabled={isLoading}
           />

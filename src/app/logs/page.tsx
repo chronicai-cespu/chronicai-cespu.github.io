@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { HeartPulse, Activity, Scale, ClipboardList, CheckCircle2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { HeartPulse, Activity, Scale, ClipboardList, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
@@ -18,34 +19,68 @@ export default function LogsPage() {
   const { logs, addLog } = useHealth();
   const { toast } = useToast();
   
-  const [bp, setBp] = useState('');
-  const [activity, setActivity] = useState('');
-  const [weight, setWeight] = useState('');
+  // States for the new structured inputs
+  const [systolic, setSystolic] = useState<string>('');
+  const [diastolic, setDiastolic] = useState<string>('');
+  const [activityType, setActivityType] = useState('');
+  const [activityDuration, setActivityDuration] = useState('');
+  const [weight, setWeight] = useState<string>('');
   const [notes, setNotes] = useState('');
+
+  // Dropdown ranges
+  const systolicRange = Array.from({ length: 151 }, (_, i) => i + 70); // 70 to 220
+  const diastolicRange = Array.from({ length: 91 }, (_, i) => i + 40); // 40 to 130
+  const weightRange = Array.from({ length: 161 }, (_, i) => i + 40); // 40 to 200
+  const durationOptions = [5, 10, 15, 20, 30, 45, 60, 90, 120, 180];
+
+  const getBpStatus = (sys: number, dia: number) => {
+    if (!sys || !dia) return null;
+    if (sys >= 140 || dia >= 90) return { label: 'Alta (Hipertensão)', color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-destructive' };
+    if (sys >= 120 || dia >= 80) return { label: 'Elevada (Pré-hipertensão)', color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200' };
+    if (sys < 90 || dia < 60) return { label: 'Baixa (Hipotensão)', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' };
+    return { label: 'Normal', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' };
+  };
+
+  const bpStatus = getBpStatus(parseInt(systolic), parseInt(diastolic));
 
   const handleLog = (type: 'bp' | 'activity' | 'weight') => {
     let value = '';
-    if (type === 'bp') value = bp;
-    if (type === 'activity') value = activity;
-    if (type === 'weight') value = weight;
-
-    if (!value) {
-      toast({ title: "Erro", description: "Por favor, introduza um valor.", variant: "destructive" });
-      return;
+    
+    if (type === 'bp') {
+      if (!systolic || !diastolic) {
+        toast({ title: "Erro", description: "Por favor, selecione os valores de pressão arterial.", variant: "destructive" });
+        return;
+      }
+      value = `${systolic}/${diastolic} mmHg`;
+    }
+    
+    if (type === 'activity') {
+      if (!activityType || !activityDuration) {
+        toast({ title: "Erro", description: "Por favor, preencha o tipo e a duração da atividade.", variant: "destructive" });
+        return;
+      }
+      value = `${activityType} (${activityDuration} min)`;
+    }
+    
+    if (type === 'weight') {
+      if (!weight) {
+        toast({ title: "Erro", description: "Por favor, selecione o seu peso.", variant: "destructive" });
+        return;
+      }
+      value = `${weight} kg`;
     }
 
     addLog({ type, value, notes });
     
-    // Clear form
-    setBp('');
-    setActivity('');
-    setWeight('');
+    // Clear current tab inputs
+    if (type === 'bp') { setSystolic(''); setDiastolic(''); }
+    if (type === 'activity') { setActivityType(''); setActivityDuration(''); }
+    if (type === 'weight') setWeight('');
     setNotes('');
 
     toast({
       title: "Sucesso",
-      description: `Registo de ${type === 'bp' ? 'Pressão Arterial' : type === 'activity' ? 'Atividade' : 'Peso'} adicionado com sucesso!`,
-      variant: "default",
+      description: "O seu registo foi guardado com sucesso!",
     });
   };
 
@@ -53,13 +88,12 @@ export default function LogsPage() {
     <div className="max-w-5xl mx-auto p-4 sm:p-8 space-y-8">
       <header className="mb-8">
         <h1 className="text-3xl font-bold font-headline text-secondary flex items-center gap-3">
-          <ClipboardList className="h-8 w-8 text-primary" /> Registo de Saúde
+          <ClipboardList className="h-8 w-8 text-primary" /> Registo de Saúde Diário
         </h1>
-        <p className="text-muted-foreground text-lg">Registe as suas medições diárias e atividades para manter o controlo.</p>
+        <p className="text-muted-foreground text-lg">Mantenha o seu histórico atualizado. É simples e rápido.</p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-        {/* Logging Forms */}
         <div className="md:col-span-7 space-y-6">
           <Card className="shadow-lg border-none overflow-hidden">
             <Tabs defaultValue="bp" className="w-full">
@@ -77,44 +111,85 @@ export default function LogsPage() {
 
               <div className="p-8">
                 <TabsContent value="bp" className="space-y-6 mt-0">
-                  <div className="space-y-2">
-                    <Label htmlFor="bp" className="text-lg">Pressão Arterial (mmHg)</Label>
-                    <Input 
-                      id="bp" 
-                      placeholder="ex: 120/80" 
-                      className="h-14 text-xl"
-                      value={bp}
-                      onChange={(e) => setBp(e.target.value)}
-                    />
-                    <p className="text-sm text-muted-foreground">Formato: Sistólica/Diastólica</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-bold">Sistólica (Máxima)</Label>
+                      <Select value={systolic} onValueChange={setSystolic}>
+                        <SelectTrigger className="h-14 text-xl">
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {systolicRange.map(v => <SelectItem key={v} value={v.toString()}>{v}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-bold">Diastólica (Mínima)</Label>
+                      <Select value={diastolic} onValueChange={setDiastolic}>
+                        <SelectTrigger className="h-14 text-xl">
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {diastolicRange.map(v => <SelectItem key={v} value={v.toString()}>{v}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
+
+                  {bpStatus && (
+                    <div className={cn("p-4 rounded-xl border flex items-center gap-3 animate-in fade-in duration-300", bpStatus.bg, bpStatus.border)}>
+                      {bpStatus.label.includes('Alta') || bpStatus.label.includes('Baixa') ? (
+                        <AlertTriangle className={cn("w-6 h-6", bpStatus.color)} />
+                      ) : (
+                        <CheckCircle2 className={cn("w-6 h-6", bpStatus.color)} />
+                      )}
+                      <div>
+                        <p className={cn("font-bold", bpStatus.color)}>{bpStatus.label}</p>
+                        <p className="text-xs text-muted-foreground">Estado atual baseado nos valores inseridos.</p>
+                      </div>
+                    </div>
+                  )}
+
                   <LogFields notes={notes} setNotes={setNotes} onLog={() => handleLog('bp')} />
                 </TabsContent>
 
                 <TabsContent value="activity" className="space-y-6 mt-0">
-                  <div className="space-y-2">
-                    <Label htmlFor="activity" className="text-lg">Descrição do Exercício</Label>
-                    <Input 
-                      id="activity" 
-                      placeholder="ex: 20 min de caminhada no parque" 
-                      className="h-14 text-xl"
-                      value={activity}
-                      onChange={(e) => setActivity(e.target.value)}
-                    />
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-bold">Tipo de Atividade</Label>
+                      <Input 
+                        placeholder="ex: Caminhada, Hidroginástica..." 
+                        className="h-14 text-lg"
+                        value={activityType}
+                        onChange={(e) => setActivityType(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-bold">Duração (Minutos)</Label>
+                      <Select value={activityDuration} onValueChange={setActivityDuration}>
+                        <SelectTrigger className="h-14 text-lg">
+                          <SelectValue placeholder="Selecione o tempo..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {durationOptions.map(v => <SelectItem key={v} value={v.toString()}>{v} minutos</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   <LogFields notes={notes} setNotes={setNotes} onLog={() => handleLog('activity')} />
                 </TabsContent>
 
                 <TabsContent value="weight" className="space-y-6 mt-0">
                   <div className="space-y-2">
-                    <Label htmlFor="weight" className="text-lg">Peso Corporal (kg/lbs)</Label>
-                    <Input 
-                      id="weight" 
-                      placeholder="ex: 75 kg" 
-                      className="h-14 text-xl"
-                      value={weight}
-                      onChange={(e) => setWeight(e.target.value)}
-                    />
+                    <Label className="text-sm font-bold">Peso Atual (kg)</Label>
+                    <Select value={weight} onValueChange={setWeight}>
+                      <SelectTrigger className="h-14 text-xl">
+                        <SelectValue placeholder="Selecione o peso..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {weightRange.map(v => <SelectItem key={v} value={v.toString()}>{v} kg</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <LogFields notes={notes} setNotes={setNotes} onLog={() => handleLog('weight')} />
                 </TabsContent>
@@ -123,11 +198,10 @@ export default function LogsPage() {
           </Card>
         </div>
 
-        {/* Recent History Sidebar */}
         <div className="md:col-span-5 space-y-6">
           <Card className="shadow-md border-none h-full bg-secondary/5">
             <CardHeader className="border-b bg-white rounded-t-lg">
-              <CardTitle className="text-xl">Registos de Hoje</CardTitle>
+              <CardTitle className="text-xl">Registos Recentes</CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
               <div className="space-y-4">
@@ -148,12 +222,13 @@ export default function LogsPage() {
                           <span className="text-xs text-muted-foreground">{format(log.timestamp, 'HH:mm')}</span>
                         </div>
                         {log.notes && <p className="text-sm text-muted-foreground italic mt-1">"{log.notes}"</p>}
+                        <p className="text-[10px] text-muted-foreground mt-1">{format(log.timestamp, "d 'de' MMM", { locale: pt })}</p>
                       </div>
                     </div>
                   ))
                 ) : (
                   <div className="text-center py-10">
-                    <p className="text-muted-foreground italic">Nenhum registo hoje.</p>
+                    <p className="text-muted-foreground italic">Nenhum registo efetuado hoje.</p>
                   </div>
                 )}
               </div>
@@ -167,13 +242,13 @@ export default function LogsPage() {
 
 function LogFields({ notes, setNotes, onLog }: { notes: string, setNotes: (v: string) => void, onLog: () => void }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pt-4 border-t">
       <div className="space-y-2">
-        <Label htmlFor="notes">Notas (Opcional)</Label>
+        <Label htmlFor="notes">Notas ou Sentimentos (Opcional)</Label>
         <Textarea 
           id="notes" 
-          placeholder="Como se sente? Algum sintoma?" 
-          className="min-h-[100px] text-lg"
+          placeholder="Como se sente no momento?" 
+          className="min-h-[100px] text-lg bg-muted/20"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
         />
@@ -182,7 +257,7 @@ function LogFields({ notes, setNotes, onLog }: { notes: string, setNotes: (v: st
         onClick={onLog} 
         className="w-full h-14 text-xl rounded-full bg-primary hover:bg-primary/90 shadow-lg"
       >
-        <CheckCircle2 className="mr-2 h-6 w-6" /> Guardar Registo
+        <CheckCircle2 className="mr-2 h-6 w-6" /> Guardar no Histórico
       </Button>
     </div>
   );

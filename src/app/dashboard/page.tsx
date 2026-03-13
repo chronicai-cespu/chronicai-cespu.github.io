@@ -1,25 +1,32 @@
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useHealth } from '@/components/health-context';
 import { aiHealthAssistantAdvice } from '@/ai/flows/ai-health-assistant-advice-flow';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Activity, Pill, History, AlertCircle, PlusCircle, ArrowRight, MessageCircle, User, HeartPulse, Sparkles, Lightbulb } from 'lucide-react';
+import { Activity, Pill, History, ArrowRight, MessageCircle, User, HeartPulse, Lightbulb, TrendingUp } from 'lucide-react';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import { Bar, BarChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import Link from 'next/link';
-import { format } from 'date-fns';
+import { format, subDays, isSameDay, startOfDay } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+
+const chartConfig = {
+  minutes: {
+    label: "Minutos",
+    color: "hsl(var(--secondary))",
+  },
+} satisfies ChartConfig;
 
 export default function Dashboard() {
   const { userProfile, logs, meds } = useHealth();
   const [didYouKnow, setDidYouKnow] = useState<string | null>(null);
-  const [isLoadingCuriosity, setIsLoadingCuriosity] = useState(false);
 
   useEffect(() => {
     async function fetchCuriosity() {
-      setIsLoadingCuriosity(true);
       try {
         const response = await aiHealthAssistantAdvice({
           question: "Gera uma curiosidade útil sobre as minhas condições de saúde para o meu dashboard.",
@@ -28,12 +35,38 @@ export default function Dashboard() {
         setDidYouKnow(response.didYouKnow || null);
       } catch (error) {
         console.error("Failed to fetch curiosity", error);
-      } finally {
-        setIsLoadingCuriosity(false);
       }
     }
     fetchCuriosity();
   }, [userProfile]);
+
+  const activityData = useMemo(() => {
+    // Gerar os últimos 7 dias
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const date = subDays(new Date(), 6 - i);
+      return {
+        date,
+        label: format(date, 'eee', { locale: pt }),
+        minutes: 0
+      };
+    });
+
+    // Preencher com os dados dos logs
+    logs.filter(log => log.type === 'activity').forEach(log => {
+      const logDate = startOfDay(log.timestamp);
+      const dayData = last7Days.find(d => isSameDay(startOfDay(d.date), logDate));
+      
+      if (dayData) {
+        // Extrair minutos da string "Atividade (X min)"
+        const match = log.value.match(/\((\d+)\s*min\)/);
+        if (match && match[1]) {
+          dayData.minutes += parseInt(match[1]);
+        }
+      }
+    });
+
+    return last7Days;
+  }, [logs]);
 
   const recentLogs = logs.slice(0, 3);
 
@@ -47,7 +80,7 @@ export default function Dashboard() {
         <div className="flex gap-2">
           <Button asChild variant="outline" className="rounded-full">
             <Link href="/logs">
-              <PlusCircle className="mr-2 h-4 w-4" /> Registar Novo
+              <Activity className="mr-2 h-4 w-4" /> Registar Novo
             </Link>
           </Button>
           <Button asChild className="rounded-full bg-primary">
@@ -79,8 +112,78 @@ export default function Dashboard() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Profile Summary */}
-        <Card className="md:col-span-1 shadow-md border-none">
+        {/* Vital Stats Card */}
+        <Card className="shadow-md border-none">
+          <CardHeader className="bg-accent/10 rounded-t-lg">
+            <CardTitle className="flex items-center gap-2 text-accent-foreground">
+              <HeartPulse className="h-5 w-5" /> Vitais Recentes
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            {logs.find(l => l.type === 'bp') ? (
+              <div className="text-center py-4">
+                <span className="text-4xl font-bold text-secondary">
+                  {logs.find(l => l.type === 'bp')?.value}
+                </span>
+                <p className="text-muted-foreground mt-2">Última Pressão Arterial</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Registado em {format(logs.find(l => l.type === 'bp')!.timestamp, "d 'de' MMMM, HH:mm", { locale: pt })}
+                </p>
+              </div>
+            ) : (
+              <div className="text-center py-6 text-muted-foreground italic">Sem registos vitais ainda.</div>
+            )}
+            <Button asChild className="w-full mt-4 rounded-full bg-accent text-accent-foreground hover:bg-accent/90">
+              <Link href="/logs">Registar Novo Sinal Vital</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Activity Chart Card */}
+        <Card className="md:col-span-2 shadow-md border-none">
+          <CardHeader className="bg-secondary/5 rounded-t-lg">
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-secondary">
+                  <TrendingUp className="h-5 w-5" /> Progresso Semanal
+                </CardTitle>
+                <CardDescription>Minutos de atividade física por dia</CardDescription>
+              </div>
+              <Badge variant="secondary" className="bg-secondary/10 text-secondary">Últimos 7 dias</Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="h-[200px] w-full">
+              <ChartContainer config={chartConfig}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={activityData}>
+                    <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.3} />
+                    <XAxis 
+                      dataKey="label" 
+                      line={false} 
+                      tickLine={false} 
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      axisLine={false}
+                    />
+                    <YAxis hide />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar 
+                      dataKey="minutes" 
+                      fill="var(--color-minutes)" 
+                      radius={[4, 4, 0, 0]} 
+                      barSize={40}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+         {/* Profile Summary */}
+         <Card className="shadow-md border-none">
           <CardHeader className="bg-primary/10 rounded-t-lg">
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5 text-primary" /> Perfil de Saúde
@@ -107,33 +210,6 @@ export default function Dashboard() {
             </div>
             <Button asChild variant="link" className="p-0 h-auto text-primary">
               <Link href="/profile">Atualizar Perfil & Questionário <ArrowRight className="ml-1 h-3 w-3" /></Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Vital Stats Card */}
-        <Card className="md:col-span-1 shadow-md border-none">
-          <CardHeader className="bg-accent/10 rounded-t-lg">
-            <CardTitle className="flex items-center gap-2 text-accent-foreground">
-              <HeartPulse className="h-5 w-5" /> Vitais Recentes
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            {logs.find(l => l.type === 'bp') ? (
-              <div className="text-center py-4">
-                <span className="text-4xl font-bold text-secondary">
-                  {logs.find(l => l.type === 'bp')?.value}
-                </span>
-                <p className="text-muted-foreground mt-2">Última Pressão Arterial</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Registado em {format(logs.find(l => l.type === 'bp')!.timestamp, "d 'de' MMMM, HH:mm", { locale: pt })}
-                </p>
-              </div>
-            ) : (
-              <div className="text-center py-6 text-muted-foreground italic">Sem registos vitais ainda.</div>
-            )}
-            <Button asChild className="w-full mt-4 rounded-full bg-accent text-accent-foreground hover:bg-accent/90">
-              <Link href="/logs">Registar Novo Sinal Vital</Link>
             </Button>
           </CardContent>
         </Card>
@@ -166,48 +242,43 @@ export default function Dashboard() {
             </Button>
           </CardContent>
         </Card>
-      </div>
 
-      {/* Recent Activity Log */}
-      <Card className="shadow-md border-none">
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle className="flex items-center gap-2">
-              <History className="h-5 w-5 text-muted-foreground" /> Histórico Recente
-            </CardTitle>
-            <Button asChild variant="link" className="text-primary">
-              <Link href="/logs">Ver Tudo</Link>
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-1">
-            {recentLogs.length > 0 ? recentLogs.map((log, idx) => (
-              <div key={log.id} className={cn(
-                "flex items-center justify-between p-4 rounded-lg",
-                idx % 2 === 0 ? "bg-white" : "bg-transparent"
-              )}>
-                <div className="flex items-center gap-4">
-                  <div className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center",
-                    log.type === 'bp' ? "bg-red-50 text-red-500" : "bg-blue-50 text-blue-500"
-                  )}>
-                    {log.type === 'bp' ? <HeartPulse className="w-5 h-5" /> : <Activity className="w-5 h-5" />}
-                  </div>
-                  <div>
-                    <p className="font-bold">{log.value}</p>
-                    <p className="text-sm text-muted-foreground capitalize">{log.type === 'bp' ? 'Pressão Arterial' : log.type} • {log.notes}</p>
+        {/* Recent Activity Log */}
+        <Card className="md:col-span-1 shadow-md border-none">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <History className="h-5 w-5 text-muted-foreground" /> Histórico
+              </CardTitle>
+              <Button asChild variant="link" className="text-primary text-xs h-auto p-0">
+                <Link href="/logs">Ver Tudo</Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1">
+              {recentLogs.length > 0 ? recentLogs.map((log, idx) => (
+                <div key={log.id} className={cn(
+                  "flex items-center justify-between p-2 rounded-lg border-b last:border-0",
+                )}>
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
+                      log.type === 'bp' ? "bg-red-50 text-red-500" : "bg-blue-50 text-blue-500"
+                    )}>
+                      {log.type === 'bp' ? <HeartPulse className="w-4 h-4" /> : <Activity className="w-4 h-4" />}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold leading-tight">{log.value}</p>
+                      <p className="text-[10px] text-muted-foreground">{format(log.timestamp, 'd MMM HH:mm', { locale: pt })}</p>
+                    </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">{format(log.timestamp, 'd MMM', { locale: pt })}</p>
-                  <p className="text-xs text-muted-foreground">{format(log.timestamp, 'HH:mm')}</p>
-                </div>
-              </div>
-            )) : <p className="text-center py-10 text-muted-foreground italic">Nenhuma atividade recente.</p>}
-          </div>
-        </CardContent>
-      </Card>
+              )) : <p className="text-center py-4 text-xs text-muted-foreground italic">Nenhuma atividade recente.</p>}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

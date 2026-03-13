@@ -1,10 +1,12 @@
 "use client"
 
+import { useState, useEffect } from 'react';
 import { useHealth } from '@/components/health-context';
+import { aiHealthAssistantAdvice } from '@/ai/flows/ai-health-assistant-advice-flow';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Activity, Pill, History, AlertCircle, PlusCircle, ArrowRight, MessageCircle, User, HeartPulse } from 'lucide-react';
+import { Activity, Pill, History, AlertCircle, PlusCircle, ArrowRight, MessageCircle, User, HeartPulse, Sparkles, Lightbulb } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
@@ -12,6 +14,26 @@ import { cn } from '@/lib/utils';
 
 export default function Dashboard() {
   const { userProfile, logs, meds } = useHealth();
+  const [didYouKnow, setDidYouKnow] = useState<string | null>(null);
+  const [isLoadingCuriosity, setIsLoadingCuriosity] = useState(false);
+
+  useEffect(() => {
+    async function fetchCuriosity() {
+      setIsLoadingCuriosity(true);
+      try {
+        const response = await aiHealthAssistantAdvice({
+          question: "Gera uma curiosidade útil sobre as minhas condições de saúde para o meu dashboard.",
+          userProfile: userProfile
+        });
+        setDidYouKnow(response.didYouKnow || null);
+      } catch (error) {
+        console.error("Failed to fetch curiosity", error);
+      } finally {
+        setIsLoadingCuriosity(false);
+      }
+    }
+    fetchCuriosity();
+  }, [userProfile]);
 
   const recentLogs = logs.slice(0, 3);
 
@@ -20,7 +42,7 @@ export default function Dashboard() {
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold font-headline text-secondary">Bom dia, {userProfile.name}</h1>
-          <p className="text-muted-foreground text-lg">Aqui está o seu resumo de saúde para hoje.</p>
+          <p className="text-muted-foreground text-lg">Aqui está o seu resumo de saúde e sugestões personalizadas.</p>
         </div>
         <div className="flex gap-2">
           <Button asChild variant="outline" className="rounded-full">
@@ -36,29 +58,55 @@ export default function Dashboard() {
         </div>
       </header>
 
+      {/* Secção de Informação Personalizada / Curiosidades */}
+      {didYouKnow && (
+        <Card className="border-none shadow-lg bg-gradient-to-r from-accent/20 to-accent/5 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="p-1 bg-accent"></div>
+          <CardContent className="p-6 flex items-start gap-4">
+            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-accent shadow-sm shrink-0">
+              <Lightbulb className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-bold text-accent-foreground flex items-center gap-2">
+                Informação Personalizada: Sabia que...?
+              </h3>
+              <p className="text-lg leading-relaxed text-accent-foreground/90">
+                {didYouKnow}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Profile Summary */}
         <Card className="md:col-span-1 shadow-md border-none">
           <CardHeader className="bg-primary/10 rounded-t-lg">
             <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5 text-primary" /> Perfil
+              <User className="h-5 w-5 text-primary" /> Perfil de Saúde
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6 space-y-4">
             <div>
-              <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">Condições</p>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {userProfile.chronicDiseases.map(d => (
+              <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">Patologias Registadas</p>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {userProfile.chronicDiseases.length > 0 ? userProfile.chronicDiseases.map(d => (
                   <Badge key={d} variant="secondary" className="bg-secondary/10 text-secondary border-secondary/20">{d}</Badge>
-                ))}
+                )) : <p className="text-sm italic">Nenhuma patologia registada.</p>}
               </div>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">Preocupações Atuais</p>
-              <p className="mt-1 text-sm">{userProfile.recentHealthConcerns}</p>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="p-2 bg-muted rounded-lg">
+                <p className="text-muted-foreground text-xs">Atividade</p>
+                <p className="font-bold">{userProfile.physicalActivityLevel}</p>
+              </div>
+              <div className="p-2 bg-muted rounded-lg">
+                <p className="text-muted-foreground text-xs">Motivação</p>
+                <p className="font-bold">{userProfile.motivationToChange ? 'Sim' : 'Não'}</p>
+              </div>
             </div>
             <Button asChild variant="link" className="p-0 h-auto text-primary">
-              <Link href="/profile">Editar Perfil <ArrowRight className="ml-1 h-3 w-3" /></Link>
+              <Link href="/profile">Atualizar Perfil & Questionário <ArrowRight className="ml-1 h-3 w-3" /></Link>
             </Button>
           </CardContent>
         </Card>
@@ -82,7 +130,7 @@ export default function Dashboard() {
                 </p>
               </div>
             ) : (
-              <div className="text-center py-6 text-muted-foreground">Sem registos ainda.</div>
+              <div className="text-center py-6 text-muted-foreground italic">Sem registos vitais ainda.</div>
             )}
             <Button asChild className="w-full mt-4 rounded-full bg-accent text-accent-foreground hover:bg-accent/90">
               <Link href="/logs">Registar Novo Sinal Vital</Link>
@@ -104,17 +152,17 @@ export default function Dashboard() {
                   <div key={m.id} className="flex justify-between items-center p-3 bg-muted rounded-lg">
                     <div>
                       <p className="font-bold">{m.name}</p>
-                      <p className="text-xs text-muted-foreground">{m.dosage} • {m.frequency}</p>
+                      <p className="text-xs text-muted-foreground">{m.dosage}</p>
                     </div>
                     <Badge variant="outline" className="border-primary text-primary">Ativo</Badge>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-center py-4 text-muted-foreground">Sem medicamentos listados.</p>
+              <p className="text-center py-4 text-muted-foreground italic">Sem medicação listada.</p>
             )}
             <Button asChild variant="outline" className="w-full rounded-full border-secondary text-secondary hover:bg-secondary/5">
-              <Link href="/profile">Gerir Medicamentos</Link>
+              <Link href="/profile">Gerir Farmacoterapêutica</Link>
             </Button>
           </CardContent>
         </Card>
@@ -134,7 +182,7 @@ export default function Dashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-1">
-            {recentLogs.map((log, idx) => (
+            {recentLogs.length > 0 ? recentLogs.map((log, idx) => (
               <div key={log.id} className={cn(
                 "flex items-center justify-between p-4 rounded-lg",
                 idx % 2 === 0 ? "bg-white" : "bg-transparent"
@@ -156,7 +204,7 @@ export default function Dashboard() {
                   <p className="text-xs text-muted-foreground">{format(log.timestamp, 'HH:mm')}</p>
                 </div>
               </div>
-            ))}
+            )) : <p className="text-center py-10 text-muted-foreground italic">Nenhuma atividade recente.</p>}
           </div>
         </CardContent>
       </Card>

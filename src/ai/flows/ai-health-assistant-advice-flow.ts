@@ -1,11 +1,7 @@
 'use server';
 /**
  * @fileOverview An AI health assistant that provides personalized advice and recommendations
- * based on a user's health profile and questions, following strict behavioral guidelines.
- *
- * - aiHealthAssistantAdvice - A function that handles health-related questions and provides tailored advice.
- * - AiHealthAssistantAdviceInput - The input type for the aiHealthAssistantAdvice function.
- * - AiHealthAssistantAdviceOutput - The return type for the aiHealthAssistantAdvice function.
+ * based on a user's health profile and questions, including personalized curiosities (INS).
  */
 
 import {ai} from '@/ai/genkit';
@@ -15,24 +11,19 @@ const AiHealthAssistantAdviceInputSchema = z.object({
   question: z.string().describe('A pergunta relacionada com saúde do utilizador.').min(1),
   userProfile: z
     .object({
-      age: z.number().describe('A idade do utilizador.').optional(),
-      gender: z.string().describe('O género do utilizador.').optional(),
-      chronicDiseases: z
-        .array(z.string())
-        .describe('Lista de doenças crónicas do utilizador.')
-        .optional(),
-      medications: z
-        .array(z.string())
-        .describe('Lista de medicamentos que o utilizador está a tomar.')
-        .optional(),
-      allergies: z
-        .array(z.string())
-        .describe('Lista de alergias conhecidas.')
-        .optional(),
-      recentHealthConcerns: z
-        .string()
-        .describe('Preocupações de saúde recentes ou sintomas reportados.')
-        .optional(),
+      age: z.number().optional(),
+      gender: z.string().optional(),
+      chronicDiseases: z.array(z.string()).optional(),
+      weight: z.number().optional(),
+      height: z.number().optional(),
+      alcoholFreq: z.string().optional(),
+      tobaccoFreq: z.string().optional(),
+      physicalActivityLevel: z.string().optional(),
+      motivationToChange: z.boolean().optional(),
+      diabetesInfo: z.any().optional(),
+      hypertensionInfo: z.any().optional(),
+      cholesterolInfo: z.any().optional(),
+      recentHealthConcerns: z.string().optional(),
     })
     .describe('O perfil de saúde abrangente do utilizador.'),
 });
@@ -49,7 +40,11 @@ const AiHealthAssistantAdviceOutputSchema = z.object({
     .array(z.string())
     .describe('Recomendações específicas para gerir a saúde ou próximos passos.')
     .optional(),
-  disclaimer: z.string().describe('Um aviso médico indicando que isto não substitui aconselhamento médico profissional.').min(1),
+  didYouKnow: z
+    .string()
+    .describe('Uma curiosidade personalizada baseada em dados estatísticos de saúde (INS) ou boas práticas para as patologias do utilizador.')
+    .optional(),
+  disclaimer: z.string().describe('Um aviso médico.').min(1),
 });
 export type AiHealthAssistantAdviceOutput = z.infer<
   typeof AiHealthAssistantAdviceOutputSchema
@@ -65,36 +60,22 @@ const prompt = ai.definePrompt({
   name: 'aiHealthAssistantAdvicePrompt',
   input: {schema: AiHealthAssistantAdviceInputSchema},
   output: {schema: AiHealthAssistantAdviceOutputSchema},
-  prompt: `És um assistente de saúde com IA dedicado a fornecer conselhos e recomendações de saúde personalizados, úteis e empáticos em PORTUGUÊS DE PORTUGAL (PT-PT).
+  prompt: `És um assistente de saúde com IA em PORTUGUÊS DE PORTUGAL (PT-PT).
 
-### DIRETRIZES DE COMPORTAMENTO:
-1. **Tom de Voz:** Empático, paciente, respeitoso e motivador. Trata o utilizador com proximidade, mas mantém o profissionalismo clínico.
-2. **Linguagem:** Português de Portugal (PT-PT) simples. Evita termos médicos complexos sem os explicar de forma clara.
-3. **Acessibilidade (MUITO IMPORTANTE):** Considera que o utilizador pode ter dificuldades de visão ou artrite. Usa frases curtas e claras. Incentiva o uso de voz (como ditar texto no telemóvel ou computador) se for mais fácil para o utilizador.
-4. **Segurança (CRUCIAL):**
-   - NUNCA dês diagnósticos definitivos.
-   - Perante sinais de alerta (dor no peito, falta de ar súbita, desorientação), instrui IMEDIATAMENTE o utilizador a ligar para o 112 ou SNS 24 (808 24 24 24).
-5. **Recomendações:** Sugere apenas exercícios de reabilitação física de baixo impacto e dicas de estilo de vida baseadas em evidência científica.
+### DIRETRIZES:
+1. **Tom:** Empático e profissional. Frases curtas e claras para seniores.
+2. **Acessibilidade:** Incentiva o uso de voz.
+3. **Segurança:** Sem diagnósticos. Se grave (dor peito, falta ar), instrui ligar 112 ou SNS 24 (808 24 24 24).
+4. **Informação Útil (Sabia que...?):** Gera sempre uma curiosidade relevante no campo 'didYouKnow'. Baseia-te em dados de saúde reais (tipo INS/DGS) adequados às patologias do utilizador (Ex: "Sabia que em Portugal X% dos seniores com hipertensão controlam-na com caminhadas diárias?").
 
-### Perfil de Saúde do Utilizador:
-{{#if userProfile.age}}Idade: {{{userProfile.age}}}\n{{/if}}
-{{#if userProfile.gender}}Género: {{{userProfile.gender}}}\n{{/if}}
-{{#if userProfile.chronicDiseases.length}}
-Doenças Crónicas: {{#each userProfile.chronicDiseases}}{{{this}}}{{^last}}, {{/last}}{{/each}}\n{{/if}}
-{{#if userProfile.medications.length}}
-Medicamentos: {{#each userProfile.medications}}{{{this}}}{{^last}}, {{/last}}{{/each}}\n{{/if}}
-{{#if userProfile.allergies.length}}
-Alergias: {{#each userProfile.allergies}}{{{this}}}{{^last}}, {{/last}}{{/each}}\n{{/if}}
-{{#if userProfile.recentHealthConcerns}}
-Preocupações de Saúde Recentes: {{{userProfile.recentHealthConcerns}}}\n{{/if}}
+### Perfil do Utilizador:
+Doenças: {{#each userProfile.chronicDiseases}}{{{this}}}{{^last}}, {{/last}}{{/each}}
+Dados: Idade {{userProfile.age}}, Peso {{userProfile.weight}}kg, Altura {{userProfile.height}}cm.
+Atividade: {{userProfile.physicalActivityLevel}}. Motivação: {{#if userProfile.motivationToChange}}Sim{{else}}Não{{/if}}.
+Detalhes Diabetes: {{{userProfile.diabetesInfo}}}
+Detalhes Hipertensão: {{{userProfile.hypertensionInfo}}}
 
-Pergunta do Utilizador: "{{{question}}}"
-
-Com base no perfil acima, fornece conselhos personalizados. Foca-te em bem-estar geral e educação. 
-
-DEVES incluir SEMPRE um aviso médico no campo 'disclaimer', indicando que o teu conselho é apenas informativo e não substitui uma consulta médica profissional.
-
-Responde APENAS no formato JSON especificado.`,
+Pergunta: "{{{question}}}"`,
 });
 
 const aiHealthAssistantAdviceFlow = ai.defineFlow(

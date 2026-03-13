@@ -21,8 +21,35 @@ export type UserProfile = {
   name: string;
   age: number;
   gender: string;
+  education: string;
+  householdSize: string;
+  healthUnit: string;
+  weight: number;
+  height: number;
+  alcoholFreq: string;
+  tobaccoFreq: string;
+  physicalActivityLevel: string;
+  motivationToChange: boolean;
   chronicDiseases: string[];
-  medications: string[];
+  diabetesInfo?: {
+    duration: string;
+    insulinDependent: boolean;
+    meds: string;
+    symptoms: string[];
+  };
+  hypertensionInfo?: {
+    highestReading: string;
+    regularReading: string;
+    meds: string;
+    symptoms: string;
+  };
+  cholesterolInfo?: {
+    highestReading: string;
+    regularReading: string;
+    highTriglycerides: boolean;
+    meds: string;
+  };
+  otherConditions: string;
   allergies: string[];
   recentHealthConcerns: string;
 };
@@ -43,8 +70,29 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     name: 'João Silva',
     age: 68,
     gender: 'Masculino',
-    chronicDiseases: ['Hipertensão', 'Diabetes Tipo 2'],
-    medications: ['Lisinopril 10mg', 'Metformina 500mg'],
+    education: 'Ensino Básico',
+    householdSize: '2 pessoas',
+    healthUnit: 'Centro de Saúde de Arroios',
+    weight: 82,
+    height: 175,
+    alcoholFreq: 'Ocasional',
+    tobaccoFreq: 'Não fumador',
+    physicalActivityLevel: 'Baixa',
+    motivationToChange: true,
+    chronicDiseases: ['Hipertensão', 'Diabetes'],
+    diabetesInfo: {
+      duration: '10 anos',
+      insulinDependent: false,
+      meds: 'Metformina',
+      symptoms: ['Fadiga']
+    },
+    hypertensionInfo: {
+      highestReading: '160/95',
+      regularReading: '135/85',
+      meds: 'Lisinopril',
+      symptoms: 'Nenhuns'
+    },
+    otherConditions: '',
     allergies: ['Penicilina'],
     recentHealthConcerns: 'Leve elevação nas leituras de pressão arterial matinais.',
   });

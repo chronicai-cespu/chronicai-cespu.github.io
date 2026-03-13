@@ -1,21 +1,24 @@
 "use client"
 
 import { useState } from 'react';
-import { useHealth } from '@/components/health-context';
+import { useHealth, UserProfile } from '@/components/health-context';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { User, ShieldCheck, Pill, Stethoscope, Plus, Trash2, Save } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { User, ShieldCheck, Pill, Stethoscope, Plus, Trash2, Save, FileText, Activity } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 export default function ProfilePage() {
   const { userProfile, setUserProfile, meds, addMed } = useHealth();
   const { toast } = useToast();
 
-  const [editProfile, setEditProfile] = useState(userProfile);
+  const [editProfile, setEditProfile] = useState<UserProfile>(userProfile);
   const [newMedName, setNewMedName] = useState('');
   const [newMedDose, setNewMedDose] = useState('');
 
@@ -24,127 +27,251 @@ export default function ProfilePage() {
     toast({ title: "Perfil Atualizado", description: "As suas informações de saúde foram guardadas com segurança." });
   };
 
-  const handleAddMed = () => {
-    if (!newMedName) return;
-    addMed({ name: newMedName, dosage: newMedDose, frequency: 'Conforme necessário' });
-    setNewMedName('');
-    setNewMedDose('');
-    toast({ title: "Medicamento Adicionado", description: `${newMedName} adicionado à sua lista.` });
+  const toggleDisease = (disease: string) => {
+    const current = editProfile.chronicDiseases;
+    if (current.includes(disease)) {
+      setEditProfile({ ...editProfile, chronicDiseases: current.filter(d => d !== disease) });
+    } else {
+      setEditProfile({ ...editProfile, chronicDiseases: [...current, disease] });
+    }
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-8 space-y-8">
+    <div className="max-w-5xl mx-auto p-4 sm:p-8 space-y-8 pb-24">
       <header>
         <h1 className="text-3xl font-bold font-headline text-secondary flex items-center gap-3">
-          <User className="h-8 w-8 text-primary" /> O Meu Perfil de Saúde
+          <User className="h-8 w-8 text-primary" /> Questionário de Saúde
         </h1>
-        <p className="text-muted-foreground text-lg">Gira as suas informações pessoais, condições crónicas e medicamentos.</p>
+        <p className="text-muted-foreground text-lg italic">"A sua saúde é o seu maior bem. Vamos cuidar dela juntos."</p>
       </header>
 
       <div className="grid gap-8">
-        {/* Personal Info */}
+        {/* Identificação e Registo */}
         <Card className="shadow-md border-none">
           <CardHeader className="bg-primary/5 rounded-t-lg">
-            <CardTitle className="text-xl">Informações Básicas</CardTitle>
-            <CardDescription>Isto ajuda a nossa IA a fornecer orientações mais precisas.</CardDescription>
+            <CardTitle className="text-xl flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" /> Identificação e Dados Pessoais
+            </CardTitle>
+            <CardDescription>Informação básica para o seu registo de saúde.</CardDescription>
           </CardHeader>
           <CardContent className="p-8 grid md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="name">Nome Completo</Label>
-              <Input id="name" value={editProfile.name} onChange={e => setEditProfile({...editProfile, name: e.target.value})} className="h-12" />
+              <Input id="name" value={editProfile.name} onChange={e => setEditProfile({ ...editProfile, name: e.target.value })} className="h-12" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="age">Idade</Label>
-              <Input id="age" type="number" value={editProfile.age} onChange={e => setEditProfile({...editProfile, age: parseInt(e.target.value)})} className="h-12" />
+              <Input id="age" type="number" value={editProfile.age} onChange={e => setEditProfile({ ...editProfile, age: parseInt(e.target.value) || 0 })} className="h-12" />
             </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="concerns">Preocupações de Saúde Recentes</Label>
-              <Textarea id="concerns" value={editProfile.recentHealthConcerns} onChange={e => setEditProfile({...editProfile, recentHealthConcerns: e.target.value})} className="min-h-[100px]" />
+            <div className="space-y-2">
+              <Label htmlFor="gender">Género</Label>
+              <Select value={editProfile.gender} onValueChange={v => setEditProfile({ ...editProfile, gender: v })}>
+                <SelectTrigger className="h-12">
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Masculino">Masculino</SelectItem>
+                  <SelectItem value="Feminino">Feminino</SelectItem>
+                  <SelectItem value="Outro">Outro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="education">Escolaridade</Label>
+              <Input id="education" value={editProfile.education} onChange={e => setEditProfile({ ...editProfile, education: e.target.value })} className="h-12" placeholder="ex: Ensino Secundário" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="household">Agregado Familiar</Label>
+              <Input id="household" value={editProfile.householdSize} onChange={e => setEditProfile({ ...editProfile, householdSize: e.target.value })} className="h-12" placeholder="ex: 2 pessoas" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="healthunit">Unidade de Saúde / Local</Label>
+              <Input id="healthunit" value={editProfile.healthUnit} onChange={e => setEditProfile({ ...editProfile, healthUnit: e.target.value })} className="h-12" />
             </div>
           </CardContent>
-          <CardFooter className="bg-muted/30 px-8 py-4 flex justify-end">
-            <Button onClick={handleSaveProfile} className="bg-primary hover:bg-primary/90 rounded-full px-8">
-              <Save className="mr-2 h-4 w-4" /> Guardar Alterações
-            </Button>
-          </CardFooter>
         </Card>
 
-        {/* Clinical Info */}
+        {/* Biometria e Hábitos */}
         <Card className="shadow-md border-none">
           <CardHeader className="bg-secondary/5 rounded-t-lg">
             <CardTitle className="text-xl flex items-center gap-2">
-              <Stethoscope className="h-5 w-5 text-secondary" /> Condições Médicas
+              <Activity className="h-5 w-5 text-secondary" /> Biometria e Estilo de Vida
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-8 space-y-6">
-            <div className="space-y-4">
-              <Label>Condições Crónicas</Label>
-              <div className="flex flex-wrap gap-2">
-                {editProfile.chronicDiseases.map(disease => (
-                  <Badge key={disease} variant="secondary" className="px-3 py-1 text-sm bg-secondary/10 text-secondary border-secondary/20 flex items-center gap-2">
-                    {disease} <Trash2 className="h-3 w-3 cursor-pointer hover:text-red-500" />
-                  </Badge>
-                ))}
-                <Button variant="outline" size="sm" className="rounded-full h-8 border-dashed">
-                  <Plus className="h-4 w-4 mr-1" /> Adicionar Condição
-                </Button>
-              </div>
+          <CardContent className="p-8 grid md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="weight">Peso (kg)</Label>
+              <Input id="weight" type="number" value={editProfile.weight} onChange={e => setEditProfile({ ...editProfile, weight: parseFloat(e.target.value) || 0 })} className="h-12" />
             </div>
-            
-            <div className="space-y-4">
-              <Label>Alergias Conhecidas</Label>
-              <div className="flex flex-wrap gap-2">
-                {editProfile.allergies.map(allergy => (
-                  <Badge key={allergy} variant="outline" className="px-3 py-1 text-sm border-red-200 text-red-600 bg-red-50">
-                    {allergy}
-                  </Badge>
-                ))}
-                <Button variant="outline" size="sm" className="rounded-full h-8 border-dashed">
-                  <Plus className="h-4 w-4 mr-1" /> Adicionar Alergia
-                </Button>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="height">Altura (cm)</Label>
+              <Input id="height" type="number" value={editProfile.height} onChange={e => setEditProfile({ ...editProfile, height: parseInt(e.target.value) || 0 })} className="h-12" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="alcohol">Consumo de Álcool</Label>
+              <Select value={editProfile.alcoholFreq} onValueChange={v => setEditProfile({ ...editProfile, alcoholFreq: v })}>
+                <SelectTrigger className="h-12">
+                  <SelectValue placeholder="Frequência..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Nunca">Nunca</SelectItem>
+                  <SelectItem value="Ocasional">Ocasional</SelectItem>
+                  <SelectItem value="Frequente">Frequente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tobacco">Consumo de Tabaco</Label>
+              <Select value={editProfile.tobaccoFreq} onValueChange={v => setEditProfile({ ...editProfile, tobaccoFreq: v })}>
+                <SelectTrigger className="h-12">
+                  <SelectValue placeholder="Frequência..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Não fumador">Não fumador</SelectItem>
+                  <SelectItem value="Ex-fumador">Ex-fumador</SelectItem>
+                  <SelectItem value="Fumador">Fumador</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="activity">Nível de Atividade Física (Autocuidado)</Label>
+              <Select value={editProfile.physicalActivityLevel} onValueChange={v => setEditProfile({ ...editProfile, physicalActivityLevel: v })}>
+                <SelectTrigger className="h-12">
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Nula">Nula / Muito Baixa</SelectItem>
+                  <SelectItem value="Baixa">Baixa (Caminhadas ocasionais)</SelectItem>
+                  <SelectItem value="Moderada">Moderada (3x por semana)</SelectItem>
+                  <SelectItem value="Alta">Alta (Diária)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center space-x-2 pt-8">
+              <Checkbox 
+                id="motivation" 
+                checked={editProfile.motivationToChange} 
+                onCheckedChange={(checked) => setEditProfile({ ...editProfile, motivationToChange: checked === true })}
+              />
+              <Label htmlFor="motivation" className="text-sm font-medium leading-none cursor-pointer">
+                Tem motivação para mudança de hábitos e estilo de vida?
+              </Label>
             </div>
           </CardContent>
         </Card>
 
-        {/* Medication List */}
+        {/* Patologias Crónicas */}
         <Card className="shadow-md border-none">
           <CardHeader className="bg-accent/5 rounded-t-lg">
             <CardTitle className="text-xl flex items-center gap-2">
-              <Pill className="h-5 w-5 text-accent-foreground" /> Meus Medicamentos
+              <Stethoscope className="h-5 w-5 text-accent-foreground" /> Condições Crónicas e Farmacoterapêutica
             </CardTitle>
+            <CardDescription>Selecione as suas condições para receber apoio personalizado.</CardDescription>
           </CardHeader>
-          <CardContent className="p-8 space-y-6">
-            <div className="space-y-4">
-              {meds.map(med => (
-                <div key={med.id} className="flex justify-between items-center p-4 border rounded-xl hover:bg-muted/10 transition-colors">
-                  <div>
-                    <p className="font-bold text-lg">{med.name}</p>
-                    <p className="text-sm text-muted-foreground">{med.dosage} • {med.frequency}</p>
-                  </div>
-                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-red-500">
-                    <Trash2 className="h-5 w-5" />
-                  </Button>
-                </div>
+          <CardContent className="p-8 space-y-8">
+            <div className="flex flex-wrap gap-3">
+              {['Diabetes', 'Hipertensão', 'Colesterol'].map(disease => (
+                <Badge 
+                  key={disease} 
+                  variant={editProfile.chronicDiseases.includes(disease) ? "default" : "outline"}
+                  className={cn(
+                    "px-4 py-2 text-sm cursor-pointer transition-all",
+                    editProfile.chronicDiseases.includes(disease) 
+                      ? "bg-primary text-white scale-105" 
+                      : "hover:bg-primary/10"
+                  )}
+                  onClick={() => toggleDisease(disease)}
+                >
+                  {disease}
+                </Badge>
               ))}
             </div>
 
-            <div className="pt-6 border-t grid md:grid-cols-7 gap-4 items-end">
-              <div className="md:col-span-3 space-y-2">
-                <Label htmlFor="med-name">Nome do Medicamento</Label>
-                <Input id="med-name" placeholder="ex: Aspirina" value={newMedName} onChange={e => setNewMedName(e.target.value)} />
+            {/* Campos Dinâmicos por Doença */}
+            {editProfile.chronicDiseases.includes('Diabetes') && (
+              <div className="space-y-4 p-6 border-l-4 border-primary bg-primary/5 rounded-r-xl">
+                <h4 className="font-bold text-primary flex items-center gap-2"><Activity className="w-4 h-4" /> Diabetes</h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Duração da doença (+/- anos)</Label>
+                    <Input 
+                      placeholder="ex: 15 anos" 
+                      value={editProfile.diabetesInfo?.duration} 
+                      onChange={e => setEditProfile({...editProfile, diabetesInfo: { ...editProfile.diabetesInfo!, duration: e.target.value }})}
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2 pt-6">
+                    <Checkbox 
+                      id="insulin" 
+                      checked={editProfile.diabetesInfo?.insulinDependent}
+                      onCheckedChange={checked => setEditProfile({...editProfile, diabetesInfo: { ...editProfile.diabetesInfo!, insulinDependent: checked === true }})}
+                    />
+                    <Label htmlFor="insulin">Dependente de Insulina?</Label>
+                  </div>
+                  <div className="md:col-span-2 space-y-2">
+                    <Label>Farmacoterapêutica (Medicamentos)</Label>
+                    <Input 
+                      placeholder="ex: Metformina, Januvia" 
+                      value={editProfile.diabetesInfo?.meds}
+                      onChange={e => setEditProfile({...editProfile, diabetesInfo: { ...editProfile.diabetesInfo!, meds: e.target.value }})}
+                    />
+                  </div>
+                  <div className="md:col-span-2 space-y-2">
+                    <Label>Sintomatologia (pés, rins, olhos, outros)</Label>
+                    <Input 
+                      placeholder="ex: sensibilidade nos pés, visão turva" 
+                      value={editProfile.diabetesInfo?.symptoms?.join(', ')}
+                      onChange={e => setEditProfile({...editProfile, diabetesInfo: { ...editProfile.diabetesInfo!, symptoms: e.target.value.split(',').map(s => s.trim()) }})}
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="md:col-span-3 space-y-2">
-                <Label htmlFor="med-dose">Dosagem</Label>
-                <Input id="med-dose" placeholder="ex: 81mg" value={newMedDose} onChange={e => setNewMedDose(e.target.value)} />
+            )}
+
+            {editProfile.chronicDiseases.includes('Hipertensão') && (
+              <div className="space-y-4 p-6 border-l-4 border-secondary bg-secondary/5 rounded-r-xl">
+                <h4 className="font-bold text-secondary flex items-center gap-2"><Activity className="w-4 h-4" /> Hipertensão</h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Registo mais elevado (ex: 150/95)</Label>
+                    <Input 
+                      value={editProfile.hypertensionInfo?.highestReading}
+                      onChange={e => setEditProfile({...editProfile, hypertensionInfo: { ...editProfile.hypertensionInfo!, highestReading: e.target.value }})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Registo regular</Label>
+                    <Input 
+                      value={editProfile.hypertensionInfo?.regularReading}
+                      onChange={e => setEditProfile({...editProfile, hypertensionInfo: { ...editProfile.hypertensionInfo!, regularReading: e.target.value }})}
+                    />
+                  </div>
+                  <div className="md:col-span-2 space-y-2">
+                    <Label>Farmacoterapêutica</Label>
+                    <Input 
+                      value={editProfile.hypertensionInfo?.meds}
+                      onChange={e => setEditProfile({...editProfile, hypertensionInfo: { ...editProfile.hypertensionInfo!, meds: e.target.value }})}
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="md:col-span-1">
-                <Button onClick={handleAddMed} className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
-                  <Plus className="h-5 w-5" />
-                </Button>
-              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="others">Outras Doenças (Caixa Aberta)</Label>
+              <Textarea 
+                id="others" 
+                placeholder="Descreva outras condições ou detalhes importantes..." 
+                value={editProfile.otherConditions}
+                onChange={e => setEditProfile({...editProfile, otherConditions: e.target.value})}
+              />
             </div>
           </CardContent>
+          <CardFooter className="bg-muted/30 px-8 py-4 flex justify-end">
+            <Button onClick={handleSaveProfile} className="bg-primary hover:bg-primary/90 rounded-full px-8 h-12 text-lg">
+              <Save className="mr-2 h-5 w-5" /> Guardar Perfil de Saúde
+            </Button>
+          </CardFooter>
         </Card>
 
         {/* Security & Privacy */}
@@ -153,8 +280,8 @@ export default function ProfilePage() {
             <ShieldCheck className="w-8 h-8" />
           </div>
           <div>
-            <h3 className="font-bold text-green-800">Os seus dados estão seguros</h3>
-            <p className="text-sm text-green-700">Todas as informações de saúde são armazenadas de forma segura e usadas apenas para personalizar a sua jornada com o ChronicAI.</p>
+            <h3 className="font-bold text-green-800">Privacidade Garantida</h3>
+            <p className="text-sm text-green-700">Os seus dados são usados apenas para personalizar as recomendações e melhorar a assistência da IA.</p>
           </div>
         </div>
       </div>

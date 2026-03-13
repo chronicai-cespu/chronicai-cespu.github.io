@@ -12,13 +12,15 @@ O **ChronicAI** é uma aplicação Next.js moderna concebida para ajudar seniore
 
 ## Como Começar (Desenvolvimento Local)
 
+Após descarregar o código do Firebase Studio:
+
 1. **Instalar dependências:**
    ```bash
    npm install
    ```
 
 2. **Configurar variáveis de ambiente:**
-   Crie um ficheiro `.env` com as suas chaves do Firebase e a chave de API do Google Gemini.
+   Crie um ficheiro `.env` na raiz do projeto com as suas chaves do Firebase e a chave de API do Google Gemini.
 
 3. **Executar em modo de desenvolvimento:**
    ```bash

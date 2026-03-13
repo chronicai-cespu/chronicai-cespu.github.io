@@ -11,6 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HeartPulse, Activity, Scale, ClipboardList, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { pt } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 export default function LogsPage() {
   const { logs, addLog } = useHealth();
@@ -28,7 +30,7 @@ export default function LogsPage() {
     if (type === 'weight') value = weight;
 
     if (!value) {
-      toast({ title: "Error", description: "Please enter a value.", variant: "destructive" });
+      toast({ title: "Erro", description: "Por favor, introduza um valor.", variant: "destructive" });
       return;
     }
 
@@ -41,8 +43,8 @@ export default function LogsPage() {
     setNotes('');
 
     toast({
-      title: "Success",
-      description: `${type.toUpperCase()} log added successfully!`,
+      title: "Sucesso",
+      description: `Registo de ${type === 'bp' ? 'Pressão Arterial' : type === 'activity' ? 'Atividade' : 'Peso'} adicionado com sucesso!`,
       variant: "default",
     });
   };
@@ -51,9 +53,9 @@ export default function LogsPage() {
     <div className="max-w-5xl mx-auto p-4 sm:p-8 space-y-8">
       <header className="mb-8">
         <h1 className="text-3xl font-bold font-headline text-secondary flex items-center gap-3">
-          <ClipboardList className="h-8 w-8 text-primary" /> Health Logger
+          <ClipboardList className="h-8 w-8 text-primary" /> Registo de Saúde
         </h1>
-        <p className="text-muted-foreground text-lg">Record your daily measurements and activities to stay on track.</p>
+        <p className="text-muted-foreground text-lg">Registe as suas medições diárias e atividades para manter o controlo.</p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
@@ -63,38 +65,38 @@ export default function LogsPage() {
             <Tabs defaultValue="bp" className="w-full">
               <TabsList className="w-full h-16 rounded-none bg-muted grid grid-cols-3">
                 <TabsTrigger value="bp" className="data-[state=active]:bg-white h-full text-lg gap-2">
-                  <HeartPulse className="w-5 h-5" /> Vitals
+                  <HeartPulse className="w-5 h-5" /> Vitais
                 </TabsTrigger>
                 <TabsTrigger value="activity" className="data-[state=active]:bg-white h-full text-lg gap-2">
-                  <Activity className="w-5 h-5" /> Activity
+                  <Activity className="w-5 h-5" /> Atividade
                 </TabsTrigger>
                 <TabsTrigger value="weight" className="data-[state=active]:bg-white h-full text-lg gap-2">
-                  <Scale className="w-5 h-5" /> Weight
+                  <Scale className="w-5 h-5" /> Peso
                 </TabsTrigger>
               </TabsList>
 
               <div className="p-8">
                 <TabsContent value="bp" className="space-y-6 mt-0">
                   <div className="space-y-2">
-                    <Label htmlFor="bp" className="text-lg">Blood Pressure (mmHg)</Label>
+                    <Label htmlFor="bp" className="text-lg">Pressão Arterial (mmHg)</Label>
                     <Input 
                       id="bp" 
-                      placeholder="e.g. 120/80" 
+                      placeholder="ex: 120/80" 
                       className="h-14 text-xl"
                       value={bp}
                       onChange={(e) => setBp(e.target.value)}
                     />
-                    <p className="text-sm text-muted-foreground">Format: Systolic/Diastolic</p>
+                    <p className="text-sm text-muted-foreground">Formato: Sistólica/Diastólica</p>
                   </div>
                   <LogFields notes={notes} setNotes={setNotes} onLog={() => handleLog('bp')} />
                 </TabsContent>
 
                 <TabsContent value="activity" className="space-y-6 mt-0">
                   <div className="space-y-2">
-                    <Label htmlFor="activity" className="text-lg">Exercise Description</Label>
+                    <Label htmlFor="activity" className="text-lg">Descrição do Exercício</Label>
                     <Input 
                       id="activity" 
-                      placeholder="e.g. 20 min walk in the park" 
+                      placeholder="ex: 20 min de caminhada no parque" 
                       className="h-14 text-xl"
                       value={activity}
                       onChange={(e) => setActivity(e.target.value)}
@@ -105,10 +107,10 @@ export default function LogsPage() {
 
                 <TabsContent value="weight" className="space-y-6 mt-0">
                   <div className="space-y-2">
-                    <Label htmlFor="weight" className="text-lg">Body Weight (lbs/kg)</Label>
+                    <Label htmlFor="weight" className="text-lg">Peso Corporal (kg/lbs)</Label>
                     <Input 
                       id="weight" 
-                      placeholder="e.g. 175 lbs" 
+                      placeholder="ex: 75 kg" 
                       className="h-14 text-xl"
                       value={weight}
                       onChange={(e) => setWeight(e.target.value)}
@@ -125,7 +127,7 @@ export default function LogsPage() {
         <div className="md:col-span-5 space-y-6">
           <Card className="shadow-md border-none h-full bg-secondary/5">
             <CardHeader className="border-b bg-white rounded-t-lg">
-              <CardTitle className="text-xl">Today's Logs</CardTitle>
+              <CardTitle className="text-xl">Registos de Hoje</CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
               <div className="space-y-4">
@@ -143,7 +145,7 @@ export default function LogsPage() {
                       <div className="flex-1">
                         <div className="flex justify-between items-start">
                           <p className="font-bold text-lg">{log.value}</p>
-                          <span className="text-xs text-muted-foreground">{format(log.timestamp, 'h:mm a')}</span>
+                          <span className="text-xs text-muted-foreground">{format(log.timestamp, 'HH:mm')}</span>
                         </div>
                         {log.notes && <p className="text-sm text-muted-foreground italic mt-1">"{log.notes}"</p>}
                       </div>
@@ -151,7 +153,7 @@ export default function LogsPage() {
                   ))
                 ) : (
                   <div className="text-center py-10">
-                    <p className="text-muted-foreground italic">No logs recorded today yet.</p>
+                    <p className="text-muted-foreground italic">Nenhum registo hoje.</p>
                   </div>
                 )}
               </div>
@@ -167,10 +169,10 @@ function LogFields({ notes, setNotes, onLog }: { notes: string, setNotes: (v: st
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="notes">Notes (Optional)</Label>
+        <Label htmlFor="notes">Notas (Opcional)</Label>
         <Textarea 
           id="notes" 
-          placeholder="How are you feeling? Any symptoms?" 
+          placeholder="Como se sente? Algum sintoma?" 
           className="min-h-[100px] text-lg"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
@@ -180,7 +182,7 @@ function LogFields({ notes, setNotes, onLog }: { notes: string, setNotes: (v: st
         onClick={onLog} 
         className="w-full h-14 text-xl rounded-full bg-primary hover:bg-primary/90 shadow-lg"
       >
-        <CheckCircle2 className="mr-2 h-6 w-6" /> Save Entry
+        <CheckCircle2 className="mr-2 h-6 w-6" /> Guardar Registo
       </Button>
     </div>
   );

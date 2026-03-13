@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview This file implements the Urgent Care Guidance Genkit flow.
+ * @fileOverview This file implements the Urgent Care Guidance Genkit flow in Portuguese.
  *
  * - urgentCareGuidance - A function that assesses user-provided symptoms for urgency and provides appropriate guidance.
  * - UrgentCareGuidanceInput - The input type for the urgentCareGuidance function.
@@ -11,13 +11,13 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const UrgentCareGuidanceInputSchema = z.object({
-  symptoms: z.string().describe('A detailed description of the user\'s symptoms.'),
+  symptoms: z.string().describe('Uma descrição detalhada dos sintomas do utilizador.'),
 });
 export type UrgentCareGuidanceInput = z.infer<typeof UrgentCareGuidanceInputSchema>;
 
 const UrgentCareGuidanceOutputSchema = z.object({
-  isUrgent: z.boolean().describe('True if the symptoms suggest an urgent health situation, false otherwise.'),
-  guidance: z.string().describe('Clear instructions for contacting emergency services or local health units if urgent, or general advice for non-urgent situations.'),
+  isUrgent: z.boolean().describe('Verdadeiro se os sintomas sugerirem uma situação de saúde urgente, falso caso contrário.'),
+  guidance: z.string().describe('Instruções claras para contactar serviços de emergência ou unidades de saúde locais se for urgente, ou conselhos gerais para situações não urgentes.'),
 });
 export type UrgentCareGuidanceOutput = z.infer<typeof UrgentCareGuidanceOutputSchema>;
 
@@ -29,20 +29,20 @@ const urgentCareGuidancePrompt = ai.definePrompt({
   name: 'urgentCareGuidancePrompt',
   input: {schema: UrgentCareGuidanceInputSchema},
   output: {schema: UrgentCareGuidanceOutputSchema},
-  prompt: `You are an AI Health Assistant designed to identify urgent health situations based on user-provided symptoms and provide immediate, clear instructions.
+  prompt: `És um Assistente de Saúde com IA concebido para identificar situações de saúde urgentes com base nos sintomas fornecidos pelo utilizador e fornecer instruções imediatas e claras EM PORTUGUÊS.
 
-Analyze the following symptoms:
-Symptoms: {{{symptoms}}}
+Analisa os seguintes sintomas:
+Sintomas: {{{symptoms}}}
 
-Based on these symptoms, determine if the situation requires urgent medical attention (e.g., calling emergency services, going to an emergency room).
+Com base nestes sintomas, determina se a situação requer atenção médica urgente (por exemplo, ligar para os serviços de emergência, ir a uma urgência).
 
-If the situation is urgent:
-Set 'isUrgent' to true.
-Provide clear, actionable instructions in 'guidance' to contact emergency services immediately (e.g., "Dial 911 or your local emergency number right away. Do not wait for symptoms to worsen. Seek immediate medical attention.") and what to do while waiting for help. Emphasize not to delay.
+Se a situação for urgente:
+Define 'isUrgent' como verdadeiro.
+Fornece instruções claras e acionáveis em 'guidance' EM PORTUGUÊS para contactar os serviços de emergência imediatamente (por exemplo, "Ligue para o 112 ou para o número de emergência local imediatamente. Não espere que os sintomas piorem. Procure assistência médica imediata.") e o que fazer enquanto espera por ajuda. Enfatiza que não deve haver atrasos.
 
-If the situation is NOT urgent:
-Set 'isUrgent' to false.
-Provide reassuring, general advice in 'guidance', suggesting they consult their primary care physician or a local health clinic for non-urgent concerns, and to monitor their symptoms. Do NOT provide specific diagnoses or treatment plans.`,
+Se a situação NÃO for urgente:
+Define 'isUrgent' como falso.
+Fornece conselhos gerais e tranquilizadores em 'guidance' EM PORTUGUÊS, sugerindo que consultem o seu médico de família ou uma clínica de saúde local para preocupações não urgentes, e que monitorizem os seus sintomas. NÃO forneças diagnósticos específicos ou planos de tratamento.`,
 });
 
 const urgentCareGuidanceFlow = ai.defineFlow(

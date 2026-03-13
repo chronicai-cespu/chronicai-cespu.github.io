@@ -26,7 +26,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: `Hello ${userProfile.name}! I am your AI Health Assistant. How can I help you today? You can ask me about your conditions, medication, or any symptoms you're feeling.`
+      content: `Olá ${userProfile.name}! Eu sou o seu Assistente de Saúde com IA. Como posso ajudar hoje? Pode perguntar-me sobre as suas condições, medicação ou qualquer sintoma que sinta.`
     }
   ]);
   const [isLoading, setIsLoading] = useState(false);
@@ -82,7 +82,7 @@ export default function ChatPage() {
       console.error(error);
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: "I'm sorry, I'm having trouble connecting right now. Please try again or consult your doctor if you have urgent concerns."
+        content: "Lamento, estou com dificuldades em ligar-me agora. Por favor, tente novamente ou consulte o seu médico se tiver preocupações urgentes."
       }]);
     } finally {
       setIsLoading(false);
@@ -97,14 +97,14 @@ export default function ChatPage() {
             <Sparkles className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="font-bold text-lg">AI Assistant</h2>
+            <h2 className="font-bold text-lg">Assistente IA</h2>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Online & Ready to help
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Online e pronto a ajudar
             </p>
           </div>
         </div>
         <div className="hidden sm:block text-xs text-muted-foreground max-w-xs text-right">
-          Disclaimer: AI advice is informational and not a medical diagnosis.
+          Aviso: O conselho da IA é informativo e não um diagnóstico médico.
         </div>
       </div>
 
@@ -132,7 +132,7 @@ export default function ChatPage() {
                 {msg.isUrgent && (
                   <Alert variant="destructive" className="mb-2 bg-destructive/10 border-destructive/20">
                     <AlertTriangle className="h-5 w-5" />
-                    <AlertTitle className="font-bold">Urgent Situation Detected</AlertTitle>
+                    <AlertTitle className="font-bold">Situação Urgente Detetada</AlertTitle>
                   </Alert>
                 )}
 
@@ -149,7 +149,7 @@ export default function ChatPage() {
                 {msg.recommendations && msg.recommendations.length > 0 && (
                   <div className="bg-accent/10 border border-accent/20 p-4 rounded-xl w-full">
                     <h4 className="font-bold text-sm mb-2 text-accent-foreground flex items-center gap-2">
-                      <Sparkles className="w-4 h-4" /> Recommended Steps:
+                      <Sparkles className="w-4 h-4" /> Passos Recomendados:
                     </h4>
                     <ul className="list-disc list-inside space-y-1 text-sm text-accent-foreground">
                       {msg.recommendations.map((rec, i) => (
@@ -174,7 +174,7 @@ export default function ChatPage() {
               </div>
               <div className="bg-white border p-4 rounded-2xl rounded-tl-none flex items-center gap-2 shadow-sm">
                 <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                <span className="text-muted-foreground italic">Assistant is thinking...</span>
+                <span className="text-muted-foreground italic">O assistente está a pensar...</span>
               </div>
             </div>
           )}
@@ -187,7 +187,7 @@ export default function ChatPage() {
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your health question or symptom here..."
+            placeholder="Escreva a sua pergunta de saúde ou sintoma aqui..."
             className="flex-1 h-14 text-lg rounded-full px-6 border-2 focus-visible:ring-primary"
             disabled={isLoading}
           />

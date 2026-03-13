@@ -9,10 +9,10 @@ export function Navigation() {
   const pathname = usePathname();
 
   const navItems = [
-    { href: '/dashboard', label: 'Home', icon: LayoutDashboard },
-    { href: '/chat', label: 'AI Assistant', icon: MessageCircle },
-    { href: '/logs', label: 'Logs', icon: ClipboardList },
-    { href: '/profile', label: 'Profile', icon: User },
+    { href: '/dashboard', label: 'Início', icon: LayoutDashboard },
+    { href: '/chat', label: 'Assistente IA', icon: MessageCircle },
+    { href: '/logs', label: 'Registos', icon: ClipboardList },
+    { href: '/profile', label: 'Perfil', icon: User },
   ];
 
   return (

@@ -5,8 +5,8 @@ import { Navigation } from '@/components/navigation';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'ChronicAI - Your Health Companion',
-  description: 'AI-powered health tracking and assistant for chronic care.',
+  title: 'ChronicAI - O Seu Companheiro de Saúde',
+  description: 'Acompanhamento de saúde e assistente com IA para cuidados crónicos.',
 };
 
 export default function RootLayout({
@@ -15,7 +15,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="pt">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

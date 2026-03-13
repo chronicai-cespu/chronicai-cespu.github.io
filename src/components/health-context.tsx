@@ -40,23 +40,23 @@ const HealthContext = createContext<HealthContextType | undefined>(undefined);
 
 export function HealthProvider({ children }: { children: React.ReactNode }) {
   const [userProfile, setUserProfile] = useState<UserProfile>({
-    name: 'John Doe',
+    name: 'João Silva',
     age: 68,
-    gender: 'Male',
-    chronicDiseases: ['Hypertension', 'Type 2 Diabetes'],
-    medications: ['Lisinopril 10mg', 'Metformin 500mg'],
-    allergies: ['Penicillin'],
-    recentHealthConcerns: 'Slightly elevated morning blood pressure readings.',
+    gender: 'Masculino',
+    chronicDiseases: ['Hipertensão', 'Diabetes Tipo 2'],
+    medications: ['Lisinopril 10mg', 'Metformina 500mg'],
+    allergies: ['Penicilina'],
+    recentHealthConcerns: 'Leve elevação nas leituras de pressão arterial matinais.',
   });
 
   const [logs, setLogs] = useState<HealthEntry[]>([
-    { id: '1', type: 'bp', value: '135/85', timestamp: new Date(Date.now() - 86400000), notes: 'Morning check' },
-    { id: '2', type: 'activity', value: '30 mins walking', timestamp: new Date(Date.now() - 43200000), notes: 'Park trail' },
+    { id: '1', type: 'bp', value: '135/85', timestamp: new Date(Date.now() - 86400000), notes: 'Check matinal' },
+    { id: '2', type: 'activity', value: '30 min de caminhada', timestamp: new Date(Date.now() - 43200000), notes: 'Trilha no parque' },
   ]);
 
   const [meds, setMeds] = useState<Medication[]>([
-    { id: 'm1', name: 'Lisinopril', dosage: '10mg', frequency: 'Once daily' },
-    { id: 'm2', name: 'Metformin', dosage: '500mg', frequency: 'Twice daily' },
+    { id: 'm1', name: 'Lisinopril', dosage: '10mg', frequency: 'Uma vez ao dia' },
+    { id: 'm2', name: 'Metformina', dosage: '500mg', frequency: 'Duas vezes ao dia' },
   ]);
 
   const addLog = (entry: Omit<HealthEntry, 'id' | 'timestamp'>) => {

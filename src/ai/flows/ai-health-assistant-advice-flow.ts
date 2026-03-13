@@ -12,29 +12,29 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const AiHealthAssistantAdviceInputSchema = z.object({
-  question: z.string().describe('The health-related question from the user.').min(1),
+  question: z.string().describe('A pergunta relacionada com saúde do utilizador.').min(1),
   userProfile: z
     .object({
-      age: z.number().describe('The age of the user.').optional(),
-      gender: z.string().describe('The gender of the user.').optional(),
+      age: z.number().describe('A idade do utilizador.').optional(),
+      gender: z.string().describe('O género do utilizador.').optional(),
       chronicDiseases: z
         .array(z.string())
-        .describe('List of chronic diseases the user has.')
+        .describe('Lista de doenças crónicas do utilizador.')
         .optional(),
       medications: z
         .array(z.string())
-        .describe('List of medications the user is currently taking.')
+        .describe('Lista de medicamentos que o utilizador está a tomar.')
         .optional(),
       allergies: z
         .array(z.string())
-        .describe('List of known allergies.')
+        .describe('Lista de alergias conhecidas.')
         .optional(),
       recentHealthConcerns: z
         .string()
-        .describe('Any recent health concerns or symptoms reported by the user.')
+        .describe('Preocupações de saúde recentes ou sintomas reportados.')
         .optional(),
     })
-    .describe('The comprehensive health profile of the user.'),
+    .describe('O perfil de saúde abrangente do utilizador.'),
 });
 export type AiHealthAssistantAdviceInput = z.infer<
   typeof AiHealthAssistantAdviceInputSchema
@@ -43,13 +43,13 @@ export type AiHealthAssistantAdviceInput = z.infer<
 const AiHealthAssistantAdviceOutputSchema = z.object({
   advice: z
     .string()
-    .describe('Personalized health advice based on the question and profile.')
+    .describe('Conselho de saúde personalizado com base na pergunta e no perfil.')
     .min(1),
   recommendations: z
     .array(z.string())
-    .describe('Specific recommendations for managing health or next steps.')
+    .describe('Recomendações específicas para gerir a saúde ou próximos passos.')
     .optional(),
-  disclaimer: z.string().describe('A medical disclaimer stating that this is not a substitute for professional medical advice.').min(1),
+  disclaimer: z.string().describe('Um aviso médico indicando que isto não substitui aconselhamento médico profissional.').min(1),
 });
 export type AiHealthAssistantAdviceOutput = z.infer<
   typeof AiHealthAssistantAdviceOutputSchema
@@ -65,27 +65,27 @@ const prompt = ai.definePrompt({
   name: 'aiHealthAssistantAdvicePrompt',
   input: {schema: AiHealthAssistantAdviceInputSchema},
   output: {schema: AiHealthAssistantAdviceOutputSchema},
-  prompt: `You are an AI health assistant dedicated to providing personalized, helpful, and empathetic health advice and recommendations. Your primary goal is to empower users to better understand and manage their health conditions based on their provided health profile.
+  prompt: `És um assistente de saúde com IA dedicado a fornecer conselhos e recomendações de saúde personalizados, úteis e empáticos em PORTUGUÊS. O teu principal objetivo é capacitar os utilizadores a compreender e gerir melhor as suas condições de saúde com base no perfil de saúde fornecido.
 
-ALWAYS include a medical disclaimer at the end of your response, clearly stating that your advice is for informational purposes only and not a substitute for professional medical consultation. Never diagnose or prescribe treatment.
+DEVES incluir SEMPRE um aviso médico no final da tua resposta, indicando claramente que o teu conselho é apenas para fins informativos e não substitui uma consulta médica profissional. Nunca diagnostiques nem prescrevas tratamento.
 
-User's Health Profile:
-{{#if userProfile.age}}Age: {{{userProfile.age}}}\n{{/if}}
-{{#if userProfile.gender}}Gender: {{{userProfile.gender}}}\n{{/if}}
+Perfil de Saúde do Utilizador:
+{{#if userProfile.age}}Idade: {{{userProfile.age}}}\n{{/if}}
+{{#if userProfile.gender}}Género: {{{userProfile.gender}}}\n{{/if}}
 {{#if userProfile.chronicDiseases.length}}
-Chronic Diseases: {{#each userProfile.chronicDiseases}}{{{this}}}{{^last}}, {{/last}}{{/each}}\n{{/if}}
+Doenças Crónicas: {{#each userProfile.chronicDiseases}}{{{this}}}{{^last}}, {{/last}}{{/each}}\n{{/if}}
 {{#if userProfile.medications.length}}
-Medications: {{#each userProfile.medications}}{{{this}}}{{^last}}, {{/last}}{{/each}}\n{{/if}}
+Medicamentos: {{#each userProfile.medications}}{{{this}}}{{^last}}, {{/last}}{{/each}}\n{{/if}}
 {{#if userProfile.allergies.length}}
-Allergies: {{#each userProfile.allergies}}{{{this}}}{{^last}}, {{/last}}{{/each}}\n{{/if}}
+Alergias: {{#each userProfile.allergies}}{{{this}}}{{^last}}, {{/last}}{{/each}}\n{{/if}}
 {{#if userProfile.recentHealthConcerns}}
-Recent Health Concerns: {{{userProfile.recentHealthConcerns}}}\n{{/if}}
+Preocupações de Saúde Recentes: {{{userProfile.recentHealthConcerns}}}\n{{/if}}
 
-User's Question: "{{{question}}}"
+Pergunta do Utilizador: "{{{question}}}"
 
-Based on the user's health profile and their question, provide tailored advice and specific recommendations. Focus on actionable insights, general wellness, and educational information related to their conditions. Avoid directly answering questions that require a medical diagnosis or specific treatment plans. Instead, guide them on how to discuss these with their healthcare provider.
+Com base no perfil de saúde do utilizador e na sua pergunta, fornece conselhos personalizados e recomendações específicas EM PORTUGUÊS. Foca-te em informações úteis, bem-estar geral e informação educativa relacionada com as suas condições. Evita responder diretamente a perguntas que exijam um diagnóstico médico ou planos de tratamento específicos. Em vez disso, orienta-os sobre como discutir estes assuntos com o seu profissional de saúde.
 
-Output ONLY in the specified JSON format.`,
+Responde APENAS no formato JSON especificado.`,
 });
 
 const aiHealthAssistantAdviceFlow = ai.defineFlow(

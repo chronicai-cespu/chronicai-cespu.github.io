@@ -21,50 +21,50 @@ export default function ProfilePage() {
 
   const handleSaveProfile = () => {
     setUserProfile(editProfile);
-    toast({ title: "Profile Updated", description: "Your health information has been securely saved." });
+    toast({ title: "Perfil Atualizado", description: "As suas informações de saúde foram guardadas com segurança." });
   };
 
   const handleAddMed = () => {
     if (!newMedName) return;
-    addMed({ name: newMedName, dosage: newMedDose, frequency: 'As needed' });
+    addMed({ name: newMedName, dosage: newMedDose, frequency: 'Conforme necessário' });
     setNewMedName('');
     setNewMedDose('');
-    toast({ title: "Medication Added", description: `${newMedName} added to your list.` });
+    toast({ title: "Medicamento Adicionado", description: `${newMedName} adicionado à sua lista.` });
   };
 
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-8 space-y-8">
       <header>
         <h1 className="text-3xl font-bold font-headline text-secondary flex items-center gap-3">
-          <User className="h-8 w-8 text-primary" /> My Health Profile
+          <User className="h-8 w-8 text-primary" /> O Meu Perfil de Saúde
         </h1>
-        <p className="text-muted-foreground text-lg">Manage your personal information, chronic conditions, and medications.</p>
+        <p className="text-muted-foreground text-lg">Gira as suas informações pessoais, condições crónicas e medicamentos.</p>
       </header>
 
       <div className="grid gap-8">
         {/* Personal Info */}
         <Card className="shadow-md border-none">
           <CardHeader className="bg-primary/5 rounded-t-lg">
-            <CardTitle className="text-xl">Basic Information</CardTitle>
-            <CardDescription>This helps our AI provide more accurate guidance.</CardDescription>
+            <CardTitle className="text-xl">Informações Básicas</CardTitle>
+            <CardDescription>Isto ajuda a nossa IA a fornecer orientações mais precisas.</CardDescription>
           </CardHeader>
           <CardContent className="p-8 grid md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">Nome Completo</Label>
               <Input id="name" value={editProfile.name} onChange={e => setEditProfile({...editProfile, name: e.target.value})} className="h-12" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="age">Age</Label>
+              <Label htmlFor="age">Idade</Label>
               <Input id="age" type="number" value={editProfile.age} onChange={e => setEditProfile({...editProfile, age: parseInt(e.target.value)})} className="h-12" />
             </div>
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="concerns">Recent Health Concerns</Label>
+              <Label htmlFor="concerns">Preocupações de Saúde Recentes</Label>
               <Textarea id="concerns" value={editProfile.recentHealthConcerns} onChange={e => setEditProfile({...editProfile, recentHealthConcerns: e.target.value})} className="min-h-[100px]" />
             </div>
           </CardContent>
           <CardFooter className="bg-muted/30 px-8 py-4 flex justify-end">
             <Button onClick={handleSaveProfile} className="bg-primary hover:bg-primary/90 rounded-full px-8">
-              <Save className="mr-2 h-4 w-4" /> Save Changes
+              <Save className="mr-2 h-4 w-4" /> Guardar Alterações
             </Button>
           </CardFooter>
         </Card>
@@ -73,12 +73,12 @@ export default function ProfilePage() {
         <Card className="shadow-md border-none">
           <CardHeader className="bg-secondary/5 rounded-t-lg">
             <CardTitle className="text-xl flex items-center gap-2">
-              <Stethoscope className="h-5 w-5 text-secondary" /> Medical Conditions
+              <Stethoscope className="h-5 w-5 text-secondary" /> Condições Médicas
             </CardTitle>
           </CardHeader>
           <CardContent className="p-8 space-y-6">
             <div className="space-y-4">
-              <Label>Chronic Conditions</Label>
+              <Label>Condições Crónicas</Label>
               <div className="flex flex-wrap gap-2">
                 {editProfile.chronicDiseases.map(disease => (
                   <Badge key={disease} variant="secondary" className="px-3 py-1 text-sm bg-secondary/10 text-secondary border-secondary/20 flex items-center gap-2">
@@ -86,13 +86,13 @@ export default function ProfilePage() {
                   </Badge>
                 ))}
                 <Button variant="outline" size="sm" className="rounded-full h-8 border-dashed">
-                  <Plus className="h-4 w-4 mr-1" /> Add Condition
+                  <Plus className="h-4 w-4 mr-1" /> Adicionar Condição
                 </Button>
               </div>
             </div>
             
             <div className="space-y-4">
-              <Label>Known Allergies</Label>
+              <Label>Alergias Conhecidas</Label>
               <div className="flex flex-wrap gap-2">
                 {editProfile.allergies.map(allergy => (
                   <Badge key={allergy} variant="outline" className="px-3 py-1 text-sm border-red-200 text-red-600 bg-red-50">
@@ -100,7 +100,7 @@ export default function ProfilePage() {
                   </Badge>
                 ))}
                 <Button variant="outline" size="sm" className="rounded-full h-8 border-dashed">
-                  <Plus className="h-4 w-4 mr-1" /> Add Allergy
+                  <Plus className="h-4 w-4 mr-1" /> Adicionar Alergia
                 </Button>
               </div>
             </div>
@@ -111,7 +111,7 @@ export default function ProfilePage() {
         <Card className="shadow-md border-none">
           <CardHeader className="bg-accent/5 rounded-t-lg">
             <CardTitle className="text-xl flex items-center gap-2">
-              <Pill className="h-5 w-5 text-accent-foreground" /> My Medications
+              <Pill className="h-5 w-5 text-accent-foreground" /> Meus Medicamentos
             </CardTitle>
           </CardHeader>
           <CardContent className="p-8 space-y-6">
@@ -131,12 +131,12 @@ export default function ProfilePage() {
 
             <div className="pt-6 border-t grid md:grid-cols-7 gap-4 items-end">
               <div className="md:col-span-3 space-y-2">
-                <Label htmlFor="med-name">Medication Name</Label>
-                <Input id="med-name" placeholder="e.g. Aspirin" value={newMedName} onChange={e => setNewMedName(e.target.value)} />
+                <Label htmlFor="med-name">Nome do Medicamento</Label>
+                <Input id="med-name" placeholder="ex: Aspirina" value={newMedName} onChange={e => setNewMedName(e.target.value)} />
               </div>
               <div className="md:col-span-3 space-y-2">
-                <Label htmlFor="med-dose">Dosage</Label>
-                <Input id="med-dose" placeholder="e.g. 81mg" value={newMedDose} onChange={e => setNewMedDose(e.target.value)} />
+                <Label htmlFor="med-dose">Dosagem</Label>
+                <Input id="med-dose" placeholder="ex: 81mg" value={newMedDose} onChange={e => setNewMedDose(e.target.value)} />
               </div>
               <div className="md:col-span-1">
                 <Button onClick={handleAddMed} className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
@@ -153,8 +153,8 @@ export default function ProfilePage() {
             <ShieldCheck className="w-8 h-8" />
           </div>
           <div>
-            <h3 className="font-bold text-green-800">Your Data is Secure</h3>
-            <p className="text-sm text-green-700">All health information is stored securely and used only to personalize your health journey with ChronicAI.</p>
+            <h3 className="font-bold text-green-800">Os seus dados estão seguros</h3>
+            <p className="text-sm text-green-700">Todas as informações de saúde são armazenadas de forma segura e usadas apenas para personalizar a sua jornada com o ChronicAI.</p>
           </div>
         </div>
       </div>

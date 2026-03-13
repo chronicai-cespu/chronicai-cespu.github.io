@@ -23,19 +23,17 @@ export default function Home() {
           />
         )}
         <div className="relative z-10 px-4 max-w-4xl mx-auto">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 font-headline leading-tight text-[#CCAC00]">
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 font-headline leading-tight text-secondary">
             Gira a sua Saúde com <span className="text-primary brightness-75">ChronicAI</span>
           </h1>
-          <p className="text-xl md:text-2xl mb-10 text-[#CCAC00] font-bold max-w-2xl mx-auto">
+          <p className="text-xl md:text-2xl mb-10 text-secondary font-bold max-w-2xl mx-auto">
             Um companheiro de saúde dedicado aos seniores. Monitorize sinais vitais, gira a medicação e fale com a IA para aconselhamento personalizado.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {/* Mantém as mesmas cores: Azul primário com texto branco */}
             <Button asChild size="lg" className="text-lg px-10 h-14 rounded-full bg-primary hover:bg-primary/90 text-white">
               <Link href="/dashboard">Ir para o Meu Painel</Link>
             </Button>
-            {/* Alterado para fundo branco */}
-            <Button asChild variant="default" size="lg" className="text-lg px-10 h-14 rounded-full bg-white text-primary hover:bg-gray-100 border-none shadow-lg">
+            <Button asChild variant="default" size="lg" className="text-lg px-10 h-14 rounded-full bg-accent text-accent-foreground hover:bg-accent/90 border-none shadow-lg">
               <Link href="/chat">Falar com o Assistente</Link>
             </Button>
           </div>

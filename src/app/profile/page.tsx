@@ -10,17 +10,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { User, ShieldCheck, Pill, Stethoscope, Plus, Trash2, Save, FileText, Activity } from 'lucide-react';
+import { User, ShieldCheck, Pill, Stethoscope, Save, FileText, Activity } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 export default function ProfilePage() {
-  const { userProfile, setUserProfile, meds, addMed } = useHealth();
+  const { userProfile, setUserProfile } = useHealth();
   const { toast } = useToast();
 
   const [editProfile, setEditProfile] = useState<UserProfile>(userProfile);
-  const [newMedName, setNewMedName] = useState('');
-  const [newMedDose, setNewMedDose] = useState('');
 
   const handleSaveProfile = () => {
     setUserProfile(editProfile);
@@ -35,6 +33,28 @@ export default function ProfilePage() {
       setEditProfile({ ...editProfile, chronicDiseases: [...current, disease] });
     }
   };
+
+  // Helper ranges for dropdowns
+  const ages = Array.from({ length: 93 }, (_, i) => i + 18); // 18 to 110
+  const weights = Array.from({ length: 151 }, (_, i) => i + 40); // 40 to 190 kg
+  const heights = Array.from({ length: 101 }, (_, i) => i + 130); // 130 to 230 cm
+  const educationLevels = [
+    "Sem escolaridade",
+    "Ensino Básico (1º ciclo)",
+    "Ensino Básico (2º ciclo)",
+    "Ensino Básico (3º ciclo)",
+    "Ensino Secundário",
+    "Ensino Superior (Licenciatura)",
+    "Pós-graduação / Mestrado",
+    "Doutoramento"
+  ];
+  const householdSizes = [
+    "Mora sozinho(a)",
+    "2 pessoas",
+    "3 pessoas",
+    "4 pessoas",
+    "5 ou mais pessoas"
+  ];
 
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-8 space-y-8 pb-24">
@@ -59,10 +79,21 @@ export default function ProfilePage() {
               <Label htmlFor="name">Nome Completo</Label>
               <Input id="name" value={editProfile.name} onChange={e => setEditProfile({ ...editProfile, name: e.target.value })} className="h-12" />
             </div>
+            
             <div className="space-y-2">
               <Label htmlFor="age">Idade</Label>
-              <Input id="age" type="number" value={editProfile.age} onChange={e => setEditProfile({ ...editProfile, age: parseInt(e.target.value) || 0 })} className="h-12" />
+              <Select value={editProfile.age.toString()} onValueChange={v => setEditProfile({ ...editProfile, age: parseInt(v) })}>
+                <SelectTrigger className="h-12">
+                  <SelectValue placeholder="Escolha a idade..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {ages.map(age => (
+                    <SelectItem key={age} value={age.toString()}>{age} anos</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="gender">Género</Label>
               <Select value={editProfile.gender} onValueChange={v => setEditProfile({ ...editProfile, gender: v })}>
@@ -76,14 +107,35 @@ export default function ProfilePage() {
                 </SelectContent>
               </Select>
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="education">Escolaridade</Label>
-              <Input id="education" value={editProfile.education} onChange={e => setEditProfile({ ...editProfile, education: e.target.value })} className="h-12" placeholder="ex: Ensino Secundário" />
+              <Select value={editProfile.education} onValueChange={v => setEditProfile({ ...editProfile, education: v })}>
+                <SelectTrigger className="h-12">
+                  <SelectValue placeholder="Selecione o nível..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {educationLevels.map(level => (
+                    <SelectItem key={level} value={level}>{level}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="household">Agregado Familiar</Label>
-              <Input id="household" value={editProfile.householdSize} onChange={e => setEditProfile({ ...editProfile, householdSize: e.target.value })} className="h-12" placeholder="ex: 2 pessoas" />
+              <Select value={editProfile.householdSize} onValueChange={v => setEditProfile({ ...editProfile, householdSize: v })}>
+                <SelectTrigger className="h-12">
+                  <SelectValue placeholder="Selecione o tamanho..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {householdSizes.map(size => (
+                    <SelectItem key={size} value={size}>{size}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="healthunit">Unidade de Saúde / Local</Label>
               <Input id="healthunit" value={editProfile.healthUnit} onChange={e => setEditProfile({ ...editProfile, healthUnit: e.target.value })} className="h-12" />
@@ -101,12 +153,32 @@ export default function ProfilePage() {
           <CardContent className="p-8 grid md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="weight">Peso (kg)</Label>
-              <Input id="weight" type="number" value={editProfile.weight} onChange={e => setEditProfile({ ...editProfile, weight: parseFloat(e.target.value) || 0 })} className="h-12" />
+              <Select value={editProfile.weight.toString()} onValueChange={v => setEditProfile({ ...editProfile, weight: parseInt(v) })}>
+                <SelectTrigger className="h-12">
+                  <SelectValue placeholder="Escolha o peso..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {weights.map(w => (
+                    <SelectItem key={w} value={w.toString()}>{w} kg</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="height">Altura (cm)</Label>
-              <Input id="height" type="number" value={editProfile.height} onChange={e => setEditProfile({ ...editProfile, height: parseInt(e.target.value) || 0 })} className="h-12" />
+              <Select value={editProfile.height.toString()} onValueChange={v => setEditProfile({ ...editProfile, height: parseInt(v) })}>
+                <SelectTrigger className="h-12">
+                  <SelectValue placeholder="Escolha a altura..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {heights.map(h => (
+                    <SelectItem key={h} value={h.toString()}>{h} cm</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="alcohol">Consumo de Álcool</Label>
               <Select value={editProfile.alcoholFreq} onValueChange={v => setEditProfile({ ...editProfile, alcoholFreq: v })}>

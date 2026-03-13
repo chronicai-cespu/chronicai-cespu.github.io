@@ -26,8 +26,8 @@ export default function Home() {
         )}
         <div className="relative z-10 px-4 max-w-4xl mx-auto">
           <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-xl">
-              <AppLogo className="text-primary w-10 h-10" />
+            <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-xl">
+              <AppLogo className="text-primary w-12 h-12" />
             </div>
           </div>
           <h1 className="text-5xl md:text-7xl font-bold mb-6 font-headline leading-tight text-white">
@@ -37,7 +37,7 @@ export default function Home() {
             Um companheiro de saúde dedicado aos seniores. Monitorize sinais vitais, gira a medicação e fale com a IA para aconselhamento personalizado.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="text-lg px-10 h-14 rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg">
+            <Button asChild size="lg" className="text-lg px-10 h-14 rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg border-none">
               <Link href="/dashboard">Ir para o Meu Painel</Link>
             </Button>
             <Button asChild size="lg" className="text-lg px-10 h-14 rounded-full bg-accent text-accent-foreground hover:bg-accent/90 border-none shadow-lg">

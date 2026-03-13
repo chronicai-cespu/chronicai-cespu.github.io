@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useRef, useEffect } from 'react';
@@ -8,9 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
-import { MessageCircle, Send, User, Bot, AlertTriangle, Loader2, Sparkles, PhoneCall } from 'lucide-react';
+import { Send, User, Bot, Loader2, Sparkles, PhoneCall } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AppLogo } from '@/components/app-logo';
 
 type Message = {
   role: 'user' | 'assistant';
@@ -48,7 +50,6 @@ export default function ChatPage() {
     setIsLoading(true);
 
     try {
-      // First, check for urgency
       const urgentCheck: UrgentCareGuidanceOutput = await urgentCareGuidance({ symptoms: userMsg });
 
       if (urgentCheck.isUrgent) {
@@ -58,7 +59,6 @@ export default function ChatPage() {
           isUrgent: true
         }]);
       } else {
-        // If not urgent, get regular advice
         const response: AiHealthAssistantAdviceOutput = await aiHealthAssistantAdvice({
           question: userMsg,
           userProfile: {
@@ -79,7 +79,6 @@ export default function ChatPage() {
         }]);
       }
     } catch (error) {
-      console.error(error);
       setMessages(prev => [...prev, {
         role: 'assistant',
         content: "Lamento, ocorreu um erro na ligação. Se tiver uma preocupação urgente, por favor ligue para o SNS 24 (808 24 24 24) ou 112."
@@ -93,8 +92,8 @@ export default function ChatPage() {
     <div className="flex flex-col h-[calc(100vh-64px)] bg-background">
       <div className="bg-primary/5 py-4 px-6 border-b flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white shadow-sm">
-            <Sparkles className="w-6 h-6" />
+          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-sm">
+            <AppLogo className="w-7 h-7" />
           </div>
           <div>
             <h2 className="font-bold text-lg">Assistente ChronicAI</h2>

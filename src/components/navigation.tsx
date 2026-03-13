@@ -1,9 +1,11 @@
+
 "use client"
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, MessageCircle, User, ClipboardList, Activity } from 'lucide-react';
+import { LayoutDashboard, MessageCircle, User, ClipboardList } from 'lucide-react';
+import { AppLogo } from '@/components/app-logo';
 
 export function Navigation() {
   const pathname = usePathname();
@@ -21,8 +23,8 @@ export function Navigation() {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link href="/" className="flex-shrink-0 flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Activity className="text-white w-5 h-5" />
+              <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-sm">
+                <AppLogo className="text-white w-6 h-6" />
               </div>
               <span className="font-bold text-xl text-primary font-headline hidden sm:block">ChronicAI</span>
             </Link>

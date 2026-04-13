@@ -8,7 +8,7 @@ Este projeto faz parte da iniciativa:
 **Referência:** ChronicAI-GI2-CESPU-2025
 
 ## Unidade de Investigação
-**Digital Health & Technology (DiTech Health)** (antiga "IA & Saúde")
+**Digital Health & Technology (DiTech Health)**
 Pertencente ao **GI2- Gabinete para a Investigação & a Inovação** da **CESPU - Cooperativa de Ensino Superior Politécnico e Universitário**.
 
 ## Funcionalidades Principais

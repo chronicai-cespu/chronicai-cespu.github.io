@@ -38,20 +38,16 @@ export default function ResearcherPage() {
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   
-  // Edição de Paciente
   const [isEditingPatient, setIsEditingPatient] = useState(false);
   const [editPatientData, setEditPatientData] = useState<any>(null);
   
-  // Justificação de Alterações
   const [isJustifyOpen, setIsJustifyOpen] = useState(false);
   const [justification, setJustification] = useState('');
   const [pendingAction, setPendingAction] = useState<{type: 'profile' | 'record', data: any} | null>(null);
 
-  // Edição de Registos
   const [editingRecord, setEditingRecord] = useState<any>(null);
   const [isEditRecordOpen, setIsEditRecordOpen] = useState(false);
 
-  // Eliminação (Apenas Admin)
   const [isDeleteReasonDialogOpen, setIsDeleteReasonDialogOpen] = useState(false);
   const [deletionReason, setDeletionReason] = useState('');
   const [logToDelete, setLogToDelete] = useState<any>(null);

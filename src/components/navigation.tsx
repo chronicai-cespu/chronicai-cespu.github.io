@@ -119,8 +119,7 @@ export function Navigation() {
                     </div>
                     {assignedCode && (
                       (item.href === '/profile') ||
-                      (item.href === '/admin' && role === 'admin') ||
-                      (item.href === '/researcher' && role === 'researcher')
+                      (item.href === '/admin' && role === 'admin')
                     ) && (
                       <span className="text-[10px] font-mono leading-none mt-0.5 opacity-70">
                         {assignedCode}

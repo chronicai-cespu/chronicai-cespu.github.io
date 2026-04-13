@@ -8,7 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FlaskConical, Search, Eye, FileText, Activity, HeartPulse, Scale, Calendar, Pencil, Trash2, History, AlertCircle } from 'lucide-react';
+import { FlaskConical, Search, Eye, FileText, Activity, HeartPulse, Scale, Calendar, Plus, Trash2, History, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -199,7 +199,7 @@ export default function ResearcherPage() {
                           asChild
                         >
                           <Link href={`/logs?patientId=${patient.userId}`}>
-                            <Pencil className="mr-2 h-4 w-4" /> Inserir Registos
+                            <Plus className="mr-2 h-4 w-4" /> Inserir Registos
                           </Link>
                         </Button>
                       )}

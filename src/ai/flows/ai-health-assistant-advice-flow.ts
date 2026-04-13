@@ -63,12 +63,6 @@ const prompt = ai.definePrompt({
   name: 'aiHealthAssistantAdvicePrompt',
   input: {schema: AiHealthAssistantAdviceInputSchema},
   output: {schema: AiHealthAssistantAdviceOutputSchema},
-  config: {
-    thinkingConfig: {
-      includeThoughts: true,
-      thinkingLevel: 'HIGH'
-    }
-  },
   prompt: `És um assistente de saúde com IA em PORTUGUÊS DE PORTUGAL (PT-PT).
 
 ### DIRETRIZES:

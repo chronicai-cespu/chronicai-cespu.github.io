@@ -34,7 +34,7 @@ export function Navigation() {
     },
     { 
       href: '/researcher', 
-      label: 'Lista de utilizadores', 
+      label: 'Lista de Pacientes', 
       icon: FlaskConical,
       activeColor: "border-purple-500 text-purple-500",
       hoverColor: "hover:text-purple-500 hover:border-purple-500",

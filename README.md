@@ -1,6 +1,15 @@
+
 # ChronicAI - O Seu Companheiro de Saúde
 
-O **ChronicAI** é uma aplicação Next.js moderna concebida para ajudar seniores a gerir as suas condições de saúde crónicas (como Diabetes, Hipertensão e Colesterol) de forma autónoma e informada.
+O **ChronicAI** é uma aplicação Next.js moderna concebida para ajudar a gerir condições de saúde crónicas (como Diabetes, Hipertensão e Colesterol) de forma autónoma e informada.
+
+Este projeto faz parte da iniciativa:
+**"ChronicAI – Integrating Self-Care and Artificial Intelligence in Chronic Disease Management"**
+**Referência:** ChronicAI-GI2-CESPU-2025
+
+## Unidade de Investigação
+**Digital Health & Technology (DiTech Health)** (antiga "IA & Saúde")
+Pertencente ao **GI2- Gabinete para a Investigação & a Inovação** da **CESPU - Cooperativa de Ensino Superior Politécnico e Universitário**.
 
 ## Funcionalidades Principais
 
@@ -11,6 +20,10 @@ O **ChronicAI** é uma aplicação Next.js moderna concebida para ajudar seniore
 - **Segurança de Emergência:** A IA identifica sintomas de urgência e guia o utilizador para o 112 ou SNS 24.
 - **Sistema Multi-Papel:** Diferenciação entre Pacientes (pXX), Investigadores (rXX) e Administrador.
 - **Login Flexível:** Acesso via Código, Email, Telemóvel ou Data de Nascimento.
+
+## Contacto
+Para questões relacionadas com o projeto ou suporte:
+**Email:** chronicai.cespu@gmail.com
 
 ## Como Começar (Desenvolvimento Local)
 
@@ -29,24 +42,8 @@ Após descarregar o código do Firebase Studio:
    npm run dev
    ```
 
-4. **Executar o Genkit (IA):**
-   ```bash
-   npm run genkit:dev
-   ```
-
-## Tecnologias Utilizadas
-
-- **Frontend:** Next.js 15, React, Tailwind CSS.
-- **Componentes:** ShadCN UI, Lucide Icons, Recharts.
-- **IA:** Google Gemini via Genkit.
-- **Backend:** Configurado para Firebase App Hosting e Firestore.
-
 ## Aviso Médico
-
 O ChronicAI fornece apenas informações informativas e conselhos de bem-estar. Não substitui o diagnóstico ou tratamento por um profissional de saúde. Em caso de emergência, contacte sempre o 112 ou o SNS 24 (808 24 24 24).
 
 ---
-### Histórico de Versões
-- **2026.04.13_tabs_autenticacao_roles**: Implementação de tabs de administração/investigação, sistema de roles e login multi-identificador.
-
-© 2026 ChronicAI Health. Todos os direitos reservados.
+© 2026 ChronicAI Health | DiTech Health (CESPU). Todos os direitos reservados.

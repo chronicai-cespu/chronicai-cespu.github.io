@@ -1,8 +1,9 @@
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ShieldCheck, HeartPulse, Sparkles } from 'lucide-react';
+import { ShieldCheck, HeartPulse, Sparkles, Mail, ExternalLink } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { AppLogo } from '@/components/app-logo';
 
@@ -76,6 +77,37 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Institutional Section */}
+      <section className="py-16 bg-muted/30">
+        <div className="max-w-5xl mx-auto px-4 text-center space-y-8">
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-secondary italic">Contexto do Projeto</h2>
+            <p className="text-muted-foreground leading-relaxed max-w-3xl mx-auto">
+              Esta aplicação faz parte do projeto <strong>"ChronicAI – Integrating Self-Care and Artificial Intelligence in Chronic Disease Management"</strong> 
+              (Ref: <span className="font-mono text-xs">ChronicAI-GI2-CESPU-2025</span>).
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Desenvolvido pela unidade de investigação <strong>"Digital Health & Technology" (DiTech Health)</strong>, 
+              integrada no <strong>GI2 - Gabinete para a Investigação & a Inovação</strong> da 
+              <strong> CESPU - Cooperativa de Ensino Superior Politécnico e Universitário</strong>.
+            </p>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild variant="outline" className="rounded-full border-primary text-primary hover:bg-primary/5">
+              <a href="mailto:chronicai.cespu@gmail.com" className="flex items-center gap-2">
+                <Mail className="w-4 h-4" /> Contactar a Equipa
+              </a>
+            </Button>
+            <Button asChild variant="ghost" className="rounded-full">
+              <a href="https://forms.gle/placeholder" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                <ExternalLink className="w-4 h-4" /> Formulário de Contacto
+              </a>
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {/* Call to Action */}
       <section className="py-20 bg-accent/20 border-y border-accent/30">
         <div className="max-w-4xl mx-auto px-4 text-center">
@@ -90,9 +122,14 @@ export default function Home() {
       </section>
 
       <footer className="py-12 bg-white/80 border-t mt-auto">
-        <div className="max-w-7xl mx-auto px-4 text-center text-muted-foreground">
-          <p className="mb-2 font-bold">© 2026 ChronicAI Health. Todos os direitos reservados.</p>
-          <p className="text-sm">Aviso Médico: O ChronicAI fornece informações informativas e não substitui uma consulta médica profissional.</p>
+        <div className="max-w-7xl mx-auto px-4 text-center text-muted-foreground space-y-4">
+          <div>
+            <p className="font-bold">© 2026 ChronicAI Health. Todos os direitos reservados.</p>
+            <p className="text-xs">DiTech Health (ex- IA & Saúde) | CESPU</p>
+          </div>
+          <p className="text-[10px] leading-tight max-w-2xl mx-auto italic">
+            Aviso Médico: O ChronicAI fornece apenas informações informativas e conselhos de bem-estar. Não substitui o diagnóstico, tratamento ou aconselhamento por um profissional de saúde.
+          </p>
         </div>
       </footer>
     </div>

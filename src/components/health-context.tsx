@@ -1,6 +1,9 @@
+
 "use client"
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
+import { doc, collection, query, where, orderBy, limit } from 'firebase/firestore';
 
 export type Medication = {
   id: string;
@@ -13,8 +16,9 @@ export type HealthEntry = {
   id: string;
   type: 'bp' | 'activity' | 'weight';
   value: string;
-  timestamp: Date;
+  timestamp: any;
   notes?: string;
+  patientProfileId: string;
 };
 
 export type UserProfile = {
@@ -31,101 +35,74 @@ export type UserProfile = {
   physicalActivityLevel: string;
   motivationToChange: boolean;
   chronicDiseases: string[];
-  diabetesInfo?: {
-    duration: string;
-    insulinDependent: boolean;
-    meds: string;
-    symptoms: string[];
-  };
-  hypertensionInfo?: {
-    highestReading: string;
-    regularReading: string;
-    meds: string;
-    symptoms: string;
-  };
-  cholesterolInfo?: {
-    highestReading: string;
-    regularReading: string;
-    highTriglycerides: boolean;
-    meds: string;
-  };
+  diabetesInfo?: any;
+  hypertensionInfo?: any;
+  cholesterolInfo?: any;
   otherConditions: string;
-  allergies: string[];
-  recentHealthConcerns: string;
+  assignedCode?: string;
+  role?: string;
 };
 
 interface HealthContextType {
-  userProfile: UserProfile;
+  userProfile: UserProfile | null;
   setUserProfile: (profile: UserProfile) => void;
   logs: HealthEntry[];
-  addLog: (entry: Omit<HealthEntry, 'id' | 'timestamp'>) => void;
   meds: Medication[];
-  addMed: (med: Omit<Medication, 'id'>) => void;
+  role: string | null;
+  assignedCode: string | null;
+  isLoading: boolean;
 }
 
 const HealthContext = createContext<HealthContextType | undefined>(undefined);
 
 export function HealthProvider({ children }: { children: React.ReactNode }) {
-  const [userProfile, setUserProfile] = useState<UserProfile>({
-    name: 'João Silva',
-    age: 68,
-    gender: 'Masculino',
-    education: 'Ensino Básico',
-    householdSize: '2 pessoas',
-    healthUnit: 'Centro de Saúde de Arroios',
-    weight: 82,
-    height: 175,
-    alcoholFreq: 'Ocasional',
-    tobaccoFreq: 'Não fumador',
-    physicalActivityLevel: 'Baixa',
-    motivationToChange: true,
-    chronicDiseases: ['Hipertensão', 'Diabetes'],
-    diabetesInfo: {
-      duration: '10 anos',
-      insulinDependent: false,
-      meds: 'Metformina',
-      symptoms: ['Fadiga']
-    },
-    hypertensionInfo: {
-      highestReading: '160/95',
-      regularReading: '135/85',
-      meds: 'Lisinopril',
-      symptoms: 'Nenhuns'
-    },
-    otherConditions: '',
-    allergies: ['Penicilina'],
-    recentHealthConcerns: 'Leve elevação nas leituras de pressão arterial matinais.',
-  });
+  const { user, isUserLoading } = useUser();
+  const db = useFirestore();
 
-  const [logs, setLogs] = useState<HealthEntry[]>([
-    { id: '1', type: 'bp', value: '135/85', timestamp: new Date(Date.now() - 86400000), notes: 'Check matinal' },
-    { id: '2', type: 'activity', value: '30 min de caminhada', timestamp: new Date(Date.now() - 43200000), notes: 'Trilha no parque' },
-  ]);
+  const userDocRef = useMemoFirebase(() => user ? doc(db!, 'users', user.uid) : null, [db, user]);
+  const { data: userData, isLoading: isUserDataLoading } = useDoc(userDocRef);
 
-  const [meds, setMeds] = useState<Medication[]>([
-    { id: 'm1', name: 'Lisinopril', dosage: '10mg', frequency: 'Uma vez ao dia' },
-    { id: 'm2', name: 'Metformina', dosage: '500mg', frequency: 'Duas vezes ao dia' },
-  ]);
+  const profileDocRef = useMemoFirebase(() => user ? doc(db!, 'patient_profiles', user.uid) : null, [db, user]);
+  const { data: profileData, isLoading: isProfileLoading } = useDoc(profileDocRef);
 
-  const addLog = (entry: Omit<HealthEntry, 'id' | 'timestamp'>) => {
-    const newEntry: HealthEntry = {
-      ...entry,
-      id: Math.random().toString(36).substr(2, 9),
-      timestamp: new Date(),
-    };
-    setLogs((prev) => [newEntry, ...prev]);
-  };
+  const logsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return query(
+      collection(db, 'patient_profiles', user.uid, 'clinical_records'),
+      orderBy('recordedAt', 'desc'),
+      limit(20)
+    );
+  }, [db, user]);
+  
+  const { data: logsData } = useCollection(logsQuery);
 
-  const addMed = (med: Omit<Medication, 'id'>) => {
-    const newMed: Medication = {
-      ...med,
-      id: Math.random().toString(36).substr(2, 9),
-    };
-    setMeds((prev) => [...prev, newMed]);
+  const [localProfile, setLocalProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    if (profileData) {
+      setLocalProfile(profileData as any);
+    }
+  }, [profileData]);
+
+  const value = {
+    userProfile: localProfile,
+    setUserProfile: (p: UserProfile) => setLocalProfile(p),
+    logs: (logsData || []).map(l => ({
+      id: l.id,
+      type: l.recordType,
+      value: l.value,
+      timestamp: l.recordedAt?.toDate ? l.recordedAt.toDate() : new Date(l.recordedAt),
+      notes: l.notes,
+      patientProfileId: l.patientProfileId
+    })) as HealthEntry[],
+    meds: [], // To be implemented with Firestore subcollection
+    role: userData?.role || null,
+    assignedCode: userData?.assignedCode || null,
+    isLoading: isUserLoading || isUserDataLoading || isProfileLoading
   };
 
   return (
-    <HealthContext.Provider value={{ userProfile, setUserProfile, logs, addLog, meds, addMed }}>
+    <HealthContext.Provider value={value}>
       {children}
     </HealthContext.Provider>
   );

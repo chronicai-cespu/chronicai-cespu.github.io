@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI health assistant that provides personalized advice and recommendations
@@ -24,6 +25,8 @@ const AiHealthAssistantAdviceInputSchema = z.object({
       hypertensionInfo: z.any().optional(),
       cholesterolInfo: z.any().optional(),
       recentHealthConcerns: z.string().optional(),
+      medications: z.array(z.any()).optional(),
+      allergies: z.array(z.string()).optional(),
     })
     .describe('O perfil de saúde abrangente do utilizador.'),
 });
@@ -60,6 +63,12 @@ const prompt = ai.definePrompt({
   name: 'aiHealthAssistantAdvicePrompt',
   input: {schema: AiHealthAssistantAdviceInputSchema},
   output: {schema: AiHealthAssistantAdviceOutputSchema},
+  config: {
+    thinkingConfig: {
+      includeThoughts: true,
+      thinkingLevel: 'HIGH'
+    }
+  },
   prompt: `És um assistente de saúde com IA em PORTUGUÊS DE PORTUGAL (PT-PT).
 
 ### DIRETRIZES:
@@ -74,6 +83,7 @@ Dados: Idade {{userProfile.age}}, Peso {{userProfile.weight}}kg, Altura {{userPr
 Atividade: {{userProfile.physicalActivityLevel}}. Motivação: {{#if userProfile.motivationToChange}}Sim{{else}}Não{{/if}}.
 Detalhes Diabetes: {{{userProfile.diabetesInfo}}}
 Detalhes Hipertensão: {{{userProfile.hypertensionInfo}}}
+Detalhes Colesterol: {{{userProfile.cholesterolInfo}}}
 
 Pergunta: "{{{question}}}"`,
 });

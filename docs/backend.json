@@ -1,445 +1,58 @@
+
 {
   "entities": {
     "User": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
-      "description": "Represents a user account within the ChronicAI application, managing roles and basic contact information. Passwords and sensitive authentication details are handled by an external authentication system.",
+      "description": "Utilizador central do sistema com papel e código atribuído.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the User entity."
-        },
-        "email": {
-          "type": "string",
-          "description": "The user's primary email address, used for communication and account recovery.",
-          "format": "email"
-        },
-        "mobileNumber": {
-          "type": "string",
-          "description": "The user's mobile phone number, optional for contact."
-        },
-        "role": {
-          "type": "string",
-          "description": "The role assigned to the user, determining their access and permissions.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "assignedCode": {
-          "type": "string",
-          "description": "A unique, system-assigned code for the user (e.g., 'p01' for patients, 'r01' for researchers)."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the user account was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the user account was last updated.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "mobileNumber": { "type": "string" },
+        "role": { "type": "string", "enum": ["patient", "admin", "researcher"] },
+        "assignedCode": { "type": "string", "description": "Código pXX ou rXX" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "email",
-        "role",
-        "assignedCode",
-        "createdAt",
-        "updatedAt"
-      ]
-    },
-    "ChronicDisease": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "ChronicDisease",
-      "type": "object",
-      "description": "Represents a chronic health condition that a patient may have.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the ChronicDisease entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The common name of the chronic disease (e.g., 'Hypertension', 'Diabetes Type 2')."
-        },
-        "description": {
-          "type": "string",
-          "description": "A brief description or additional details about the chronic disease."
-        }
-      },
-      "required": [
-        "id",
-        "name"
-      ]
-    },
-    "Medication": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Medication",
-      "type": "object",
-      "description": "Represents a specific medication a patient is currently taking or has taken.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Medication entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the medication."
-        },
-        "dosage": {
-          "type": "string",
-          "description": "The dosage instructions for the medication (e.g., '10mg', '2 pills')."
-        },
-        "frequency": {
-          "type": "string",
-          "description": "How often the medication should be taken (e.g., 'Once daily', 'Every 8 hours')."
-        },
-        "startDate": {
-          "type": "string",
-          "description": "The date when the patient started taking this medication.",
-          "format": "date"
-        },
-        "endDate": {
-          "type": "string",
-          "description": "The date when the patient stopped taking this medication (optional, if still active).",
-          "format": "date"
-        },
-        "notes": {
-          "type": "string",
-          "description": "Any additional notes or instructions for the medication."
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "dosage",
-        "frequency",
-        "startDate"
-      ]
+      "required": ["id", "email", "role", "assignedCode"]
     },
     "PatientProfile": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "PatientProfile",
       "type": "object",
-      "description": "Stores personal and clinical health information for a patient user.",
+      "description": "Dados clínicos e pessoais do paciente.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the PatientProfile entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to the User entity for this patient. (Relationship: User 1:1 PatientProfile)"
-        },
-        "dateOfBirth": {
-          "type": "string",
-          "description": "The patient's date of birth.",
-          "format": "date"
-        },
-        "gender": {
-          "type": "string",
-          "description": "The patient's gender."
-        },
-        "heightCm": {
-          "type": "number",
-          "description": "The patient's height in centimeters."
-        },
-        "weightKg": {
-          "type": "number",
-          "description": "The patient's weight in kilograms."
-        },
-        "bloodType": {
-          "type": "string",
-          "description": "The patient's blood type (e.g., 'A+', 'O-')."
-        },
-        "allergies": {
-          "type": "array",
-          "description": "A list of known allergies for the patient.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "chronicDiseaseIds": {
-          "type": "array",
-          "description": "References to ChronicDisease entities associated with this patient. (Relationship: PatientProfile N:N ChronicDisease)",
-          "items": {
-            "type": "string"
-          }
-        },
-        "medicationIds": {
-          "type": "array",
-          "description": "References to Medication entities currently taken by this patient. (Relationship: PatientProfile N:N Medication)",
-          "items": {
-            "type": "string"
-          }
-        },
-        "emergencyContactName": {
-          "type": "string",
-          "description": "The name of the patient's emergency contact."
-        },
-        "emergencyContactPhone": {
-          "type": "string",
-          "description": "The phone number of the patient's emergency contact."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the patient profile was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the patient profile was last updated.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "userId",
-        "dateOfBirth",
-        "gender",
-        "createdAt",
-        "updatedAt"
-      ]
-    },
-    "ClinicalRecord": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "ClinicalRecord",
-      "type": "object",
-      "description": "Captures various clinical measurements and health logs for a patient over time.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the ClinicalRecord entity."
-        },
-        "patientProfileId": {
-          "type": "string",
-          "description": "Reference to the PatientProfile this record belongs to. (Relationship: PatientProfile 1:N ClinicalRecord)"
-        },
-        "recordType": {
-          "type": "string",
-          "description": "The type of clinical measurement (e.g., 'bloodPressure', 'bloodSugar', 'heartRate', 'weight', 'temperature')."
-        },
-        "value": {
-          "type": "string",
-          "description": "The measured value, represented as a string to accommodate various formats (e.g., '120/80', '110', '72')."
-        },
-        "unit": {
-          "type": "string",
-          "description": "The unit of measurement for the recorded value (e.g., 'mmHg', 'mg/dL', 'bpm', 'kg', '°C')."
-        },
-        "notes": {
-          "type": "string",
-          "description": "Any additional notes or context for this clinical record."
-        },
-        "recordedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the clinical measurement was recorded.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "patientProfileId",
-        "recordType",
-        "value",
-        "unit",
-        "recordedAt"
-      ]
-    },
-    "ActivityLog": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "ActivityLog",
-      "type": "object",
-      "description": "Logs physical activity and exercise sessions performed by a patient.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the ActivityLog entity."
-        },
-        "patientProfileId": {
-          "type": "string",
-          "description": "Reference to the PatientProfile this activity log belongs to. (Relationship: PatientProfile 1:N ActivityLog)"
-        },
-        "activityType": {
-          "type": "string",
-          "description": "The type of physical activity (e.g., 'walking', 'running', 'swimming', 'yoga', 'cycling', 'weightlifting')."
-        },
-        "durationMinutes": {
-          "type": "number",
-          "description": "The duration of the activity session in minutes."
-        },
-        "distanceKm": {
-          "type": "number",
-          "description": "The distance covered during the activity in kilometers (if applicable)."
-        },
-        "caloriesBurned": {
-          "type": "number",
-          "description": "An estimate of calories burned during the activity."
-        },
-        "intensity": {
-          "type": "string",
-          "description": "The perceived or measured intensity level of the activity (e.g., 'low', 'moderate', 'high')."
-        },
-        "notes": {
-          "type": "string",
-          "description": "Any additional notes or observations about the activity."
-        },
-        "recordedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the activity was performed or recorded.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "patientProfileId",
-        "activityType",
-        "durationMinutes",
-        "recordedAt"
-      ]
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "age": { "type": "number" },
+        "gender": { "type": "string" },
+        "education": { "type": "string" },
+        "householdSize": { "type": "string" },
+        "healthUnit": { "type": "string" },
+        "weight": { "type": "number" },
+        "height": { "type": "number" },
+        "chronicDiseases": { "type": "array", "items": { "type": "string" } },
+        "assignedCode": { "type": "string" }
+      }
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["password"]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/users/{userId}",
-        "definition": {
-          "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Core user accounts storing essential profile information, roles, and system-assigned codes. The `userId` in the path corresponds to the Firebase Authentication UID. The `role` and `assignedCode` fields are crucial for authorization and user identification."
-        }
-      },
-      {
-        "path": "/roles_admin/{adminId}",
-        "definition": {
-          "entityName": "RoleAssignment",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Indicates administrative role assignment. The existence of a document at this path signifies the user (identified by `adminId` matching their UID) holds the 'admin' role. This is used for database access control (DBAC) without custom claims.",
-          "params": [
-            {
-              "name": "adminId",
-              "description": "The unique Firebase Authentication UID of a user assigned the 'admin' role."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/roles_researcher/{researcherId}",
-        "definition": {
-          "entityName": "RoleAssignment",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Indicates researcher role assignment. The existence of a document at this path signifies the user (identified by `researcherId` matching their UID) holds the 'researcher' role. This is used for database access control (DBAC) without custom claims.",
-          "params": [
-            {
-              "name": "researcherId",
-              "description": "The unique Firebase Authentication UID of a user assigned the 'researcher' role."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/chronic_diseases/{diseaseId}",
-        "definition": {
-          "entityName": "ChronicDisease",
-          "schema": {
-            "$ref": "#/backend/entities/ChronicDisease"
-          },
-          "description": "Global lookup collection for standardized chronic disease definitions. Accessible for reading by all authenticated users, with full CRUD controlled by 'admin' users.",
-          "params": [
-            {
-              "name": "diseaseId",
-              "description": "The unique identifier for a specific chronic disease."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/medications/{medicationId}",
-        "definition": {
-          "entityName": "Medication",
-          "schema": {
-            "$ref": "#/backend/entities/Medication"
-          },
-          "description": "Global lookup collection for standardized medication definitions. Accessible for reading by all authenticated users, with full CRUD controlled by 'admin' users.",
-          "params": [
-            {
-              "name": "medicationId",
-              "description": "The unique identifier for a specific medication."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/patient_profiles/{patientUserId}",
-        "definition": {
-          "entityName": "PatientProfile",
-          "schema": {
-            "$ref": "#/backend/entities/PatientProfile"
-          },
-          "description": "Stores detailed personal and clinical health information for a specific patient. The `patientUserId` in the path is the Firebase Authentication UID of the patient. The `userId` field within the document MUST match the `patientUserId` from the path for authorization independence.",
-          "params": [
-            {
-              "name": "patientUserId",
-              "description": "The unique Firebase Authentication UID of the patient owner of this profile. This also serves as the document ID for the 1:1 relationship with the patient user."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/patient_profiles/{patientUserId}/clinical_records/{recordId}",
-        "definition": {
-          "entityName": "ClinicalRecord",
-          "schema": {
-            "$ref": "#/backend/entities/ClinicalRecord"
-          },
-          "description": "Stores individual clinical measurements and health logs for a specific patient. The `patientProfileId` field within the document MUST match the `patientUserId` from the path for authorization independence, enabling direct, atomic rule checks.",
-          "params": [
-            {
-              "name": "patientUserId",
-              "description": "The unique Firebase Authentication UID of the patient whose clinical record this belongs to."
-            },
-            {
-              "name": "recordId",
-              "description": "The unique identifier for a specific clinical record entry."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/patient_profiles/{patientUserId}/activity_logs/{logId}",
-        "definition": {
-          "entityName": "ActivityLog",
-          "schema": {
-            "$ref": "#/backend/entities/ActivityLog"
-          },
-          "description": "Stores individual physical activity and exercise sessions logged by a specific patient. The `patientProfileId` field within the document MUST match the `patientUserId` from the path for authorization independence, enabling direct, atomic rule checks.",
-          "params": [
-            {
-              "name": "patientUserId",
-              "description": "The unique Firebase Authentication UID of the patient whose activity log this belongs to."
-            },
-            {
-              "name": "logId",
-              "description": "The unique identifier for a specific activity log entry."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "The recommended Firestore structure is designed to adhere strictly to the CORE DESIGN PRINCIPLES and DESIGN STRATEGY MANDATES, prioritizing Authorization Independence, Structural Segregation, and DBAC. Authentication will leverage Firebase Authentication for user accounts, while roles and permissions are managed within Firestore to enable robust and debuggable security rules.\n\n**Authorization Independence (CRITICAL):**\nThis is achieved primarily through denormalization. For documents within subcollections like `clinical_records` and `activity_logs`, the `patientProfileId` field (which corresponds to the `patientUserId` from the parent path) is explicitly stored within each document. This eliminates the need for expensive and rule-breaking `get()` calls to parent documents to determine ownership or permissions. For instance, a rule for a `clinical_record` document can directly check `request.auth.uid == resource.data.patientProfileId` for patient self-access, or `exists(/databases/$(database)/documents/roles_researcher/$(request.auth.uid))` for researcher access. This ensures atomic rule evaluation and avoids dependencies on ancestor data.\n\n**QAPs (Rules are not Filters):**\n1.  **Structural Segregation:** Data with different security postures is kept in separate collections. For example, user profiles (`/users/{userId}`), role assignments (`/roles_admin`, `/roles_researcher`), global reference data (`/chronic_diseases`, `/medications`), and patient-specific data (`/patient_profiles/{patientUserId}`) are all distinct. This allows for clear, explicit rules that grant access to an entire collection or subcollection, rather than attempting to filter results based on complex conditions within a single collection.\n2.  **Path-Based Ownership:** For patient-specific data, a clear hierarchical path is used, `/patient_profiles/{patientUserId}/...`. A `patient` can only `list` documents within their *own* specific subcollections (`/patient_profiles/$(request.auth.uid)/clinical_records`). The `patientUserId` in the path segment directly maps to `request.auth.uid`, making the list operation inherently secure and predictable, as it only ever returns data the user is authorized to see.\n3.  **Role-Based Access for Researchers/Admins:** Researchers and Admins, by virtue of their roles (checked via existence in `/roles_researcher/{uid}` or `/roles_admin/{uid}`), are granted `list` access to all `patient_profiles` and their subcollections. Since their authorization is global for patient data, `list` operations correctly return all accessible documents without server-side filtering being required by the rules. This fulfills the QAPs by ensuring that any data returned by a `list` query is data that the requesting user is fully authorized to see.\n\n**DBAC (No Custom Claims):**\nUser roles (`admin`, `researcher`, `patient`) are stored as documents in dedicated collections (`/roles_admin/{uid}`, `/roles_researcher/{uid}`). The existence of a document at these paths for `request.auth.uid` is used to determine a user's role, making rule evaluation straightforward and transparent.\n\n**Structural Overview:**\n*   `users/{userId}`: Stores the core `User` entity, including their assigned role and unique code. The `id` of this document is the Firebase `auth.uid`.\n*   `roles_admin/{adminId}`, `roles_researcher/{researcherId}`: Placeholder documents indicating user roles. `adminId`/`researcherId` will be the user's `auth.uid`.\n*   `chronic_diseases/{diseaseId}`, `medications/{medicationId}`: Global reference data, readable by all, managed by admins.\n*   `patient_profiles/{patientUserId}`: The main entry point for patient-specific data. `patientUserId` is the `auth.uid` of the patient. This document includes the `userId` field which is denormalized from the path for authorization independence.\n*   `patient_profiles/{patientUserId}/clinical_records/{recordId}`: Subcollection for individual clinical records. Each document includes `patientProfileId` (which is `patientUserId`) for authorization independence.\n*   `patient_profiles/{patientUserId}/activity_logs/{logId}`: Subcollection for individual activity logs. Each document includes `patientProfileId` (which is `patientUserId`) for authorization independence."
+    "/users/{userId}": {
+      "schema": { "$ref": "#/backend/entities/User" },
+      "description": "Perfil base de utilizador."
+    },
+    "/patient_profiles/{patientId}": {
+      "schema": { "$ref": "#/backend/entities/PatientProfile" },
+      "description": "Dados clínicos."
+    },
+    "/roles_admin/{uid}": {
+      "schema": { "type": "object", "properties": {} },
+      "description": "Marcador de administrador."
+    },
+    "/roles_researcher/{uid}": {
+      "schema": { "type": "object", "properties": {} },
+      "description": "Marcador de investigador."
+    }
   }
 }

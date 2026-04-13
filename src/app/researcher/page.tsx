@@ -8,9 +8,11 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FlaskConical, Search, Eye, FileText, Activity, HeartPulse, Scale, Calendar, ArrowLeft, Pencil } from 'lucide-react';
+import { FlaskConical, Search, Eye, FileText, Activity, HeartPulse, Scale, Calendar, ArrowLeft, Pencil, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
+import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import {
   Dialog,
@@ -27,6 +29,7 @@ import { cn } from '@/lib/utils';
 export default function ResearcherPage() {
   const { role } = useHealth();
   const db = useFirestore();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -65,6 +68,18 @@ export default function ResearcherPage() {
   const handleViewDetails = (patient: any) => {
     setSelectedPatient(patient);
     setIsDetailsOpen(true);
+  };
+
+  const handleDeleteLog = (logId: string) => {
+    if (!db || !selectedPatient) return;
+    if (window.confirm("Tem a certeza que deseja apagar este registo clínico? Esta ação não pode ser revertida.")) {
+      const logRef = doc(db, 'patient_profiles', selectedPatient.userId, 'clinical_records', logId);
+      deleteDocumentNonBlocking(logRef);
+      toast({
+        title: "Registo Apagado",
+        description: "O registo clínico foi removido com sucesso.",
+      });
+    }
   };
 
   return (
@@ -237,6 +252,7 @@ export default function ResearcherPage() {
                         <TableHead>Tipo</TableHead>
                         <TableHead>Valor</TableHead>
                         <TableHead>Notas</TableHead>
+                        {role === 'admin' && <TableHead className="text-right">Ações</TableHead>}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -259,18 +275,30 @@ export default function ResearcherPage() {
                           <TableCell className="text-xs text-muted-foreground italic max-w-[200px] truncate">
                             {log.notes || '---'}
                           </TableCell>
+                          {role === 'admin' && (
+                            <TableCell className="text-right">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => handleDeleteLog(log.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          )}
                         </TableRow>
                       ))}
                       {isLogsLoading && (
                         <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8">
+                          <TableCell colSpan={role === 'admin' ? 5 : 4} className="text-center py-8">
                             A carregar histórico...
                           </TableCell>
                         </TableRow>
                       )}
                       {!isLogsLoading && (!patientLogs || patientLogs.length === 0) && (
                         <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={role === 'admin' ? 5 : 4} className="text-center py-8 text-muted-foreground">
                             Ainda não existem registos clínicos para este paciente.
                           </TableCell>
                         </TableRow>

@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useHealth } from '@/components/health-context';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, limit, serverTimestamp } from 'firebase/firestore';
@@ -13,19 +13,20 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { HeartPulse, Activity, Scale, ClipboardList, CheckCircle2, AlertTriangle, Loader2, User } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { HeartPulse, Activity, Scale, ClipboardList, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
-export default function LogsPage() {
+function LogsPageContent() {
   const { user } = useUser();
   const { role, userProfile, isLoading: isContextLoading } = useHealth();
   const db = useFirestore();
   const { toast } = useToast();
-  const router = useRouter();
+  const searchParams = useSearchParams();
+  const patientIdFromUrl = searchParams.get('patientId');
   
   const [targetPatientId, setTargetPatientId] = useState<string>('');
   const [systolic, setSystolic] = useState<string>('');
@@ -41,10 +42,12 @@ export default function LogsPage() {
 
   // Definir ID alvo para o registo e histórico
   useEffect(() => {
-    if (role !== 'admin' && user) {
+    if (role === 'admin' && patientIdFromUrl) {
+      setTargetPatientId(patientIdFromUrl);
+    } else if (role !== 'admin' && user) {
       setTargetPatientId(user.uid);
     }
-  }, [role, user]);
+  }, [role, user, patientIdFromUrl]);
 
   // Carregar logs do paciente selecionado (ou do próprio utilizador)
   const logsQuery = useMemoFirebase(() => {
@@ -105,7 +108,7 @@ export default function LogsPage() {
     }
     if (type === 'weight') {
       if (!weight) {
-        toast({ title: "Erro", description: "Por favor, selecione o seu peso.", variant: "destructive" });
+        toast({ title: "Erro", description: "Por favor, selecione o peso.", variant: "destructive" });
         return;
       }
       value = `${weight} kg`;
@@ -123,7 +126,7 @@ export default function LogsPage() {
 
       toast({
         title: "Sucesso",
-        description: role === 'admin' ? "Registo inserido para o paciente." : "O seu registo foi guardado com sucesso!",
+        description: role === 'admin' ? "Registo clínico inserido com sucesso." : "O seu registo foi guardado com sucesso!",
       });
 
       if (type === 'bp') { setSystolic(''); setDiastolic(''); }
@@ -274,7 +277,7 @@ export default function LogsPage() {
           <Card className="shadow-md border-none h-full bg-secondary/5">
             <CardHeader className="border-b bg-white rounded-t-lg">
               <CardTitle className="text-xl flex items-center justify-between">
-                <span>Registos Recentes</span>
+                <span>Histórico de Medições</span>
                 {targetPatientId && role === 'admin' && (
                   <Badge variant="outline" className="text-[10px] font-mono">
                     {allPatients?.find(p => p.userId === targetPatientId)?.assignedCode}
@@ -315,7 +318,7 @@ export default function LogsPage() {
                   ))
                 ) : (
                   <div className="text-center py-10">
-                    <p className="text-muted-foreground italic">
+                    <p className="text-muted-foreground italic text-sm">
                       {targetPatientId ? "Nenhum registo encontrado para este paciente." : "Selecione um paciente para ver o histórico."}
                     </p>
                   </div>
@@ -352,5 +355,18 @@ function LogFields({ notes, setNotes, onLog, isAdmin }: { notes: string, setNote
         <CheckCircle2 className="mr-2 h-6 w-6" /> {isAdmin ? "Confirmar Registo Clínico" : "Guardar no Histórico"}
       </Button>
     </div>
+  );
+}
+
+export default function LogsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        <p className="text-muted-foreground italic">A carregar...</p>
+      </div>
+    }>
+      <LogsPageContent />
+    </Suspense>
   );
 }

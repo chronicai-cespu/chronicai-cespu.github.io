@@ -8,9 +8,10 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FlaskConical, Search, Eye, FileText, Activity, HeartPulse, Scale, Calendar, ArrowLeft } from 'lucide-react';
+import { FlaskConical, Search, Eye, FileText, Activity, HeartPulse, Scale, Calendar, ArrowLeft, Pencil } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
+import Link from 'next/link';
 import {
   Dialog,
   DialogContent,
@@ -100,7 +101,7 @@ export default function ResearcherPage() {
                 <TableHead>Idade</TableHead>
                 <TableHead>Género</TableHead>
                 <TableHead>Doenças Crónicas</TableHead>
-                <TableHead className="text-right">Detalhes</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -120,14 +121,28 @@ export default function ResearcherPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-secondary hover:text-secondary hover:bg-secondary/10"
-                      onClick={() => handleViewDetails(patient)}
-                    >
-                      <Eye className="mr-2 h-4 w-4" /> Ver Registos
-                    </Button>
+                    <div className="flex flex-col items-end gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-secondary hover:text-secondary hover:bg-secondary/10 w-full justify-start"
+                        onClick={() => handleViewDetails(patient)}
+                      >
+                        <Eye className="mr-2 h-4 w-4" /> Ver Registos
+                      </Button>
+                      {role === 'admin' && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-primary hover:text-primary hover:bg-primary/10 w-full justify-start"
+                          asChild
+                        >
+                          <Link href={`/logs?patientId=${patient.userId}`}>
+                            <Pencil className="mr-2 h-4 w-4" /> Inserir Registos
+                          </Link>
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -164,7 +179,7 @@ export default function ResearcherPage() {
                 </DialogDescription>
               </div>
               <Badge variant="outline" className="bg-white/20 text-white border-white/40">
-                Registado em: {selectedPatient?.birthDate}
+                Data Nascimento: {selectedPatient?.birthDate}
               </Badge>
             </div>
           </DialogHeader>

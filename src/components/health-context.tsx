@@ -24,6 +24,7 @@ export type HealthEntry = {
 export type UserProfile = {
   name: string;
   age: number;
+  birthDate: string;
   gender: string;
   education: string;
   householdSize: string;

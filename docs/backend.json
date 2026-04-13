@@ -23,6 +23,7 @@
         "userId": { "type": "string" },
         "name": { "type": "string" },
         "age": { "type": "number" },
+        "birthDate": { "type": "string", "format": "date", "description": "Data de nascimento em formato DD/MM/AAAA" },
         "gender": { "type": "string" },
         "education": { "type": "string" },
         "householdSize": { "type": "string" },

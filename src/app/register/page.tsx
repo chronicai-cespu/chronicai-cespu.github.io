@@ -14,12 +14,14 @@ import { AppLogo } from '@/components/app-logo';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { collection, getDocs, query, where, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc } from 'firebase/firestore';
+import { Loader2 } from 'lucide-react';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mobile, setMobile] = useState('');
+  const [birthDate, setBirthDate] = useState('');
   const [role, setRole] = useState<'patient' | 'researcher'>('patient');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -63,6 +65,7 @@ export default function RegisterPage() {
           userId: user.uid,
           name: '',
           age: 0,
+          birthDate: birthDate || '',
           gender: '',
           education: '',
           householdSize: '',
@@ -122,7 +125,11 @@ export default function RegisterPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="mobile">Telemóvel (Opcional)</Label>
-              <Input id="mobile" type="tel" value={mobile} onChange={(e) => setMobile(e.target.value)} className="h-12" />
+              <Input id="mobile" type="tel" placeholder="912345678" value={mobile} onChange={(e) => setMobile(e.target.value)} className="h-12" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="birthDate">Data de Nascimento (Opcional)</Label>
+              <Input id="birthDate" type="text" placeholder="DD/MM/AAAA" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} className="h-12" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Palavra-passe</Label>
@@ -131,7 +138,7 @@ export default function RegisterPage() {
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
             <Button type="submit" disabled={isSubmitting} className="w-full h-12 text-lg rounded-full bg-secondary hover:bg-secondary/90 text-white">
-              {isSubmitting ? "A criar conta..." : "Registar"}
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Registar"}
             </Button>
             <p className="text-sm text-center text-muted-foreground">
               Já tem conta? <Link href="/login" className="text-primary font-bold hover:underline">Entre aqui</Link>

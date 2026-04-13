@@ -19,7 +19,23 @@ export default function ProfilePage() {
   const { userProfile, setUserProfile } = useHealth();
   const { toast } = useToast();
 
-  const [editProfile, setEditProfile] = useState<UserProfile>(userProfile);
+  const [editProfile, setEditProfile] = useState<UserProfile>(userProfile || {
+    name: '',
+    age: 0,
+    birthDate: '',
+    gender: '',
+    education: '',
+    householdSize: '',
+    healthUnit: '',
+    weight: 0,
+    height: 0,
+    alcoholFreq: '',
+    tobaccoFreq: '',
+    physicalActivityLevel: '',
+    motivationToChange: false,
+    chronicDiseases: [],
+    otherConditions: ''
+  });
 
   const handleSaveProfile = () => {
     setUserProfile(editProfile);
@@ -83,6 +99,11 @@ export default function ProfilePage() {
               <Input id="name" value={editProfile.name} onChange={e => setEditProfile({ ...editProfile, name: e.target.value })} className="h-12" />
             </div>
             
+            <div className="space-y-2">
+              <Label htmlFor="birthDate">Data de Nascimento (DD/MM/AAAA)</Label>
+              <Input id="birthDate" value={editProfile.birthDate} onChange={e => setEditProfile({ ...editProfile, birthDate: e.target.value })} className="h-12" placeholder="DD/MM/AAAA" />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="age">Idade</Label>
               <Select value={editProfile.age.toString()} onValueChange={v => setEditProfile({ ...editProfile, age: parseInt(v) })}>
@@ -358,14 +379,14 @@ export default function ProfilePage() {
                       placeholder="ex: 240"
                       className="h-12 bg-white"
                       value={editProfile.cholesterolInfo?.highestReading}
-                      onChange={e => setEditProfile({...editProfile, cholesterolInfo: { ...editProfile.cholesterolInfo!, highestReading: e.target.value, regularReading: editProfile.cholesterolInfo?.regularReading || '', highTriglycerides: editProfile.cholesterolInfo?.highTriglycerides || false, meds: editProfile.cholesterolInfo?.meds || '' }})}
+                      onChange={e => setEditProfile({...editProfile, cholesterolInfo: { ...editProfile.cholesterolInfo!, highestReading: e.target.value }})}
                     />
                   </div>
                   <div className="flex items-center space-x-2 pt-6">
                     <Checkbox 
                       id="triglycerides" 
                       checked={editProfile.cholesterolInfo?.highTriglycerides}
-                      onCheckedChange={checked => setEditProfile({...editProfile, cholesterolInfo: { ...editProfile.cholesterolInfo!, highTriglycerides: checked === true, highestReading: editProfile.cholesterolInfo?.highestReading || '', regularReading: editProfile.cholesterolInfo?.regularReading || '', meds: editProfile.cholesterolInfo?.meds || '' }})}
+                      onCheckedChange={checked => setEditProfile({...editProfile, cholesterolInfo: { ...editProfile.cholesterolInfo!, highTriglycerides: checked === true }})}
                     />
                     <Label htmlFor="triglycerides" className="text-sm font-medium cursor-pointer">Triglicéridos elevados?</Label>
                   </div>
@@ -375,7 +396,7 @@ export default function ProfilePage() {
                       placeholder="ex: Atorvastatina, Sinvastatina"
                       className="h-12 bg-white"
                       value={editProfile.cholesterolInfo?.meds}
-                      onChange={e => setEditProfile({...editProfile, cholesterolInfo: { ...editProfile.cholesterolInfo!, meds: e.target.value, highestReading: editProfile.cholesterolInfo?.highestReading || '', regularReading: editProfile.cholesterolInfo?.regularReading || '', highTriglycerides: editProfile.cholesterolInfo?.highTriglycerides || false }})}
+                      onChange={e => setEditProfile({...editProfile, cholesterolInfo: { ...editProfile.cholesterolInfo!, meds: e.target.value }})}
                     />
                   </div>
                 </div>

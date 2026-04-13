@@ -77,6 +77,19 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Call to Action */}
+      <section className="py-20 bg-accent/20 border-y border-accent/30">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold mb-6 text-accent-foreground">Pronto para assumir o controlo da sua saúde?</h2>
+          <p className="text-lg text-muted-foreground mb-10">
+            Junte-se a milhares de seniores que gerem as suas condições crónicas com confiança.
+          </p>
+          <Button asChild size="lg" className="rounded-full px-12 h-14 bg-accent text-accent-foreground hover:bg-accent/90 shadow-md">
+            <Link href="/profile">Configurar o seu Perfil</Link>
+          </Button>
+        </div>
+      </section>
+
       {/* Institutional Section */}
       <section className="py-16 bg-muted/30">
         <div className="max-w-5xl mx-auto px-4 text-center space-y-8">
@@ -105,19 +118,6 @@ export default function Home() {
               </a>
             </Button>
           </div>
-        </div>
-      </section>
-
-      {/* Call to Action */}
-      <section className="py-20 bg-accent/20 border-y border-accent/30">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-6 text-accent-foreground">Pronto para assumir o controlo da sua saúde?</h2>
-          <p className="text-lg text-muted-foreground mb-10">
-            Junte-se a milhares de seniores que gerem as suas condições crónicas com confiança.
-          </p>
-          <Button asChild size="lg" className="rounded-full px-12 h-14 bg-accent text-accent-foreground hover:bg-accent/90 shadow-md">
-            <Link href="/profile">Configurar o seu Perfil</Link>
-          </Button>
         </div>
       </section>
 

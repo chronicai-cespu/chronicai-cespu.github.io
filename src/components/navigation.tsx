@@ -80,15 +80,10 @@ export function Navigation() {
               <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border">
                 <AppLogo className="w-7 h-7" />
               </div>
-              <div className="flex flex-col -space-y-1">
+              <div className="flex flex-col">
                 <span className="font-bold text-xl font-headline hidden sm:block bg-gradient-to-br from-primary to-secondary bg-clip-text text-transparent">
                   ChronicAI
                 </span>
-                {assignedCode && (
-                  <span className="text-[10px] font-bold text-muted-foreground hidden sm:block">
-                    Código: {assignedCode}
-                  </span>
-                )}
               </div>
             </Link>
           </div>

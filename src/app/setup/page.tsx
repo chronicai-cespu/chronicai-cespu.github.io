@@ -21,8 +21,10 @@ export default function SetupPage() {
     setStatus('');
 
     try {
-      const email = 'chronicai.cespu@gmail.com';
-      const password = 'ditechAI2526';
+      // Garantir que as strings estão limpas e sem aspas extras
+      const email = 'chronicai.cespu@gmail.com'.trim();
+      const password = 'ditechAI2526'.trim();
+      const assignedCode = 'admin2526'.trim();
       
       // 1. Criar utilizador na Autenticação
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -33,7 +35,7 @@ export default function SetupPage() {
         id: uid,
         email: email,
         role: 'admin',
-        assignedCode: 'admin2526',
+        assignedCode: assignedCode,
         createdAt: new Date().toISOString()
       });
 

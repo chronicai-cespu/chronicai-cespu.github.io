@@ -37,14 +37,13 @@ export default function AdminPage() {
     if (window.confirm(`Tem a certeza que deseja apagar o utilizador ${code}?`)) {
       const userRef = doc(db!, 'users', userId);
       deleteDocumentNonBlocking(userRef);
-      // Also should delete profile and subcollections in a real app
       toast({ title: "Utilizador Apagado", description: `O utilizador ${code} foi removido.` });
     }
   };
 
   const filteredUsers = allUsers?.filter(u => 
     u.assignedCode.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    u.email.toLowerCase().includes(searchTerm.toLowerCase())
+    (u.email && u.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -93,7 +92,7 @@ export default function AdminPage() {
               {filteredUsers?.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-bold">{user.assignedCode}</TableCell>
-                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.email ? user.email.replace(/^"|"$/g, '') : 'N/A'}</TableCell>
                   <TableCell>
                     <Badge variant={user.role === 'admin' ? 'destructive' : user.role === 'researcher' ? 'secondary' : 'outline'}>
                       {user.role.toUpperCase()}

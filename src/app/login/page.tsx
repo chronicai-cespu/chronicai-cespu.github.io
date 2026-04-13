@@ -33,40 +33,56 @@ export default function LoginPage() {
     const loginPass = identifier === 'admin2526' ? 'ditechAI2526' : password;
 
     try {
-      // 1. Determine the email based on the identifier
+      if (!db) throw new Error("Erro de ligação à base de dados.");
+
+      // 1. Caso especial: Username Admin
       if (identifier === 'admin2526') {
         loginEmail = 'chronicai.cespu@gmail.com';
-      } else if (identifier.includes('@')) {
+      } 
+      // 2. Identificador por Email
+      else if (identifier.includes('@')) {
         loginEmail = identifier;
-      } else {
-        // Search Firestore for assignedCode, mobileNumber, or birthDate
-        const usersRef = collection(db!, 'users');
-        const profilesRef = collection(db!, 'patient_profiles');
+      } 
+      // 3. Pesquisa em Firestore (Código, Telemóvel ou Data de Nascimento)
+      else {
+        const usersRef = collection(db, 'users');
+        const profilesRef = collection(db, 'patient_profiles');
 
-        // Check assignedCode
+        // Pesquisa por Código de Utilizador (pXX ou rXX)
         const qCode = query(usersRef, where('assignedCode', '==', identifier), limit(1));
         const snapCode = await getDocs(qCode);
         
         if (!snapCode.empty) {
           loginEmail = snapCode.docs[0].data().email;
         } else {
-          // Check mobileNumber
+          // Pesquisa por Telemóvel
           const qMobile = query(usersRef, where('mobileNumber', '==', identifier), limit(1));
           const snapMobile = await getDocs(qMobile);
           
           if (!snapMobile.empty) {
             loginEmail = snapMobile.docs[0].data().email;
           } else {
-            // Check birthDate in profiles
-            const qBirth = query(profilesRef, where('birthDate', '==', identifier), limit(1));
-            const snapBirth = await getDocs(qBirth);
-            
-            if (!snapBirth.empty) {
-              const userId = snapBirth.docs[0].data().userId;
-              const qUser = query(usersRef, where('id', '==', userId), limit(1));
-              const snapUser = await getDocs(qUser);
-              if (!snapUser.empty) {
-                loginEmail = snapUser.docs[0].data().email;
+            // Pesquisa por Data de Nascimento (apenas se o formato for DD/MM/AAAA)
+            const isBirthDatePattern = /^\d{2}\/\d{2}\/\d{4}$/.test(identifier);
+            if (isBirthDatePattern) {
+              const qBirth = query(profilesRef, where('birthDate', '==', identifier), limit(1));
+              const snapBirth = await getDocs(qBirth);
+              
+              if (!snapBirth.empty) {
+                const profileData = snapBirth.docs[0].data();
+                const userId = profileData.userId;
+                
+                // Obter o utilizador para validar o papel (Excluir Admin da pesquisa por data de nascimento)
+                const qUser = query(usersRef, where('id', '==', userId), limit(1));
+                const snapUser = await getDocs(qUser);
+                
+                if (!snapUser.empty) {
+                  const userData = snapUser.docs[0].data();
+                  if (userData.role === 'admin') {
+                    throw new Error("A data de nascimento não é um identificador válido para administradores.");
+                  }
+                  loginEmail = userData.email;
+                }
               }
             }
           }
@@ -105,17 +121,20 @@ export default function LoginPage() {
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="identifier">Utilizador, Email, Telemóvel ou Data de Nascimento</Label>
+              <Label htmlFor="identifier">Identificador</Label>
               <Input 
                 id="identifier" 
                 type="text" 
-                placeholder="ex: p01, jose@email.com, 912345678 ou DD/MM/AAAA" 
+                placeholder="Código, Email, Telemóvel ou DD/MM/AAAA" 
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 required
-                className="h-12"
+                className="h-12 text-lg"
                 disabled={isLoggingIn}
               />
+              <p className="text-[10px] text-muted-foreground">
+                Nota: Administradores devem usar username, email ou telemóvel.
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Palavra-passe</Label>
@@ -125,17 +144,17 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="h-12"
+                className="h-12 text-lg"
                 disabled={isLoggingIn}
               />
             </div>
             <p className="text-xs text-muted-foreground text-center">
-              Esqueceu-se da senha? Contacte <a href="mailto:chronicai.cespu@gmail.com" className="text-primary hover:underline">chronicai.cespu@gmail.com</a>
+              Recuperação: <a href="mailto:chronicai.cespu@gmail.com" className="text-primary hover:underline font-bold">chronicai.cespu@gmail.com</a>
             </p>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" disabled={isLoggingIn} className="w-full h-12 text-lg rounded-full bg-primary hover:bg-primary/90">
-              {isLoggingIn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Entrar"}
+            <Button type="submit" disabled={isLoggingIn} className="w-full h-14 text-xl rounded-full bg-primary hover:bg-primary/90 shadow-md">
+              {isLoggingIn ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Entrar"}
             </Button>
             <p className="text-sm text-center text-muted-foreground">
               Ainda não tem conta? <Link href="/register" className="text-secondary font-bold hover:underline">Registe-se aqui</Link>

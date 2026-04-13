@@ -29,4 +29,4 @@ Para questões relacionadas com o projeto ou suporte:
 O ChronicAI fornece apenas informações informativas e conselhos de bem-estar. Não substitui o diagnóstico ou tratamento por um profissional de saúde. Em caso de emergência, contacte sempre o 112 ou o SNS 24 (808 24 24 24).
 
 ---
-© 2026 ChronicAI Health | DiTech (CESPU) | LASI (Centro Algoritmi - UMinho). Todos os direitos reservados.
+© 2026 ChronicAI | DiTech (CESPU) | LASI (Centro Algoritmi - UMinho). Todos os direitos reservados.

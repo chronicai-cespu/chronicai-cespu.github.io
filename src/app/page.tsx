@@ -181,7 +181,7 @@ export default function Home() {
       <footer className="py-12 bg-white/80 border-t mt-auto">
         <div className="max-w-7xl mx-auto px-4 text-center text-muted-foreground space-y-4">
           <div>
-            <p className="font-bold">© 2026 ChronicAI Health. Todos os direitos reservados.</p>
+            <p className="font-bold">© 2026 ChronicAI. Todos os direitos reservados.</p>
             <p className="text-xs">DiTech | CESPU | LASI | Centro Algoritmi | Universidade do Minho</p>
           </div>
           <p className="text-[10px] leading-tight max-w-2xl mx-auto italic">

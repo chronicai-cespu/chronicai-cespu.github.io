@@ -12,7 +12,7 @@ export function Navigation() {
   const navItems = [
     { 
       href: '/dashboard', 
-      label: 'Início', 
+      label: 'Os meus dados', 
       icon: Home,
       activeColor: "border-primary text-primary",
       hoverColor: "hover:text-primary hover:border-primary"

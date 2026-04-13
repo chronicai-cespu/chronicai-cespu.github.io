@@ -41,6 +41,12 @@
       "description": "Logótipo Universidade do Minho",
       "imageUrl": "https://picsum.photos/seed/uminho-logo/300/100",
       "imageHint": "university logo"
+    },
+    {
+      "id": "logo-algoritmi",
+      "description": "Logótipo Centro Algoritmi",
+      "imageUrl": "https://picsum.photos/seed/algoritmi-logo/300/100",
+      "imageHint": "research center"
     }
   ]
 }

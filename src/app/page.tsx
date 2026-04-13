@@ -10,6 +10,8 @@ export default function Home() {
   const heroImage = PlaceHolderImages.find(img => img.id === 'health-hero');
   const ditechLogo = PlaceHolderImages.find(img => img.id === 'logo-ditech');
   const cespuLogo = PlaceHolderImages.find(img => img.id === 'logo-cespu');
+  const lasiLogo = PlaceHolderImages.find(img => img.id === 'logo-lasi');
+  const uminhoLogo = PlaceHolderImages.find(img => img.id === 'logo-uminho');
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -93,24 +95,29 @@ export default function Home() {
 
       {/* Institutional Section */}
       <section className="py-16 bg-muted/30">
-        <div className="max-w-5xl mx-auto px-4 text-center space-y-12">
+        <div className="max-w-7xl mx-auto px-4 text-center space-y-12">
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-secondary italic">Contexto do Projeto</h2>
-            <p className="text-muted-foreground leading-relaxed max-w-3xl mx-auto">
+            <p className="text-muted-foreground leading-relaxed max-w-4xl mx-auto">
               Esta aplicação faz parte do projeto <strong>"ChronicAI – Integrating Self-Care and Artificial Intelligence in Chronic Disease Management"</strong> 
               (<span>ChronicAI-GI2-CESPU-2025</span>).
             </p>
-            <p className="text-sm text-muted-foreground">
-              Desenvolvido pela unidade de investigação <strong>"Digital Health & Technology" (DiTech Health)</strong>, 
-              integrada no <strong>GI2 - Gabinete para a Investigação & a Inovação</strong> da 
-              <strong> CESPU - Cooperativa de Ensino Superior Politécnico e Universitário</strong>.
-            </p>
+            <div className="text-sm text-muted-foreground max-w-4xl mx-auto space-y-4">
+              <p>
+                O projeto resulta de uma colaboração entre a unidade de investigação 
+                <strong> "Digital Health & Technology" (DiTech Health)</strong>, integrada no 
+                <strong> GI2 - Gabinete para a Investigação & a Inovação</strong> da 
+                <strong> CESPU - Cooperativa de Ensino Superior Politécnico e Universitário</strong>, 
+                e o <strong>Intelligent Systems Associate Laboratory (LASI)</strong>, do centro de investigação 
+                <strong> Centro Algoritmi</strong> da <strong>Universidade do Minho</strong>.
+              </p>
+            </div>
           </div>
 
           {/* Logos Display Area */}
-          <div className="flex flex-col md:flex-row items-center justify-center gap-12 opacity-90">
+          <div className="flex flex-wrap items-center justify-center gap-12 opacity-90">
             {ditechLogo && (
-              <div className="relative w-48 h-24">
+              <div className="relative w-40 h-20">
                 <Image 
                   src={ditechLogo.imageUrl} 
                   alt={ditechLogo.description} 
@@ -121,13 +128,35 @@ export default function Home() {
               </div>
             )}
             {cespuLogo && (
-              <div className="relative w-48 h-16">
+              <div className="relative w-40 h-16">
                 <Image 
                   src={cespuLogo.imageUrl} 
                   alt={cespuLogo.description} 
                   fill 
                   className="object-contain" 
                   data-ai-hint={cespuLogo.imageHint}
+                />
+              </div>
+            )}
+            {lasiLogo && (
+              <div className="relative w-40 h-16">
+                <Image 
+                  src={lasiLogo.imageUrl} 
+                  alt={lasiLogo.description} 
+                  fill 
+                  className="object-contain" 
+                  data-ai-hint={lasiLogo.imageHint}
+                />
+              </div>
+            )}
+            {uminhoLogo && (
+              <div className="relative w-40 h-16">
+                <Image 
+                  src={uminhoLogo.imageUrl} 
+                  alt={uminhoLogo.description} 
+                  fill 
+                  className="object-contain" 
+                  data-ai-hint={uminhoLogo.imageHint}
                 />
               </div>
             )}
@@ -152,7 +181,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 text-center text-muted-foreground space-y-4">
           <div>
             <p className="font-bold">© 2026 ChronicAI Health. Todos os direitos reservados.</p>
-            <p className="text-xs">DiTech Health | CESPU</p>
+            <p className="text-xs">DiTech Health | CESPU | LASI | Centro Algoritmi | Universidade do Minho</p>
           </div>
           <p className="text-[10px] leading-tight max-w-2xl mx-auto italic">
             Aviso Médico: O ChronicAI fornece apenas informações informativas e conselhos de bem-estar. Não substitui o diagnóstico, tratamento ou aconselhamento por um profissional de saúde.

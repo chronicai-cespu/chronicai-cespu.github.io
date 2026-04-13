@@ -1,4 +1,3 @@
-
 {
   "placeholderImages": [
     {
@@ -29,6 +28,18 @@
       "id": "logo-cespu",
       "description": "Logótipo CESPU",
       "imageUrl": "https://picsum.photos/seed/cespu-logo/300/100",
+      "imageHint": "university logo"
+    },
+    {
+      "id": "logo-lasi",
+      "description": "Logótipo LASI",
+      "imageUrl": "https://picsum.photos/seed/lasi-logo/300/100",
+      "imageHint": "research lab"
+    },
+    {
+      "id": "logo-uminho",
+      "description": "Logótipo Universidade do Minho",
+      "imageUrl": "https://picsum.photos/seed/uminho-logo/300/100",
       "imageHint": "university logo"
     }
   ]

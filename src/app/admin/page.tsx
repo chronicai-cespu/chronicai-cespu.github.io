@@ -1,9 +1,8 @@
-
 "use client"
 
 import { useHealth } from '@/components/health-context';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, doc } from 'firebase/firestore';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
 export default function AdminPage() {
   const { role } = useHealth();
@@ -50,14 +50,16 @@ export default function AdminPage() {
     <div className="max-w-7xl mx-auto p-4 sm:p-8 space-y-8">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-red-600 flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-primary flex items-center gap-3">
             <ShieldAlert className="h-8 w-8" /> Painel de Administração
           </h1>
           <p className="text-muted-foreground">Gestão total de utilizadores, perfis e segurança.</p>
         </div>
         <div className="flex gap-2">
-          <Button className="rounded-full bg-secondary text-white">
-            <UserPlus className="mr-2 h-4 w-4" /> Criar Investigador
+          <Button asChild className="rounded-full bg-secondary text-white">
+            <Link href="/register">
+              <UserPlus className="mr-2 h-4 w-4" /> Criar Utilizador
+            </Link>
           </Button>
         </div>
       </header>

@@ -1,22 +1,35 @@
+
 {
   "placeholderImages": [
     {
       "id": "health-hero",
-      "description": "A calming scene representing health and wellness",
+      "description": "Uma cena calma que representa saúde e bem-estar",
       "imageUrl": "https://picsum.photos/seed/chronic-health-1/1200/600",
       "imageHint": "health wellness"
     },
     {
       "id": "elderly-wellness",
-      "description": "Healthy lifestyle for seniors",
+      "description": "Estilo de vida saudável para seniores",
       "imageUrl": "https://picsum.photos/seed/senior-fit/800/600",
       "imageHint": "active senior"
     },
     {
       "id": "avatar-default",
-      "description": "A friendly profile avatar",
+      "description": "Um avatar de perfil amigável",
       "imageUrl": "https://picsum.photos/seed/user-avatar-1/150/150",
       "imageHint": "person portrait"
+    },
+    {
+      "id": "logo-ditech",
+      "description": "Logótipo DiTech Health Research Unit",
+      "imageUrl": "https://picsum.photos/seed/ditech-logo/300/150",
+      "imageHint": "research logo"
+    },
+    {
+      "id": "logo-cespu",
+      "description": "Logótipo CESPU",
+      "imageUrl": "https://picsum.photos/seed/cespu-logo/300/100",
+      "imageHint": "university logo"
     }
   ]
 }

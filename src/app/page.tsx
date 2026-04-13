@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,8 @@ import { AppLogo } from '@/components/app-logo';
 
 export default function Home() {
   const heroImage = PlaceHolderImages.find(img => img.id === 'health-hero');
+  const ditechLogo = PlaceHolderImages.find(img => img.id === 'logo-ditech');
+  const cespuLogo = PlaceHolderImages.find(img => img.id === 'logo-cespu');
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -81,7 +84,7 @@ export default function Home() {
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-6 text-accent-foreground">Pronto para assumir o controlo da sua saúde?</h2>
           <p className="text-lg text-muted-foreground mb-10">
-            Junte-se a milhares de seniores que gerem as suas condições crónicas com confiança.
+            Junte-se a milhares de utilizadores que gerem as suas condições crónicas com confiança.
           </p>
           <Button asChild size="lg" className="rounded-full px-12 h-14 bg-accent text-accent-foreground hover:bg-accent/90 shadow-md">
             <Link href="/profile">Configurar o seu Perfil</Link>
@@ -91,7 +94,7 @@ export default function Home() {
 
       {/* Institutional Section */}
       <section className="py-16 bg-muted/30">
-        <div className="max-w-5xl mx-auto px-4 text-center space-y-8">
+        <div className="max-w-5xl mx-auto px-4 text-center space-y-12">
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-secondary italic">Contexto do Projeto</h2>
             <p className="text-muted-foreground leading-relaxed max-w-3xl mx-auto">
@@ -103,6 +106,32 @@ export default function Home() {
               integrada no <strong>GI2 - Gabinete para a Investigação & a Inovação</strong> da 
               <strong> CESPU - Cooperativa de Ensino Superior Politécnico e Universitário</strong>.
             </p>
+          </div>
+
+          {/* Logos Display Area */}
+          <div className="flex flex-col md:flex-row items-center justify-center gap-12 grayscale hover:grayscale-0 transition-all duration-500 opacity-80 hover:opacity-100">
+            {ditechLogo && (
+              <div className="relative w-48 h-24">
+                <Image 
+                  src={ditechLogo.imageUrl} 
+                  alt={ditechLogo.description} 
+                  fill 
+                  className="object-contain" 
+                  data-ai-hint={ditechLogo.imageHint}
+                />
+              </div>
+            )}
+            {cespuLogo && (
+              <div className="relative w-48 h-16">
+                <Image 
+                  src={cespuLogo.imageUrl} 
+                  alt={cespuLogo.description} 
+                  fill 
+                  className="object-contain" 
+                  data-ai-hint={cespuLogo.imageHint}
+                />
+              </div>
+            )}
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -4,7 +4,7 @@ O **ChronicAI** é uma aplicação Next.js moderna concebida para ajudar a gerir
 
 Este projeto faz parte da iniciativa:
 **"ChronicAI – Integrating Self-Care and Artificial Intelligence in Chronic Disease Management"**
-**Referência:** ChronicAI-GI2-CESPU-2025
+**ChronicAI-GI2-CESPU-2025**
 
 ## Colaboração Institucional
 Este projeto resulta de uma colaboração estratégica entre:

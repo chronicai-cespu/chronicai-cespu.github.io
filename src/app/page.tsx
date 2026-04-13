@@ -17,13 +17,13 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="relative h-[600px] flex items-center justify-center text-center overflow-hidden bg-[#E0F2F1]">
+      <section className="relative h-[600px] flex items-center justify-center text-center overflow-hidden bg-background">
         {heroImage && (
           <Image
             src={heroImage.imageUrl}
             alt={heroImage.description}
             fill
-            className="object-cover opacity-20"
+            className="object-cover opacity-10"
             priority
             data-ai-hint={heroImage.imageHint}
           />
@@ -81,19 +81,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Call to Action */}
-      <section className="py-20 bg-primary/5 border-y border-primary/10">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-6 text-primary">Pronto para assumir o controlo da sua saúde?</h2>
-          <p className="text-lg text-muted-foreground mb-10">
-            Junte-se a milhares de utilizadores que gerem as suas condições crónicas com confiança.
-          </p>
-          <Button asChild size="lg" className="rounded-full px-12 h-14 bg-primary text-white hover:bg-primary/90 shadow-md">
-            <Link href="/profile">Configurar o seu Perfil</Link>
-          </Button>
-        </div>
-      </section>
-
       {/* Institutional Section */}
       <section className="py-16 bg-muted/30">
         <div className="max-w-7xl mx-auto px-4 text-center space-y-12">
@@ -104,14 +91,14 @@ export default function Home() {
                 ChronicAI – Integrating Self-Care and Artificial Intelligence in Chronic Disease Management
               </p>
               <p className="text-sm text-muted-foreground font-mono mb-6">
-                Referência: ChronicAI-GI2-CESPU-2025
+                ChronicAI-GI2-CESPU-2025
               </p>
-              <p className="text-muted-foreground leading-relaxed max-w-5xl mx-auto">
+              <p className="text-muted-foreground leading-relaxed max-w-5xl mx-auto text-sm sm:text-base">
                 Este projeto resulta de uma colaboração estratégica entre a unidade de investigação 
                 <strong> "Digital Health & Technology" (DiTech Health)</strong>, integrada no 
                 <strong> GI2 - Gabinete para a Investigação & a Inovação</strong> da 
                 <strong> CESPU - Cooperativa de Ensino Superior Politécnico e Universitário</strong>, 
-                e o <strong>Intelligent Systems Associate Laboratory (LASI)</strong>, do centro de investigação 
+                e o <strong>Intelligent Systems Associate Laboratory (LASI)</strong>, do 
                 <strong> Centro Algoritmi</strong> da <strong>Universidade do Minho</strong>.
               </p>
             </div>

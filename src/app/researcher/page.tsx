@@ -25,7 +25,6 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -108,33 +107,28 @@ export default function ResearcherPage() {
     setIsDetailsOpen(true);
   };
 
-  // Iniciar edição de perfil
   const handleEditPatientClick = (patient: any) => {
     setEditPatientData({ ...patient });
     setIsEditingPatient(true);
   };
 
-  // Guardar edição de perfil (solicita justificativa)
   const handleSavePatientRequest = () => {
     setPendingAction({ type: 'profile', data: editPatientData });
     setJustification('');
     setIsJustifyOpen(true);
   };
 
-  // Iniciar edição de registo clínico
   const handleEditRecordClick = (record: any) => {
     setEditingRecord({ ...record });
     setIsEditRecordOpen(true);
   };
 
-  // Guardar edição de registo (solicita justificativa)
   const handleSaveRecordRequest = () => {
     setPendingAction({ type: 'record', data: editingRecord });
     setJustification('');
     setIsJustifyOpen(true);
   };
 
-  // Executar a ação pendente após justificativa
   const handleExecuteAction = () => {
     if (!db || !pendingAction || !justification.trim() || !selectedPatient) return;
 
@@ -144,7 +138,6 @@ export default function ResearcherPage() {
       justification: justification.trim(),
       performedBy: currentResearcherCode || role,
       timestamp: serverTimestamp(),
-      previousData: pendingAction.type === 'profile' ? selectedPatient : null // Idealmente guardar snapshot anterior
     };
 
     if (pendingAction.type === 'profile') {
@@ -165,7 +158,6 @@ export default function ResearcherPage() {
       setIsEditRecordOpen(false);
     }
 
-    // Criar log de auditoria
     setDocumentNonBlocking(auditRef, auditData, { merge: true });
 
     setIsJustifyOpen(false);
@@ -173,7 +165,6 @@ export default function ResearcherPage() {
     toast({ title: "Alteração Guardada", description: "O log de auditoria foi atualizado." });
   };
 
-  // Eliminação (Apenas Admin)
   const initiateDelete = (log: any) => {
     if (!isAdmin) {
       toast({ variant: "destructive", title: "Ação Bloqueada", description: "Apenas administradores podem apagar registos." });
@@ -428,7 +419,7 @@ export default function ResearcherPage() {
 
               <section className="space-y-4 pt-4">
                 <h3 className="text-lg font-bold flex items-center gap-2 border-b pb-2 text-muted-foreground">
-                  <History className="h-5 w-5" /> Log de Auditoria (Alterações e Eliminações)
+                  <History className="h-5 w-5" /> Log de Auditoria
                 </h3>
                 <div className="space-y-3">
                   {auditHistory && auditHistory.length > 0 ? auditHistory.map((del) => (
@@ -444,7 +435,7 @@ export default function ResearcherPage() {
                         {del.actionType === 'record_deletion' ? (
                           <p className="text-[10px] text-muted-foreground"><strong>Dado Apagado:</strong> {del.originalData?.value} ({del.originalData?.recordType})</p>
                         ) : (
-                          <p className="text-[10px] text-muted-foreground">Alteração efetuada em {del.actionType === 'profile_update' ? 'Perfil' : 'Registo Clínico'}.</p>
+                          <p className="text-[10px] text-muted-foreground">Alteração efetuada em perfil ou registo.</p>
                         )}
                       </CardContent>
                     </Card>
@@ -464,7 +455,6 @@ export default function ResearcherPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialogo de Edição de Perfil */}
       <Dialog open={isEditingPatient} onOpenChange={setIsEditingPatient}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -513,7 +503,6 @@ export default function ResearcherPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialogo de Edição de Registo */}
       <Dialog open={isEditRecordOpen} onOpenChange={setIsEditRecordOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -545,7 +534,6 @@ export default function ResearcherPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialogo de Justificação (CRÍTICO) */}
       <Dialog open={isJustifyOpen} onOpenChange={setIsJustifyOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -577,7 +565,6 @@ export default function ResearcherPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialogo de Eliminação (Admin Only) */}
       <Dialog open={isDeleteReasonDialogOpen} onOpenChange={setIsDeleteReasonDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

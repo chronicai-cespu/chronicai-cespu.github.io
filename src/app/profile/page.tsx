@@ -111,11 +111,10 @@ export default function ProfilePage() {
     );
   }
 
-  // Questionário de Saúde para Pacientes (Mantido conforme anterior)
+  // Questionário de Saúde para Pacientes
   const ages = Array.from({ length: 93 }, (_, i) => i + 18);
   const weights = Array.from({ length: 151 }, (_, i) => i + 40);
   const heights = Array.from({ length: 101 }, (_, i) => i + 130);
-  const durations = Array.from({ length: 51 }, (_, i) => i);
   
   const educationLevels = [
     "Sem escolaridade",
@@ -340,7 +339,6 @@ export default function ProfilePage() {
               ))}
             </div>
 
-            {/* Secções de detalhes omitidas para brevidade, mas devem permanecer no código real */}
             <div className="space-y-2">
               <Label htmlFor="others">Outras Doenças ou Observações Importantes</Label>
               <Textarea 

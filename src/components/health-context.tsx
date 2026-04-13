@@ -43,6 +43,8 @@ export type UserProfile = {
   otherConditions: string;
   assignedCode?: string;
   role?: string;
+  email?: string;
+  mobileNumber?: string;
 };
 
 interface HealthContextType {
@@ -83,8 +85,6 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (userData && db && user) {
-      // Mecanismo de autocorreção: garantir que investigadores e admins têm o marcador de papel
-      // para as Security Rules funcionarem corretamente.
       if (userData.role === 'researcher') {
         const markerRef = doc(db, 'roles_researcher', user.uid);
         setDocumentNonBlocking(markerRef, { active: true }, { merge: true });
@@ -98,13 +98,18 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       setLocalProfile({
         ...(profileData as any),
         role: userData?.role,
-        assignedCode: userData?.assignedCode
+        assignedCode: userData?.assignedCode,
+        name: userData?.name || profileData.name,
+        email: userData?.email,
+        mobileNumber: userData?.mobileNumber
       });
     } else if (userData) {
       setLocalProfile({
         name: userData.role === 'admin' ? 'Administrador' : (userData.name || 'Utilizador'),
         role: userData.role,
         assignedCode: userData.assignedCode,
+        email: userData.email,
+        mobileNumber: userData.mobileNumber,
         chronicDiseases: []
       } as any);
     } else {
@@ -126,7 +131,13 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
 
   const value = {
     userProfile: localProfile,
-    setUserProfile: (p: UserProfile) => setLocalProfile(p),
+    setUserProfile: (p: UserProfile) => {
+      setLocalProfile(p);
+      if (db && user) {
+        const profileRef = doc(db, 'patient_profiles', user.uid);
+        updateDocumentNonBlocking(profileRef, p);
+      }
+    },
     logs: (logsData || []).map(l => ({
       id: l.id,
       type: l.recordType,

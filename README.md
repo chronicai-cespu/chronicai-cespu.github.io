@@ -9,6 +9,8 @@ O **ChronicAI** é uma aplicação Next.js moderna concebida para ajudar seniore
 - **Registo Diário Simples:** Interface intuitiva com botões grandes e menus para registar pressão arterial (sistólica/diastólica), peso e atividade.
 - **Questionário de Perfil Abrangente:** Recolha detalhada de dados biométricos, hábitos de estilo de vida e medicação habitual.
 - **Segurança de Emergência:** A IA identifica sintomas de urgência e guia o utilizador para o 112 ou SNS 24.
+- **Sistema Multi-Papel:** Diferenciação entre Pacientes (pXX), Investigadores (rXX) e Administrador.
+- **Login Flexível:** Acesso via Código, Email, Telemóvel ou Data de Nascimento.
 
 ## Como Começar (Desenvolvimento Local)
 
@@ -37,11 +39,14 @@ Após descarregar o código do Firebase Studio:
 - **Frontend:** Next.js 15, React, Tailwind CSS.
 - **Componentes:** ShadCN UI, Lucide Icons, Recharts.
 - **IA:** Google Gemini via Genkit.
-- **Backend:** Configurado para Firebase App Hosting.
+- **Backend:** Configurado para Firebase App Hosting e Firestore.
 
 ## Aviso Médico
 
 O ChronicAI fornece apenas informações informativas e conselhos de bem-estar. Não substitui o diagnóstico ou tratamento por um profissional de saúde. Em caso de emergência, contacte sempre o 112 ou o SNS 24 (808 24 24 24).
 
 ---
+### Histórico de Versões
+- **2026.04.13_tabs_autenticacao_roles**: Implementação de tabs de administração/investigação, sistema de roles e login multi-identificador.
+
 © 2026 ChronicAI Health. Todos os direitos reservados.

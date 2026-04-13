@@ -12,7 +12,7 @@ import { Button } from './ui/button';
 
 export function Navigation() {
   const pathname = usePathname();
-  const { role, assignedCode } = useHealth();
+  const { role, assignedCode, userProfile } = useHealth();
   const auth = useAuth();
   const router = useRouter();
 
@@ -21,31 +21,9 @@ export function Navigation() {
     router.push('/login');
   };
 
+  const welcomeName = role === 'admin' ? 'Admin' : (userProfile?.name || '');
+
   const navItems = [
-    { 
-      href: '/dashboard', 
-      label: 'Os meus dados', 
-      icon: Home,
-      activeColor: "border-primary text-primary",
-      hoverColor: "hover:text-primary hover:border-primary",
-      show: role === 'patient'
-    },
-    { 
-      href: '/logs', 
-      label: 'Registos', 
-      icon: ClipboardList,
-      activeColor: "border-secondary text-secondary",
-      hoverColor: "hover:text-secondary hover:border-secondary",
-      show: role === 'patient' || role === 'admin'
-    },
-    { 
-      href: '/chat', 
-      label: 'Assistente IA', 
-      icon: MessageCircle,
-      activeColor: "border-primary text-primary font-bold",
-      hoverColor: "hover:text-primary hover:border-primary",
-      show: role === 'patient'
-    },
     { 
       href: '/admin', 
       label: 'Administração', 
@@ -56,11 +34,35 @@ export function Navigation() {
     },
     { 
       href: '/researcher', 
-      label: 'Investigação', 
+      label: 'Lista de utilizadores', 
       icon: FlaskConical,
       activeColor: "border-purple-500 text-purple-500",
       hoverColor: "hover:text-purple-500 hover:border-purple-500",
       show: role === 'researcher' || role === 'admin'
+    },
+    { 
+      href: '/logs', 
+      label: 'Registos de Pacientes', 
+      icon: ClipboardList,
+      activeColor: "border-secondary text-secondary",
+      hoverColor: "hover:text-secondary hover:border-secondary",
+      show: role === 'patient' || role === 'admin'
+    },
+    { 
+      href: '/dashboard', 
+      label: 'Os meus dados', 
+      icon: Home,
+      activeColor: "border-primary text-primary",
+      hoverColor: "hover:text-primary hover:border-primary",
+      show: role === 'patient'
+    },
+    { 
+      href: '/chat', 
+      label: 'Assistente IA', 
+      icon: MessageCircle,
+      activeColor: "border-primary text-primary font-bold",
+      hoverColor: "hover:text-primary hover:border-primary",
+      show: role === 'patient'
     },
     { 
       href: '/profile', 
@@ -87,7 +89,15 @@ export function Navigation() {
                 </span>
               </div>
             </Link>
+
+            {/* Welcome message between logo and tabs */}
+            {role && welcomeName && (
+              <div className="ml-6 px-4 py-1.5 bg-secondary/10 text-secondary rounded-full text-sm font-bold border border-secondary/20 hidden md:flex items-center animate-in fade-in slide-in-from-left-4 duration-500">
+                Bem-vindo, {welcomeName}
+              </div>
+            )}
           </div>
+          
           <div className="flex items-center space-x-2 sm:space-x-4 md:space-x-8 h-full">
             {navItems.filter(i => i.show).map((item) => {
               const Icon = item.icon;
@@ -108,7 +118,7 @@ export function Navigation() {
                       <Icon className="w-5 h-5" />
                       <span className="hidden lg:inline">{item.label}</span>
                     </div>
-                    {/* Exibir o código sob o item de menu principal de cada papel */}
+                    {/* Exibir o código sob o item de menu correspondente ao papel */}
                     {assignedCode && (
                       (item.href === '/profile' && role === 'patient') ||
                       (item.href === '/admin' && role === 'admin') ||

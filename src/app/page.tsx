@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ShieldCheck, HeartPulse, Sparkles, Mail, ExternalLink } from 'lucide-react';
+import { ShieldCheck, HeartPulse, Sparkles, Mail, ExternalLink, ClipboardList } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { AppLogo } from '@/components/app-logo';
 
@@ -42,10 +42,15 @@ export default function Home() {
             Um companheiro de saúde dedicado. Monitorize sinais vitais, gira a medicação e fale com a IA para aconselhamento personalizado.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="text-lg px-10 h-14 rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg border-none">
-              <Link href="/dashboard">Ir para o Meu Painel</Link>
+            <Button asChild size="lg" className="text-lg px-8 h-14 rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg border-none">
+              <Link href="/dashboard">Ver os meus dados</Link>
             </Button>
-            <Button asChild size="lg" className="text-lg px-10 h-14 rounded-full bg-secondary text-white hover:bg-secondary/90 border-none shadow-lg">
+            <Button asChild size="lg" className="text-lg px-8 h-14 rounded-full bg-accent text-white hover:bg-accent/90 border-none shadow-lg">
+              <Link href="/logs" className="flex items-center gap-2">
+                <ClipboardList className="w-5 h-5" /> Ir para os meus registos
+              </Link>
+            </Button>
+            <Button asChild size="lg" className="text-lg px-8 h-14 rounded-full bg-secondary text-white hover:bg-secondary/90 border-none shadow-lg">
               <Link href="/chat">Falar com o Assistente</Link>
             </Button>
           </div>

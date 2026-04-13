@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, collection, query, where, orderBy, limit } from 'firebase/firestore';
+import { doc, collection, query, orderBy, limit } from 'firebase/firestore';
 
 export type Medication = {
   id: string;
@@ -60,10 +60,10 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
 
-  const userDocRef = useMemoFirebase(() => user ? doc(db!, 'users', user.uid) : null, [db, user]);
+  const userDocRef = useMemoFirebase(() => (db && user) ? doc(db, 'users', user.uid) : null, [db, user]);
   const { data: userData, isLoading: isUserDataLoading } = useDoc(userDocRef);
 
-  const profileDocRef = useMemoFirebase(() => user ? doc(db!, 'patient_profiles', user.uid) : null, [db, user]);
+  const profileDocRef = useMemoFirebase(() => (db && user) ? doc(db, 'patient_profiles', user.uid) : null, [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileDocRef);
 
   const logsQuery = useMemoFirebase(() => {
@@ -82,8 +82,16 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (profileData) {
       setLocalProfile(profileData as any);
+    } else if (userData && userData.role === 'admin') {
+      // Perfil básico para o admin se ele não tiver um clinical profile
+      setLocalProfile({
+        name: 'Administrador',
+        role: 'admin',
+        assignedCode: userData.assignedCode,
+        chronicDiseases: []
+      } as any);
     }
-  }, [profileData]);
+  }, [profileData, userData]);
 
   const value = {
     userProfile: localProfile,
@@ -96,7 +104,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       notes: l.notes,
       patientProfileId: l.patientProfileId
     })) as HealthEntry[],
-    meds: [], // To be implemented with Firestore subcollection
+    meds: [], 
     role: userData?.role || null,
     assignedCode: userData?.assignedCode || null,
     isLoading: isUserLoading || isUserDataLoading || isProfileLoading

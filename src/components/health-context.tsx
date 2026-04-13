@@ -4,7 +4,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, collection, query, orderBy, limit, serverTimestamp } from 'firebase/firestore';
-import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 export type Medication = {
   id: string;
@@ -82,6 +82,18 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
   const [localProfile, setLocalProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
+    if (userData && db && user) {
+      // Mecanismo de autocorreção: garantir que investigadores e admins têm o marcador de papel
+      // para as Security Rules funcionarem corretamente.
+      if (userData.role === 'researcher') {
+        const markerRef = doc(db, 'roles_researcher', user.uid);
+        setDocumentNonBlocking(markerRef, { active: true }, { merge: true });
+      } else if (userData.role === 'admin') {
+        const markerRef = doc(db, 'roles_admin', user.uid);
+        setDocumentNonBlocking(markerRef, { active: true }, { merge: true });
+      }
+    }
+
     if (profileData) {
       setLocalProfile({
         ...(profileData as any),
@@ -98,7 +110,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     } else {
       setLocalProfile(null);
     }
-  }, [profileData, userData]);
+  }, [profileData, userData, db, user]);
 
   const addLog = ({ type, value, notes }: { type: 'bp' | 'activity' | 'weight', value: string, notes?: string }) => {
     if (!db || !user) return;

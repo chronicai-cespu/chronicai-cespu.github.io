@@ -37,21 +37,17 @@ export default function ResearcherPage() {
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
-  // Estados para eliminação com motivo
   const [isDeleteReasonDialogOpen, setIsDeleteReasonDialogOpen] = useState(false);
   const [deletionReason, setDeletionReason] = useState('');
   const [logToDelete, setLogToDelete] = useState<any>(null);
 
-  // Queries guardadas por papel para evitar erros de permissão
   const patientsQuery = useMemoFirebase(() => {
-    // Só disparar a query se o papel for confirmado como admin ou researcher
     if (!db || isContextLoading || (role !== 'researcher' && role !== 'admin')) return null;
     return query(collection(db, 'patient_profiles'));
   }, [db, role, isContextLoading]);
   
   const { data: allPatients, isLoading: isPatientsLoading } = useCollection(patientsQuery);
 
-  // Query para os registos do paciente selecionado
   const selectedPatientLogsQuery = useMemoFirebase(() => {
     if (!db || !selectedPatient || isContextLoading || (role !== 'researcher' && role !== 'admin')) return null;
     return query(
@@ -63,7 +59,6 @@ export default function ResearcherPage() {
   
   const { data: patientLogs } = useCollection(selectedPatientLogsQuery);
 
-  // Query para os logs de eliminação (apenas para admin)
   const deletionLogsQuery = useMemoFirebase(() => {
     if (!db || !selectedPatient || role !== 'admin') return null;
     return query(
@@ -114,7 +109,6 @@ export default function ResearcherPage() {
     const logRef = doc(db, 'patient_profiles', selectedPatient.userId, 'clinical_records', logToDelete.id);
     const deletionLogRef = doc(collection(db, 'patient_profiles', selectedPatient.userId, 'deletion_logs'));
 
-    // Guardar log de auditoria
     setDocumentNonBlocking(deletionLogRef, {
       originalRecord: logToDelete,
       reason: deletionReason.trim(),
@@ -122,7 +116,6 @@ export default function ResearcherPage() {
       deletedAt: serverTimestamp()
     }, { merge: true });
 
-    // Apagar registo original
     deleteDocumentNonBlocking(logRef);
 
     setIsDeleteReasonDialogOpen(false);
@@ -366,7 +359,6 @@ export default function ResearcherPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Diálogo de Justificação de Eliminação */}
       <Dialog open={isDeleteReasonDialogOpen} onOpenChange={setIsDeleteReasonDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

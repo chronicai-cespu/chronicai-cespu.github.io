@@ -24,19 +24,26 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export default function Dashboard() {
-  const { userProfile, logs, meds, isLoading } = useHealth();
+  const { userProfile, logs, meds, role, isLoading } = useHealth();
   const [didYouKnow, setDidYouKnow] = useState<string | null>(null);
   const router = useRouter();
 
+  // Redirecionamento se não estiver autenticado ou se não for paciente
   useEffect(() => {
-    if (!isLoading && !userProfile) {
-      router.push('/login');
+    if (!isLoading) {
+      if (!role) {
+        router.push('/login');
+      } else if (role === 'admin') {
+        router.push('/admin');
+      } else if (role === 'researcher') {
+        router.push('/researcher');
+      }
     }
-  }, [userProfile, isLoading, router]);
+  }, [role, isLoading, router]);
 
   useEffect(() => {
     async function fetchCuriosity() {
-      if (!userProfile) return;
+      if (!userProfile || role !== 'patient') return;
       try {
         const response = await aiHealthAssistantAdvice({
           question: "Gera uma curiosidade útil sobre as minhas condições de saúde para o meu dashboard.",
@@ -47,10 +54,10 @@ export default function Dashboard() {
         console.error("Failed to fetch curiosity", error);
       }
     }
-    if (userProfile) {
+    if (userProfile && role === 'patient') {
       fetchCuriosity();
     }
-  }, [userProfile]);
+  }, [userProfile, role]);
 
   const activityData = useMemo(() => {
     const last7Days = Array.from({ length: 7 }, (_, i) => {
@@ -77,7 +84,7 @@ export default function Dashboard() {
     return last7Days;
   }, [logs]);
 
-  if (isLoading || !userProfile) {
+  if (isLoading || !userProfile || role !== 'patient') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />

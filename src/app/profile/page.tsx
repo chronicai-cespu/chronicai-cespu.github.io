@@ -17,19 +17,25 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 export default function ProfilePage() {
-  const { userProfile, setUserProfile, isLoading } = useHealth();
+  const { userProfile, setUserProfile, role, isLoading } = useHealth();
   const { toast } = useToast();
   const router = useRouter();
 
   const [editProfile, setEditProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
-    if (!isLoading && !userProfile) {
-      router.push('/login');
-    } else if (userProfile) {
-      setEditProfile(userProfile);
+    if (!isLoading) {
+      if (!role) {
+        router.push('/login');
+      } else if (role === 'admin') {
+        router.push('/admin');
+      } else if (role === 'researcher') {
+        router.push('/researcher');
+      } else if (userProfile) {
+        setEditProfile(userProfile);
+      }
     }
-  }, [userProfile, isLoading, router]);
+  }, [userProfile, role, isLoading, router]);
 
   const handleSaveProfile = () => {
     if (editProfile) {
@@ -48,7 +54,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (isLoading || !editProfile) {
+  if (isLoading || !editProfile || role !== 'patient') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />

@@ -28,7 +28,7 @@ export function Navigation() {
       icon: Home,
       activeColor: "border-primary text-primary",
       hoverColor: "hover:text-primary hover:border-primary",
-      show: !!role
+      show: role === 'patient'
     },
     { 
       href: '/logs', 
@@ -36,7 +36,7 @@ export function Navigation() {
       icon: ClipboardList,
       activeColor: "border-secondary text-secondary",
       hoverColor: "hover:text-secondary hover:border-secondary",
-      show: role === 'patient' || role === 'researcher'
+      show: role === 'patient' || role === 'admin'
     },
     { 
       href: '/chat', 
@@ -68,7 +68,7 @@ export function Navigation() {
       icon: User,
       activeColor: "border-primary text-primary",
       hoverColor: "hover:text-primary hover:border-primary",
-      show: !!role
+      show: role === 'patient'
     },
   ];
 
@@ -108,7 +108,12 @@ export function Navigation() {
                       <Icon className="w-5 h-5" />
                       <span className="hidden lg:inline">{item.label}</span>
                     </div>
-                    {item.href === '/profile' && assignedCode && (
+                    {/* Exibir o código sob o item de menu principal de cada papel */}
+                    {assignedCode && (
+                      (item.href === '/profile' && role === 'patient') ||
+                      (item.href === '/admin' && role === 'admin') ||
+                      (item.href === '/researcher' && role === 'researcher')
+                    ) && (
                       <span className="text-[10px] font-mono leading-none mt-0.5 opacity-70">
                         {assignedCode}
                       </span>

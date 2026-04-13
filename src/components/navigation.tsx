@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, MessageCircle, User, ClipboardList } from 'lucide-react';
+import { Home, MessageCircle, User, ClipboardList } from 'lucide-react';
 import { AppLogo } from '@/components/app-logo';
 
 export function Navigation() {
@@ -13,16 +13,9 @@ export function Navigation() {
     { 
       href: '/dashboard', 
       label: 'Início', 
-      icon: LayoutDashboard,
+      icon: Home,
       activeColor: "border-primary text-primary",
       hoverColor: "hover:text-primary hover:border-primary"
-    },
-    { 
-      href: '/chat', 
-      label: 'Assistente IA', 
-      icon: MessageCircle,
-      activeColor: "border-accent text-accent-foreground font-bold",
-      hoverColor: "hover:text-accent hover:border-accent"
     },
     { 
       href: '/logs', 
@@ -30,6 +23,13 @@ export function Navigation() {
       icon: ClipboardList,
       activeColor: "border-secondary text-secondary",
       hoverColor: "hover:text-secondary hover:border-secondary"
+    },
+    { 
+      href: '/chat', 
+      label: 'Assistente IA', 
+      icon: MessageCircle,
+      activeColor: "border-accent text-accent-foreground font-bold",
+      hoverColor: "hover:text-accent hover:border-accent"
     },
     { 
       href: '/profile', 

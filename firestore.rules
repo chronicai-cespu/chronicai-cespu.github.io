@@ -26,7 +26,6 @@ service cloud.firestore {
     // --- COLLECTION RULES ---
 
     match /users/{userId} {
-      // Permitir leitura básica para login por código/telemóvel mesmo sem estar autenticado
       allow get: if true;
       allow list: if true;
       
@@ -48,7 +47,6 @@ service cloud.firestore {
     }
 
     match /patient_profiles/{patientUserId} {
-      // Permitir pesquisa por data de nascimento para login
       allow get: if true;
       allow list: if true;
       
@@ -68,6 +66,12 @@ service cloud.firestore {
         allow create: if (isOwner(patientUserId) || isResearcher() || isAdmin()) && request.resource.data.patientProfileId == patientUserId;
         allow update: if resource != null && (isOwner(patientUserId) || isResearcher() || isAdmin()) && request.resource.data.patientProfileId == resource.data.patientProfileId;
         allow delete: if resource != null && isAdmin();
+      }
+
+      match /deletion_logs/{logId} {
+        allow get, list: if isAdmin();
+        allow create: if isAdmin();
+        allow update, delete: if isAdmin();
       }
     }
     

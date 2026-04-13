@@ -35,6 +35,17 @@
         "assignedCode": { "type": "string" }
       }
     },
+    "DeletionLog": {
+      "title": "DeletionLog",
+      "type": "object",
+      "description": "Registo de auditoria de eliminação de dados clínicos.",
+      "properties": {
+        "originalRecord": { "type": "object" },
+        "reason": { "type": "string" },
+        "deletedBy": { "type": "string" },
+        "deletedAt": { "type": "string", "format": "date-time" }
+      }
+    },
     "ContactMessage": {
       "title": "ContactMessage",
       "type": "object",
@@ -61,6 +72,10 @@
     "/patient_profiles/{patientId}": {
       "schema": { "$ref": "#/backend/entities/PatientProfile" },
       "description": "Dados clínicos."
+    },
+    "/patient_profiles/{patientId}/deletion_logs/{logId}": {
+      "schema": { "$ref": "#/backend/entities/DeletionLog" },
+      "description": "Histórico de eliminações efetuadas por administradores."
     },
     "/roles_admin/{uid}": {
       "schema": { "type": "object", "properties": {} },

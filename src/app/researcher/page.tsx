@@ -3,15 +3,15 @@
 
 import { useHealth } from '@/components/health-context';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, limit, doc } from 'firebase/firestore';
+import { collection, query, orderBy, limit, doc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FlaskConical, Search, Eye, FileText, Activity, HeartPulse, Scale, Calendar, ArrowLeft, Pencil, Trash2 } from 'lucide-react';
+import { FlaskConical, Search, Eye, FileText, Activity, HeartPulse, Scale, Calendar, Pencil, Trash2, History, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
-import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import {
@@ -20,8 +20,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/components/area-scroll';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -33,6 +36,11 @@ export default function ResearcherPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+
+  // Estados para eliminação com motivo
+  const [isDeleteReasonDialogOpen, setIsDeleteReasonDialogOpen] = useState(false);
+  const [deletionReason, setDeletionReason] = useState('');
+  const [logToDelete, setLogToDelete] = useState<any>(null);
 
   // Queries para a lista de pacientes
   const patientsQuery = useMemoFirebase(() => db ? query(collection(db, 'patient_profiles')) : null, [db]);
@@ -49,6 +57,18 @@ export default function ResearcherPage() {
   }, [db, selectedPatient]);
   
   const { data: patientLogs, isLoading: isLogsLoading } = useCollection(selectedPatientLogsQuery);
+
+  // Query para os logs de eliminação (apenas para admin)
+  const deletionLogsQuery = useMemoFirebase(() => {
+    if (!db || !selectedPatient || role !== 'admin') return null;
+    return query(
+      collection(db, 'patient_profiles', selectedPatient.userId, 'deletion_logs'),
+      orderBy('deletedAt', 'desc'),
+      limit(20)
+    );
+  }, [db, selectedPatient, role]);
+
+  const { data: deletionHistory } = useCollection(deletionLogsQuery);
 
   if (role !== 'researcher' && role !== 'admin') {
     return (
@@ -70,16 +90,42 @@ export default function ResearcherPage() {
     setIsDetailsOpen(true);
   };
 
-  const handleDeleteLog = (logId: string) => {
-    if (!db || !selectedPatient) return;
-    if (window.confirm("Tem a certeza que deseja apagar este registo clínico? Esta ação não pode ser revertida.")) {
-      const logRef = doc(db, 'patient_profiles', selectedPatient.userId, 'clinical_records', logId);
-      deleteDocumentNonBlocking(logRef);
+  const initiateDelete = (log: any) => {
+    setLogToDelete(log);
+    setDeletionReason('');
+    setIsDeleteReasonDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!db || !selectedPatient || !logToDelete || !deletionReason.trim()) {
       toast({
-        title: "Registo Apagado",
-        description: "O registo clínico foi removido com sucesso.",
+        variant: "destructive",
+        title: "Justificação Necessária",
+        description: "Por favor, indique o motivo da eliminação.",
       });
+      return;
     }
+
+    const logRef = doc(db, 'patient_profiles', selectedPatient.userId, 'clinical_records', logToDelete.id);
+    const deletionLogRef = doc(collection(db, 'patient_profiles', selectedPatient.userId, 'deletion_logs'));
+
+    // Guardar log de auditoria
+    setDocumentNonBlocking(deletionLogRef, {
+      originalRecord: logToDelete,
+      reason: deletionReason.trim(),
+      deletedBy: role,
+      deletedAt: serverTimestamp()
+    }, { merge: true });
+
+    // Apagar registo original
+    deleteDocumentNonBlocking(logRef);
+
+    setIsDeleteReasonDialogOpen(false);
+    setLogToDelete(null);
+    toast({
+      title: "Registo Apagado",
+      description: "O registo clínico foi removido e o motivo foi guardado no log de auditoria.",
+    });
   };
 
   return (
@@ -169,13 +215,6 @@ export default function ResearcherPage() {
                   </TableCell>
                 </TableRow>
               )}
-              {!isLoading && filteredPatients?.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12 text-muted-foreground italic">
-                    Nenhum paciente encontrado com os critérios de pesquisa.
-                  </TableCell>
-                </TableRow>
-              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -193,15 +232,11 @@ export default function ResearcherPage() {
                   {selectedPatient?.name} • {selectedPatient?.age} anos • {selectedPatient?.gender}
                 </DialogDescription>
               </div>
-              <Badge variant="outline" className="bg-white/20 text-white border-white/40">
-                Data Nascimento: {selectedPatient?.birthDate}
-              </Badge>
             </div>
           </DialogHeader>
 
           <ScrollArea className="flex-1 p-6">
             <div className="space-y-8">
-              {/* Resumo Biométrico */}
               <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card className="bg-muted/20 border-none">
                   <CardContent className="p-4 flex items-center gap-3">
@@ -238,7 +273,6 @@ export default function ResearcherPage() {
                 </Card>
               </section>
 
-              {/* Histórico de Registos Clinicos */}
               <section className="space-y-4">
                 <h3 className="text-lg font-bold flex items-center gap-2 border-b pb-2">
                   <Calendar className="h-5 w-5 text-primary" /> Histórico Recente de Medições
@@ -259,7 +293,7 @@ export default function ResearcherPage() {
                       {patientLogs?.map((log) => (
                         <TableRow key={log.id}>
                           <TableCell className="text-xs whitespace-nowrap">
-                            {log.recordedAt ? format(log.recordedAt.toDate(), "dd/MM/yy HH:mm", { locale: pt }) : 'N/A'}
+                            {log.recordedAt?.toDate ? format(log.recordedAt.toDate(), "dd/MM/yy HH:mm", { locale: pt }) : 'N/A'}
                           </TableCell>
                           <TableCell>
                             <Badge variant="ghost" className={cn(
@@ -281,7 +315,7 @@ export default function ResearcherPage() {
                                 variant="ghost" 
                                 size="icon" 
                                 className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                onClick={() => handleDeleteLog(log.id)}
+                                onClick={() => initiateDelete(log)}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -289,62 +323,33 @@ export default function ResearcherPage() {
                           )}
                         </TableRow>
                       ))}
-                      {isLogsLoading && (
-                        <TableRow>
-                          <TableCell colSpan={role === 'admin' ? 5 : 4} className="text-center py-8">
-                            A carregar histórico...
-                          </TableCell>
-                        </TableRow>
-                      )}
-                      {!isLogsLoading && (!patientLogs || patientLogs.length === 0) && (
-                        <TableRow>
-                          <TableCell colSpan={role === 'admin' ? 5 : 4} className="text-center py-8 text-muted-foreground">
-                            Ainda não existem registos clínicos para este paciente.
-                          </TableCell>
-                        </TableRow>
-                      )}
                     </TableBody>
                   </Table>
                 </div>
               </section>
 
-              {/* Informação Médica Adicional */}
-              <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="border-accent/20 bg-accent/5">
-                  <CardHeader className="py-3">
-                    <CardTitle className="text-sm font-bold">Condições Crónicas</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-sm space-y-2">
-                    {selectedPatient?.chronicDiseases?.includes('Diabetes') && (
-                      <div className="p-2 bg-white rounded border">
-                        <p className="font-bold text-xs text-primary">Diabetes</p>
-                        <p className="text-[10px]">Medicação: {selectedPatient.diabetesInfo?.meds || 'N/A'}</p>
-                      </div>
-                    )}
-                    {selectedPatient?.chronicDiseases?.includes('Hipertensão') && (
-                      <div className="p-2 bg-white rounded border">
-                        <p className="font-bold text-xs text-secondary">Hipertensão</p>
-                        <p className="text-[10px]">Medicação: {selectedPatient.hypertensionInfo?.meds || 'N/A'}</p>
-                      </div>
-                    )}
-                    {selectedPatient?.chronicDiseases?.includes('Colesterol') && (
-                      <div className="p-2 bg-white rounded border">
-                        <p className="font-bold text-xs text-accent-foreground">Colesterol</p>
-                        <p className="text-[10px]">Medicação: {selectedPatient.cholesterolInfo?.meds || 'N/A'}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-                
-                <Card className="border-muted bg-muted/5">
-                  <CardHeader className="py-3">
-                    <CardTitle className="text-sm font-bold">Observações do Investigador</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-xs text-muted-foreground italic">
-                    {selectedPatient?.otherConditions || "Nenhuma observação adicional registada pelo utilizador."}
-                  </CardContent>
-                </Card>
-              </section>
+              {role === 'admin' && deletionHistory && deletionHistory.length > 0 && (
+                <section className="space-y-4 pt-4">
+                  <h3 className="text-lg font-bold flex items-center gap-2 border-b pb-2 text-destructive">
+                    <History className="h-5 w-5" /> Log de Registos Apagados (Apenas Admin)
+                  </h3>
+                  <div className="space-y-3">
+                    {deletionHistory.map((del) => (
+                      <Card key={del.id} className="border-destructive/20 bg-destructive/5">
+                        <CardContent className="p-4 text-sm">
+                          <div className="flex justify-between items-start mb-2">
+                            <Badge variant="destructive" className="text-[10px]">Apagado em: {del.deletedAt?.toDate ? format(del.deletedAt.toDate(), "dd/MM HH:mm") : 'N/A'}</Badge>
+                            <span className="text-[10px] font-bold text-destructive">Motivo: {del.reason}</span>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            <strong>Dado Original:</strong> {del.originalRecord?.value} ({del.originalRecord?.recordType})
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </section>
+              )}
             </div>
           </ScrollArea>
           
@@ -353,6 +358,38 @@ export default function ResearcherPage() {
               Fechar Detalhes
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo de Justificação de Eliminação */}
+      <Dialog open={isDeleteReasonDialogOpen} onOpenChange={setIsDeleteReasonDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-5 w-5" /> Confirmar Eliminação
+            </DialogTitle>
+            <DialogDescription>
+              Esta ação é permanente. Indique o motivo da eliminação para fins de auditoria.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="reason">Motivo / Justificação</Label>
+              <Textarea 
+                id="reason" 
+                placeholder="Ex: Medição incorreta, erro de digitação, duplicado..." 
+                value={deletionReason}
+                onChange={(e) => setDeletionReason(e.target.value)}
+                className="min-h-[100px]"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteReasonDialogOpen(false)}>Cancelar</Button>
+            <Button variant="destructive" onClick={handleConfirmDelete} disabled={!deletionReason.trim()}>
+              Confirmar Eliminação
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

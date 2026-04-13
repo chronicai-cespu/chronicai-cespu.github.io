@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { ShieldAlert, Trash2, Edit, UserPlus, Search, Save } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
-import { deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import {
@@ -25,7 +25,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function AdminPage() {
-  const { role: currentUserRole } = useHealth();
+  const { role: currentUserRole, isLoading: isContextLoading } = useHealth();
   const db = useFirestore();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
@@ -34,13 +34,13 @@ export default function AdminPage() {
 
   // Guardamos a query para garantir que só dispara quando o papel de admin é confirmado
   const usersQuery = useMemoFirebase(() => {
-    if (!db || currentUserRole !== 'admin') return null;
+    if (!db || isContextLoading || currentUserRole !== 'admin') return null;
     return query(collection(db, 'users'));
-  }, [db, currentUserRole]);
+  }, [db, currentUserRole, isContextLoading]);
 
-  const { data: allUsers, isLoading } = useCollection(usersQuery);
+  const { data: allUsers, isLoading: isUsersLoading } = useCollection(usersQuery);
 
-  if (currentUserRole !== 'admin') {
+  if (!isContextLoading && currentUserRole !== 'admin') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <ShieldAlert className="w-16 h-16 text-destructive" />
@@ -76,6 +76,13 @@ export default function AdminPage() {
     };
 
     updateDocumentNonBlocking(userRef, updatedData);
+
+    // Garantir que os marcadores de papel são criados para as Security Rules
+    if (editingUser.role === 'admin') {
+      setDocumentNonBlocking(doc(db, 'roles_admin', editingUser.id), { active: true }, { merge: true });
+    } else if (editingUser.role === 'researcher') {
+      setDocumentNonBlocking(doc(db, 'roles_researcher', editingUser.id), { active: true }, { merge: true });
+    }
 
     if (editingUser.role === 'patient') {
       const profileRef = doc(db, 'patient_profiles', editingUser.id);
@@ -181,7 +188,7 @@ export default function AdminPage() {
                   </TableCell>
                 </TableRow>
               ))}
-              {isLoading && (
+              {(isUsersLoading || isContextLoading) && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-10">
                     A carregar...

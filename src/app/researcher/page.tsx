@@ -30,7 +30,7 @@ import { pt } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
 export default function ResearcherPage() {
-  const { role } = useHealth();
+  const { role, isLoading: isContextLoading } = useHealth();
   const db = useFirestore();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
@@ -44,21 +44,22 @@ export default function ResearcherPage() {
 
   // Queries guardadas por papel para evitar erros de permissão
   const patientsQuery = useMemoFirebase(() => {
-    if (!db || (role !== 'researcher' && role !== 'admin')) return null;
+    // Só disparar a query se o papel for confirmado como admin ou researcher
+    if (!db || isContextLoading || (role !== 'researcher' && role !== 'admin')) return null;
     return query(collection(db, 'patient_profiles'));
-  }, [db, role]);
+  }, [db, role, isContextLoading]);
   
-  const { data: allPatients, isLoading } = useCollection(patientsQuery);
+  const { data: allPatients, isLoading: isPatientsLoading } = useCollection(patientsQuery);
 
   // Query para os registos do paciente selecionado
   const selectedPatientLogsQuery = useMemoFirebase(() => {
-    if (!db || !selectedPatient || (role !== 'researcher' && role !== 'admin')) return null;
+    if (!db || !selectedPatient || isContextLoading || (role !== 'researcher' && role !== 'admin')) return null;
     return query(
       collection(db, 'patient_profiles', selectedPatient.userId, 'clinical_records'),
       orderBy('recordedAt', 'desc'),
       limit(50)
     );
-  }, [db, selectedPatient, role]);
+  }, [db, selectedPatient, role, isContextLoading]);
   
   const { data: patientLogs } = useCollection(selectedPatientLogsQuery);
 
@@ -74,7 +75,7 @@ export default function ResearcherPage() {
 
   const { data: deletionHistory } = useCollection(deletionLogsQuery);
 
-  if (role !== 'researcher' && role !== 'admin') {
+  if (!isContextLoading && role !== 'researcher' && role !== 'admin') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <FlaskConical className="w-16 h-16 text-muted-foreground" />
@@ -211,7 +212,7 @@ export default function ResearcherPage() {
                   </TableCell>
                 </TableRow>
               ))}
-              {isLoading && (
+              {(isPatientsLoading || isContextLoading) && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-12">
                     <FlaskConical className="h-8 w-8 animate-pulse mx-auto text-muted-foreground mb-2" />

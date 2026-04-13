@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useHealth } from '@/components/health-context';
@@ -7,23 +8,34 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShieldAlert, Trash2, Edit, UserPlus, Search } from 'lucide-react';
+import { ShieldAlert, Trash2, Edit, UserPlus, Search, Save } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
-import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function AdminPage() {
-  const { role } = useHealth();
+  const { role: currentUserRole } = useHealth();
   const db = useFirestore();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const usersQuery = useMemoFirebase(() => db ? query(collection(db, 'users')) : null, [db]);
   const { data: allUsers, isLoading } = useCollection(usersQuery);
 
-  if (role !== 'admin') {
+  if (currentUserRole !== 'admin') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <ShieldAlert className="w-16 h-16 text-destructive" />
@@ -39,6 +51,26 @@ export default function AdminPage() {
       deleteDocumentNonBlocking(userRef);
       toast({ title: "Utilizador Apagado", description: `O utilizador ${code} foi removido.` });
     }
+  };
+
+  const handleEditClick = (user: any) => {
+    setEditingUser({ ...user });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateUser = () => {
+    if (!editingUser || !db) return;
+    
+    const userRef = doc(db, 'users', editingUser.id);
+    updateDocumentNonBlocking(userRef, {
+      email: editingUser.email,
+      role: editingUser.role,
+      assignedCode: editingUser.assignedCode,
+      mobileNumber: editingUser.mobileNumber || null
+    });
+
+    setIsEditDialogOpen(false);
+    toast({ title: "Utilizador Atualizado", description: `Os dados de ${editingUser.assignedCode} foram guardados.` });
   };
 
   const filteredUsers = allUsers?.filter(u => 
@@ -104,7 +136,12 @@ export default function AdminPage() {
                     {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
                   </TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button size="icon" variant="ghost" className="text-primary">
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      className="text-primary"
+                      onClick={() => handleEditClick(user)}
+                    >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button 
@@ -130,6 +167,62 @@ export default function AdminPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar Utilizador: {editingUser?.assignedCode}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">E-mail</Label>
+              <Input 
+                id="edit-email" 
+                value={editingUser?.email?.replace(/^"|"$/g, '') || ''} 
+                onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-mobile">Telemóvel</Label>
+              <Input 
+                id="edit-mobile" 
+                value={editingUser?.mobileNumber || ''} 
+                onChange={(e) => setEditingUser({ ...editingUser, mobileNumber: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-role">Papel</Label>
+              <Select 
+                value={editingUser?.role} 
+                onValueChange={(v) => setEditingUser({ ...editingUser, role: v })}
+              >
+                <SelectTrigger id="edit-role">
+                  <SelectValue placeholder="Selecione o papel" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="patient">Paciente</SelectItem>
+                  <SelectItem value="researcher">Investigador</SelectItem>
+                  <SelectItem value="admin">Administrador</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-code">Código Atribuído</Label>
+              <Input 
+                id="edit-code" 
+                value={editingUser?.assignedCode || ''} 
+                onChange={(e) => setEditingUser({ ...editingUser, assignedCode: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleUpdateUser} className="bg-primary">
+              <Save className="mr-2 h-4 w-4" /> Guardar Alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

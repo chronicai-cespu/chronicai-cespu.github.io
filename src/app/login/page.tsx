@@ -35,11 +35,11 @@ export default function LoginPage() {
     try {
       if (!db) throw new Error("Erro de ligação à base de dados.");
 
-      // 1. Caso especial: Username Admin
+      // 1. Caso especial: Username Admin (hardcoded mapping)
       if (identifier === 'admin2526') {
         loginEmail = 'chronicai.cespu@gmail.com';
       } 
-      // 2. Identificador por Email
+      // 2. Identificador por Email direto
       else if (identifier.includes('@')) {
         loginEmail = identifier;
       } 
@@ -62,7 +62,7 @@ export default function LoginPage() {
           if (!snapMobile.empty) {
             loginEmail = snapMobile.docs[0].data().email;
           } else {
-            // Pesquisa por Data de Nascimento (apenas se o formato for DD/MM/AAAA)
+            // Pesquisa por Data de Nascimento (formato DD/MM/AAAA)
             const isBirthDatePattern = /^\d{2}\/\d{2}\/\d{4}$/.test(identifier);
             if (isBirthDatePattern) {
               const qBirth = query(profilesRef, where('birthDate', '==', identifier), limit(1));
@@ -72,14 +72,15 @@ export default function LoginPage() {
                 const profileData = snapBirth.docs[0].data();
                 const userId = profileData.userId;
                 
-                // Obter o utilizador para validar o papel (Excluir Admin da pesquisa por data de nascimento)
+                // Obter o email do utilizador associado à data de nascimento
                 const qUser = query(usersRef, where('id', '==', userId), limit(1));
                 const snapUser = await getDocs(qUser);
                 
                 if (!snapUser.empty) {
                   const userData = snapUser.docs[0].data();
+                  // Regra: Admin não pode usar data de nascimento para login
                   if (userData.role === 'admin') {
-                    throw new Error("A data de nascimento não é um identificador válido para administradores.");
+                    throw new Error("Administradores não podem usar a data de nascimento para entrar.");
                   }
                   loginEmail = userData.email;
                 }
@@ -96,10 +97,19 @@ export default function LoginPage() {
       await initiateEmailSignIn(auth, loginEmail, loginPass);
       router.push('/dashboard');
     } catch (error: any) {
+      console.error("Login Error:", error);
+      let message = "Verifique as suas credenciais.";
+      
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        message = "Dados de acesso inválidos.";
+      } else if (error.message) {
+        message = error.message;
+      }
+
       toast({
         variant: "destructive",
         title: "Erro no Login",
-        description: error.message || "Verifique as suas credenciais.",
+        description: message,
       });
     } finally {
       setIsLoggingIn(false);
@@ -133,7 +143,7 @@ export default function LoginPage() {
                 disabled={isLoggingIn}
               />
               <p className="text-[10px] text-muted-foreground">
-                Nota: Administradores devem usar username, email ou telemóvel.
+                Nota: Para o admin, utilize o código atribuído, email ou telemóvel.
               </p>
             </div>
             <div className="space-y-2">

@@ -37,18 +37,19 @@ function LogsPageContent() {
   const [weight, setWeight] = useState<string>('');
   const [notes, setNotes] = useState('');
 
-  // Se for admin, carregar lista de pacientes para seleção
-  const patientsQuery = useMemoFirebase(() => (db && role === 'admin') ? query(collection(db, 'patient_profiles')) : null, [db, role]);
+  // Se for admin ou investigador, carregar lista de pacientes para seleção
+  const canManagePatients = role === 'admin' || role === 'researcher';
+  const patientsQuery = useMemoFirebase(() => (db && canManagePatients) ? query(collection(db, 'patient_profiles')) : null, [db, canManagePatients]);
   const { data: allPatients } = useCollection(patientsQuery);
 
   // Definir ID alvo para o registo e histórico
   useEffect(() => {
-    if (role === 'admin' && patientIdFromUrl) {
+    if (canManagePatients && patientIdFromUrl) {
       setTargetPatientId(patientIdFromUrl);
-    } else if (role !== 'admin' && user) {
+    } else if (!canManagePatients && user) {
       setTargetPatientId(user.uid);
     }
-  }, [role, user, patientIdFromUrl]);
+  }, [canManagePatients, user, patientIdFromUrl]);
 
   // Carregar logs do paciente selecionado (ou do próprio utilizador)
   const logsQuery = useMemoFirebase(() => {
@@ -127,7 +128,7 @@ function LogsPageContent() {
 
       toast({
         title: "Sucesso",
-        description: role === 'admin' ? "Registo clínico inserido com sucesso." : "O seu registo foi guardado com sucesso!",
+        description: canManagePatients ? "Registo clínico inserido com sucesso." : "O seu registo foi guardado com sucesso!",
       });
 
       if (type === 'bp') { setSystolic(''); setDiastolic(''); }
@@ -143,14 +144,14 @@ function LogsPageContent() {
         <div>
           <h1 className="text-3xl font-bold font-headline text-secondary flex items-center gap-3">
             <ClipboardList className="h-8 w-8 text-primary" /> 
-            {role === 'admin' ? 'Inserção de Registos Clínicos' : 'Registo de Saúde Diário'}
+            {canManagePatients ? 'Inserção de Registos Clínicos' : 'Registo de Saúde Diário'}
           </h1>
           <p className="text-muted-foreground text-lg">
-            {role === 'admin' ? 'Adicione medições para um paciente participante.' : 'Mantenha o seu histórico atualizado. É simples e rápido.'}
+            {canManagePatients ? 'Adicione medições para um paciente participante.' : 'Mantenha o seu histórico atualizado. É simples e rápido.'}
           </p>
         </div>
         
-        {role === 'admin' && (
+        {canManagePatients && (
           <div className="w-full md:w-80 space-y-2">
             <Label className="text-xs font-bold uppercase text-primary">Selecionar Paciente</Label>
             <Select value={targetPatientId} onValueChange={setTargetPatientId}>
@@ -226,7 +227,7 @@ function LogsPageContent() {
                     </div>
                   )}
 
-                  <LogFields notes={notes} setNotes={setNotes} onLog={() => handleLog('bp')} isAdmin={role === 'admin'} />
+                  <LogFields notes={notes} setNotes={setNotes} onLog={() => handleLog('bp')} isManagement={canManagePatients} />
                 </TabsContent>
 
                 <TabsContent value="activity" className="space-y-6 mt-0">
@@ -252,7 +253,7 @@ function LogsPageContent() {
                       </Select>
                     </div>
                   </div>
-                  <LogFields notes={notes} setNotes={setNotes} onLog={() => handleLog('activity')} isAdmin={role === 'admin'} />
+                  <LogFields notes={notes} setNotes={setNotes} onLog={() => handleLog('activity')} isManagement={canManagePatients} />
                 </TabsContent>
 
                 <TabsContent value="weight" className="space-y-6 mt-0">
@@ -267,7 +268,7 @@ function LogsPageContent() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <LogFields notes={notes} setNotes={setNotes} onLog={() => handleLog('weight')} isAdmin={role === 'admin'} />
+                  <LogFields notes={notes} setNotes={setNotes} onLog={() => handleLog('weight')} isManagement={canManagePatients} />
                 </TabsContent>
               </div>
             </Tabs>
@@ -279,7 +280,7 @@ function LogsPageContent() {
             <CardHeader className="border-b bg-white rounded-t-lg">
               <CardTitle className="text-xl flex items-center justify-between">
                 <span>Histórico de Medições</span>
-                {targetPatientId && role === 'admin' && (
+                {targetPatientId && canManagePatients && (
                   <Badge variant="outline" className="text-[10px] font-mono">
                     {allPatients?.find(p => p.userId === targetPatientId)?.assignedCode}
                   </Badge>
@@ -333,14 +334,14 @@ function LogsPageContent() {
   );
 }
 
-function LogFields({ notes, setNotes, onLog, isAdmin }: { notes: string, setNotes: (v: string) => void, onLog: () => void, isAdmin?: boolean }) {
+function LogFields({ notes, setNotes, onLog, isManagement }: { notes: string, setNotes: (v: string) => void, onLog: () => void, isManagement?: boolean }) {
   return (
     <div className="space-y-4 pt-4 border-t">
       <div className="space-y-2">
         <Label htmlFor="notes">Notas ou Observações Clínicas</Label>
         <Textarea 
           id="notes" 
-          placeholder={isAdmin ? "Adicione observações sobre a medição..." : "Como se sente no momento?"} 
+          placeholder={isManagement ? "Adicione observações sobre a medição..." : "Como se sente no momento?"} 
           className="min-h-[100px] text-lg bg-muted/20"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
@@ -350,10 +351,10 @@ function LogFields({ notes, setNotes, onLog, isAdmin }: { notes: string, setNote
         onClick={onLog} 
         className={cn(
           "w-full h-14 text-xl rounded-full shadow-lg",
-          isAdmin ? "bg-secondary hover:bg-secondary/90" : "bg-primary hover:bg-primary/90"
+          isManagement ? "bg-secondary hover:bg-secondary/90" : "bg-primary hover:bg-primary/90"
         )}
       >
-        <CheckCircle2 className="mr-2 h-6 w-6" /> {isAdmin ? "Confirmar Registo Clínico" : "Guardar no Histórico"}
+        <CheckCircle2 className="mr-2 h-6 w-6" /> {isManagement ? "Confirmar Registo Clínico" : "Guardar no Histórico"}
       </Button>
     </div>
   );

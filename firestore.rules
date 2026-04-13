@@ -29,8 +29,8 @@ service cloud.firestore {
       allow get: if isSignedIn();
       allow list: if isSignedIn() && (isResearcher() || isAdmin());
       
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) || isAdmin() || isResearcher();
+      allow update: if isOwner(userId) || isAdmin() || isResearcher();
       allow delete: if isAdmin();
     }
 
@@ -52,21 +52,21 @@ service cloud.firestore {
       allow get: if isSignedIn();
       allow list: if isSignedIn() && (isResearcher() || isAdmin());
       
-      allow create: if isOwner(patientUserId) || isAdmin();
-      allow update: if resource != null && (isOwner(patientUserId) || isAdmin());
+      allow create: if isOwner(patientUserId) || isAdmin() || isResearcher();
+      allow update: if resource != null && (isOwner(patientUserId) || isAdmin() || isResearcher());
       allow delete: if resource != null && isAdmin();
 
       match /clinical_records/{recordId} {
         allow get, list: if isSignedIn() && (isOwner(patientUserId) || isResearcher() || isAdmin());
-        allow create: if (isOwner(patientUserId) || isAdmin());
-        allow update: if resource != null && (isOwner(patientUserId) || isAdmin());
+        allow create: if (isOwner(patientUserId) || isAdmin() || isResearcher());
+        allow update: if resource != null && (isOwner(patientUserId) || isAdmin() || isResearcher());
         allow delete: if resource != null && isAdmin();
       }
 
       match /activity_logs/{logId} {
         allow get, list: if isSignedIn() && (isOwner(patientUserId) || isResearcher() || isAdmin());
-        allow create: if (isOwner(patientUserId) || isAdmin());
-        allow update: if resource != null && (isOwner(patientUserId) || isAdmin());
+        allow create: if (isOwner(patientUserId) || isAdmin() || isResearcher());
+        allow update: if resource != null && (isOwner(patientUserId) || isAdmin() || isResearcher());
         allow delete: if resource != null && isAdmin();
       }
 

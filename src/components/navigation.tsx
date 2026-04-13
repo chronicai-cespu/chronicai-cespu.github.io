@@ -23,7 +23,6 @@ export function Navigation() {
 
   const welcomeName = role === 'admin' ? 'Admin' : (userProfile?.name || '');
 
-  // Definição dos itens de navegação com lógica de exibição e nomes dinâmicos
   const navItems = [
     { 
       href: '/admin', 
@@ -51,11 +50,11 @@ export function Navigation() {
     },
     { 
       href: '/logs', 
-      label: role === 'admin' ? 'Registos de Pacientes' : 'Registos', 
+      label: (role === 'admin' || role === 'researcher') ? 'Registos de Pacientes' : 'Registos', 
       icon: ClipboardList,
       activeColor: "border-secondary text-secondary",
       hoverColor: "hover:text-secondary hover:border-secondary",
-      show: role === 'patient' || role === 'admin'
+      show: role === 'patient' || role === 'admin' || role === 'researcher'
     },
     { 
       href: '/chat', 
@@ -71,7 +70,7 @@ export function Navigation() {
       icon: User,
       activeColor: "border-primary text-primary",
       hoverColor: "hover:text-primary hover:border-primary",
-      show: role === 'patient'
+      show: role === 'patient' || role === 'researcher' || role === 'admin'
     },
   ];
 
@@ -91,7 +90,6 @@ export function Navigation() {
               </div>
             </Link>
 
-            {/* Mensagem de Boas-vindas dinâmica */}
             {role && welcomeName && (
               <div className="ml-6 px-4 py-1.5 bg-secondary/10 text-secondary rounded-full text-sm font-bold border border-secondary/20 hidden md:flex items-center animate-in fade-in slide-in-from-left-4 duration-500">
                 Bem-vindo, {welcomeName}
@@ -119,9 +117,8 @@ export function Navigation() {
                       <Icon className="w-5 h-5" />
                       <span className="hidden lg:inline">{item.label}</span>
                     </div>
-                    {/* Código do utilizador visível sob o item de menu relevante */}
                     {assignedCode && (
-                      (item.href === '/profile' && role === 'patient') ||
+                      (item.href === '/profile') ||
                       (item.href === '/admin' && role === 'admin') ||
                       (item.href === '/researcher' && role === 'researcher')
                     ) && (

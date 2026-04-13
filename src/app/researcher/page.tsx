@@ -8,10 +8,10 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FlaskConical, Search, Eye, FileText, Activity, HeartPulse, Scale, Calendar, Plus, Trash2, History, AlertCircle } from 'lucide-react';
+import { FlaskConical, Search, Eye, FileText, Activity, HeartPulse, Scale, Calendar, Plus, Trash2, History, AlertCircle, Edit, UserPlus, Save } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
-import { deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { deleteDocumentNonBlocking, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import {
@@ -25,6 +25,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -36,6 +37,8 @@ export default function ResearcherPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isEditingPatient, setIsEditingPatient] = useState(false);
+  const [editPatientData, setEditPatientData] = useState<any>(null);
 
   const [isDeleteReasonDialogOpen, setIsDeleteReasonDialogOpen] = useState(false);
   const [deletionReason, setDeletionReason] = useState('');
@@ -90,6 +93,25 @@ export default function ResearcherPage() {
     setIsDetailsOpen(true);
   };
 
+  const handleEditPatient = (patient: any) => {
+    setEditPatientData({ ...patient });
+    setIsEditingPatient(true);
+  };
+
+  const handleSavePatientEdit = () => {
+    if (!db || !editPatientData) return;
+    const profileRef = doc(db, 'patient_profiles', editPatientData.userId);
+    updateDocumentNonBlocking(profileRef, editPatientData);
+    
+    // Também atualizar na coleção users se necessário
+    const userRef = doc(db, 'users', editPatientData.userId);
+    updateDocumentNonBlocking(userRef, { name: editPatientData.name });
+
+    setIsEditingPatient(false);
+    setSelectedPatient(editPatientData); // Atualizar o paciente selecionado no estado local
+    toast({ title: "Perfil Atualizado", description: "Dados do paciente guardados com sucesso." });
+  };
+
   const initiateDelete = (log: any) => {
     setLogToDelete(log);
     setDeletionReason('');
@@ -135,14 +157,21 @@ export default function ResearcherPage() {
           </h1>
           <p className="text-muted-foreground">Monitorização de dados clínicos e análise de adesão ao autocuidado.</p>
         </div>
-        <div className="relative w-full md:w-80">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Pesquisar por Código (pXX) ou Nome..." 
-            className="pl-9 h-11"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+          <Button asChild className="rounded-full bg-secondary">
+            <Link href="/register">
+              <UserPlus className="mr-2 h-4 w-4" /> Novo Paciente
+            </Link>
+          </Button>
+          <div className="relative w-full md:w-80">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input 
+              placeholder="Pesquisar pXX ou Nome..." 
+              className="pl-9 h-11"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
       </header>
 
@@ -189,18 +218,16 @@ export default function ResearcherPage() {
                       >
                         <Eye className="mr-2 h-4 w-4" /> Ver Registos
                       </Button>
-                      {role === 'admin' && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-primary hover:text-primary hover:bg-primary/10 w-full justify-start"
-                          asChild
-                        >
-                          <Link href={`/logs?patientId=${patient.userId}`}>
-                            <Plus className="mr-2 h-4 w-4" /> Inserir Registos
-                          </Link>
-                        </Button>
-                      )}
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-primary hover:text-primary hover:bg-primary/10 w-full justify-start"
+                        asChild
+                      >
+                        <Link href={`/logs?patientId=${patient.userId}`}>
+                          <Plus className="mr-2 h-4 w-4" /> Inserir Registos
+                        </Link>
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -222,7 +249,7 @@ export default function ResearcherPage() {
         <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
           <DialogHeader className="p-6 bg-secondary text-white shrink-0">
             <div className="flex justify-between items-start">
-              <div>
+              <div className="flex-1">
                 <DialogTitle className="text-2xl font-bold flex items-center gap-2">
                   <FileText className="h-6 w-6" /> Detalhes do Paciente: {selectedPatient?.assignedCode}
                 </DialogTitle>
@@ -230,6 +257,14 @@ export default function ResearcherPage() {
                   {selectedPatient?.name} • {selectedPatient?.age} anos • {selectedPatient?.gender}
                 </DialogDescription>
               </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                onClick={() => handleEditPatient(selectedPatient)}
+              >
+                <Edit className="mr-2 h-4 w-4" /> Editar Perfil
+              </Button>
             </div>
           </DialogHeader>
 
@@ -284,7 +319,7 @@ export default function ResearcherPage() {
                         <TableHead>Tipo</TableHead>
                         <TableHead>Valor</TableHead>
                         <TableHead>Notas</TableHead>
-                        {role === 'admin' && <TableHead className="text-right">Ações</TableHead>}
+                        {(role === 'admin' || role === 'researcher') && <TableHead className="text-right">Ações</TableHead>}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -307,7 +342,7 @@ export default function ResearcherPage() {
                           <TableCell className="text-xs text-muted-foreground italic max-w-[200px] truncate">
                             {log.notes || '---'}
                           </TableCell>
-                          {role === 'admin' && (
+                          {(role === 'admin' || role === 'researcher') && (
                             <TableCell className="text-right">
                               <Button 
                                 variant="ghost" 
@@ -356,6 +391,54 @@ export default function ResearcherPage() {
               Fechar Detalhes
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditingPatient} onOpenChange={setIsEditingPatient}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar Paciente: {editPatientData?.assignedCode}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome Completo</Label>
+              <Input 
+                value={editPatientData?.name || ''} 
+                onChange={e => setEditPatientData({...editPatientData, name: e.target.value})}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Peso (kg)</Label>
+                <Input 
+                  type="number"
+                  value={editPatientData?.weight || 0} 
+                  onChange={e => setEditPatientData({...editPatientData, weight: parseInt(e.target.value)})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Altura (cm)</Label>
+                <Input 
+                  type="number"
+                  value={editPatientData?.height || 0} 
+                  onChange={e => setEditPatientData({...editPatientData, height: parseInt(e.target.value)})}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Unidade de Saúde</Label>
+              <Input 
+                value={editPatientData?.healthUnit || ''} 
+                onChange={e => setEditPatientData({...editPatientData, healthUnit: e.target.value})}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditingPatient(false)}>Cancelar</Button>
+            <Button onClick={handleSavePatientEdit} className="bg-primary">
+              <Save className="mr-2 h-4 w-4" /> Guardar Alterações
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

@@ -109,7 +109,7 @@ export default function Home() {
           </div>
 
           {/* Logos Display Area */}
-          <div className="flex flex-col md:flex-row items-center justify-center gap-12 grayscale hover:grayscale-0 transition-all duration-500 opacity-80 hover:opacity-100">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-12 opacity-90">
             {ditechLogo && (
               <div className="relative w-48 h-24">
                 <Image 

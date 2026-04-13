@@ -30,12 +30,12 @@ export default function LoginPage() {
     setIsLoggingIn(true);
 
     let loginEmail = '';
-    const loginPass = identifier === 'admin2526' ? 'ditechAI2526' : password;
+    const loginPass = password;
 
     try {
       if (!db) throw new Error("Erro de ligação à base de dados.");
 
-      // 1. Caso especial: Username Admin (hardcoded mapping)
+      // 1. Caso especial: Username Admin Direto
       if (identifier === 'admin2526') {
         loginEmail = 'chronicai.cespu@gmail.com';
       } 
@@ -72,15 +72,15 @@ export default function LoginPage() {
                 const profileData = snapBirth.docs[0].data();
                 const userId = profileData.userId;
                 
-                // Obter o email do utilizador associado à data de nascimento
+                // Obter o papel do utilizador para verificar se é admin
                 const qUser = query(usersRef, where('id', '==', userId), limit(1));
                 const snapUser = await getDocs(qUser);
                 
                 if (!snapUser.empty) {
                   const userData = snapUser.docs[0].data();
-                  // Regra: Admin não pode usar data de nascimento para login
+                  // Regra Crítica: Admin não pode usar data de nascimento para login
                   if (userData.role === 'admin') {
-                    throw new Error("Administradores não podem usar a data de nascimento para entrar.");
+                    throw new Error("Administradores não podem utilizar a data de nascimento para entrar no sistema.");
                   }
                   loginEmail = userData.email;
                 }
@@ -91,24 +91,24 @@ export default function LoginPage() {
       }
 
       if (!loginEmail) {
-        throw new Error("Não foi encontrado nenhum utilizador com estes dados.");
+        throw new Error("Não foi encontrado nenhum utilizador com os dados introduzidos.");
       }
 
       await initiateEmailSignIn(auth, loginEmail, loginPass);
       router.push('/dashboard');
     } catch (error: any) {
       console.error("Login Error:", error);
-      let message = "Verifique as suas credenciais.";
+      let message = "Dados de acesso inválidos. Por favor, tente novamente.";
       
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        message = "Dados de acesso inválidos.";
+        message = "O email ou a palavra-passe estão incorretos.";
       } else if (error.message) {
         message = error.message;
       }
 
       toast({
         variant: "destructive",
-        title: "Erro no Login",
+        title: "Erro no Acesso",
         description: message,
       });
     } finally {
@@ -125,8 +125,8 @@ export default function LoginPage() {
               <AppLogo className="w-10 h-10" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Bem-vindo ao ChronicAI</CardTitle>
-          <p className="text-muted-foreground">Inicie sessão para gerir a sua saúde.</p>
+          <CardTitle className="text-2xl font-bold">Entrar no ChronicAI</CardTitle>
+          <p className="text-muted-foreground">Inicie sessão para acompanhar a sua saúde.</p>
         </CardHeader>
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
@@ -142,9 +142,6 @@ export default function LoginPage() {
                 className="h-12 text-lg"
                 disabled={isLoggingIn}
               />
-              <p className="text-[10px] text-muted-foreground">
-                Nota: Para o admin, utilize o código atribuído, email ou telemóvel.
-              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Palavra-passe</Label>
@@ -158,7 +155,7 @@ export default function LoginPage() {
                 disabled={isLoggingIn}
               />
             </div>
-            <p className="text-xs text-muted-foreground text-center">
+            <p className="text-[10px] text-muted-foreground text-center">
               Recuperação: <a href="mailto:chronicai.cespu@gmail.com" className="text-primary hover:underline font-bold">chronicai.cespu@gmail.com</a>
             </p>
           </CardContent>

@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useHealth, UserProfile } from '@/components/health-context';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,39 +11,36 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { User, ShieldCheck, Pill, Stethoscope, Save, FileText, Activity } from 'lucide-react';
+import { User, ShieldCheck, Pill, Stethoscope, Save, FileText, Activity, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 export default function ProfilePage() {
-  const { userProfile, setUserProfile } = useHealth();
+  const { userProfile, setUserProfile, isLoading } = useHealth();
   const { toast } = useToast();
+  const router = useRouter();
 
-  const [editProfile, setEditProfile] = useState<UserProfile>(userProfile || {
-    name: '',
-    age: 0,
-    birthDate: '',
-    gender: '',
-    education: '',
-    householdSize: '',
-    healthUnit: '',
-    weight: 0,
-    height: 0,
-    alcoholFreq: '',
-    tobaccoFreq: '',
-    physicalActivityLevel: '',
-    motivationToChange: false,
-    chronicDiseases: [],
-    otherConditions: ''
-  });
+  const [editProfile, setEditProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    if (!isLoading && !userProfile) {
+      router.push('/login');
+    } else if (userProfile) {
+      setEditProfile(userProfile);
+    }
+  }, [userProfile, isLoading, router]);
 
   const handleSaveProfile = () => {
-    setUserProfile(editProfile);
-    toast({ title: "Perfil Atualizado", description: "As suas informações de saúde foram guardadas com segurança." });
+    if (editProfile) {
+      setUserProfile(editProfile);
+      toast({ title: "Perfil Atualizado", description: "As suas informações de saúde foram guardadas com segurança." });
+    }
   };
 
   const toggleDisease = (disease: string) => {
-    const current = editProfile.chronicDiseases;
+    if (!editProfile) return;
+    const current = editProfile.chronicDiseases || [];
     if (current.includes(disease)) {
       setEditProfile({ ...editProfile, chronicDiseases: current.filter(d => d !== disease) });
     } else {
@@ -51,11 +48,19 @@ export default function ProfilePage() {
     }
   };
 
-  // Helper ranges for dropdowns
-  const ages = Array.from({ length: 93 }, (_, i) => i + 18); // 18 to 110
-  const weights = Array.from({ length: 151 }, (_, i) => i + 40); // 40 to 190 kg
-  const heights = Array.from({ length: 101 }, (_, i) => i + 130); // 130 to 230 cm
-  const durations = Array.from({ length: 51 }, (_, i) => i); // 0 to 50 years
+  if (isLoading || !editProfile) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        <p className="text-muted-foreground italic">A carregar perfil...</p>
+      </div>
+    );
+  }
+
+  const ages = Array.from({ length: 93 }, (_, i) => i + 18);
+  const weights = Array.from({ length: 151 }, (_, i) => i + 40);
+  const heights = Array.from({ length: 101 }, (_, i) => i + 130);
+  const durations = Array.from({ length: 51 }, (_, i) => i);
   
   const educationLevels = [
     "Sem escolaridade",
@@ -85,7 +90,6 @@ export default function ProfilePage() {
       </header>
 
       <div className="grid gap-8">
-        {/* Identificação e Registo */}
         <Card className="shadow-md border-none">
           <CardHeader className="bg-primary/5 rounded-t-lg">
             <CardTitle className="text-xl flex items-center gap-2">
@@ -106,7 +110,7 @@ export default function ProfilePage() {
 
             <div className="space-y-2">
               <Label htmlFor="age">Idade</Label>
-              <Select value={editProfile.age.toString()} onValueChange={v => setEditProfile({ ...editProfile, age: parseInt(v) })}>
+              <Select value={editProfile.age?.toString() || ""} onValueChange={v => setEditProfile({ ...editProfile, age: parseInt(v) })}>
                 <SelectTrigger className="h-12">
                   <SelectValue placeholder="Escolha a idade..." />
                 </SelectTrigger>
@@ -167,7 +171,6 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Biometria e Hábitos */}
         <Card className="shadow-md border-none">
           <CardHeader className="bg-secondary/5 rounded-t-lg">
             <CardTitle className="text-xl flex items-center gap-2">
@@ -177,7 +180,7 @@ export default function ProfilePage() {
           <CardContent className="p-8 grid md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="weight">Peso (kg)</Label>
-              <Select value={editProfile.weight.toString()} onValueChange={v => setEditProfile({ ...editProfile, weight: parseInt(v) })}>
+              <Select value={editProfile.weight?.toString() || ""} onValueChange={v => setEditProfile({ ...editProfile, weight: parseInt(v) })}>
                 <SelectTrigger className="h-12">
                   <SelectValue placeholder="Escolha o peso..." />
                 </SelectTrigger>
@@ -191,7 +194,7 @@ export default function ProfilePage() {
 
             <div className="space-y-2">
               <Label htmlFor="height">Altura (cm)</Label>
-              <Select value={editProfile.height.toString()} onValueChange={v => setEditProfile({ ...editProfile, height: parseInt(v) })}>
+              <Select value={editProfile.height?.toString() || ""} onValueChange={v => setEditProfile({ ...editProfile, height: parseInt(v) })}>
                 <SelectTrigger className="h-12">
                   <SelectValue placeholder="Escolha a altura..." />
                 </SelectTrigger>
@@ -256,7 +259,6 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Patologias Crónicas */}
         <Card className="shadow-md border-none">
           <CardHeader className="bg-accent/5 rounded-t-lg">
             <CardTitle className="text-xl flex items-center gap-2">
@@ -269,10 +271,10 @@ export default function ProfilePage() {
               {['Diabetes', 'Hipertensão', 'Colesterol'].map(disease => (
                 <Badge 
                   key={disease} 
-                  variant={editProfile.chronicDiseases.includes(disease) ? "default" : "outline"}
+                  variant={editProfile.chronicDiseases?.includes(disease) ? "default" : "outline"}
                   className={cn(
                     "px-6 py-3 text-base cursor-pointer transition-all rounded-full",
-                    editProfile.chronicDiseases.includes(disease) 
+                    editProfile.chronicDiseases?.includes(disease) 
                       ? "bg-primary text-white scale-105 shadow-md" 
                       : "hover:bg-primary/10 border-2"
                   )}
@@ -283,8 +285,7 @@ export default function ProfilePage() {
               ))}
             </div>
 
-            {/* Campos Dinâmicos por Doença */}
-            {editProfile.chronicDiseases.includes('Diabetes') && (
+            {editProfile.chronicDiseases?.includes('Diabetes') && (
               <div className="space-y-4 p-6 border-l-4 border-primary bg-primary/5 rounded-r-xl animate-in slide-in-from-left duration-300">
                 <h4 className="font-bold text-primary flex items-center gap-2 text-lg"><Activity className="w-5 h-5" /> Diabetes</h4>
                 <div className="grid md:grid-cols-2 gap-6">
@@ -317,24 +318,15 @@ export default function ProfilePage() {
                     <Input 
                       placeholder="ex: Metformina, Januvia" 
                       className="h-12 bg-white"
-                      value={editProfile.diabetesInfo?.meds}
+                      value={editProfile.diabetesInfo?.meds || ""}
                       onChange={e => setEditProfile({...editProfile, diabetesInfo: { ...editProfile.diabetesInfo!, meds: e.target.value }})}
-                    />
-                  </div>
-                  <div className="md:col-span-2 space-y-2">
-                    <Label>Sintomatologia mais frequente</Label>
-                    <Input 
-                      placeholder="ex: formigueiro nos pés, sede excessiva" 
-                      className="h-12 bg-white"
-                      value={editProfile.diabetesInfo?.symptoms?.join(', ')}
-                      onChange={e => setEditProfile({...editProfile, diabetesInfo: { ...editProfile.diabetesInfo!, symptoms: e.target.value.split(',').map(s => s.trim()) }})}
                     />
                   </div>
                 </div>
               </div>
             )}
 
-            {editProfile.chronicDiseases.includes('Hipertensão') && (
+            {editProfile.chronicDiseases?.includes('Hipertensão') && (
               <div className="space-y-4 p-6 border-l-4 border-secondary bg-secondary/5 rounded-r-xl animate-in slide-in-from-left duration-300">
                 <h4 className="font-bold text-secondary flex items-center gap-2 text-lg"><Activity className="w-5 h-5" /> Hipertensão</h4>
                 <div className="grid md:grid-cols-2 gap-6">
@@ -343,17 +335,8 @@ export default function ProfilePage() {
                     <Input 
                       placeholder="ex: 160/100"
                       className="h-12 bg-white"
-                      value={editProfile.hypertensionInfo?.highestReading}
+                      value={editProfile.hypertensionInfo?.highestReading || ""}
                       onChange={e => setEditProfile({...editProfile, hypertensionInfo: { ...editProfile.hypertensionInfo!, highestReading: e.target.value }})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Valores habituais</Label>
-                    <Input 
-                      placeholder="ex: 135/85"
-                      className="h-12 bg-white"
-                      value={editProfile.hypertensionInfo?.regularReading}
-                      onChange={e => setEditProfile({...editProfile, hypertensionInfo: { ...editProfile.hypertensionInfo!, regularReading: e.target.value }})}
                     />
                   </div>
                   <div className="md:col-span-2 space-y-2">
@@ -361,7 +344,7 @@ export default function ProfilePage() {
                     <Input 
                       placeholder="ex: Enalapril, Lisinopril"
                       className="h-12 bg-white"
-                      value={editProfile.hypertensionInfo?.meds}
+                      value={editProfile.hypertensionInfo?.meds || ""}
                       onChange={e => setEditProfile({...editProfile, hypertensionInfo: { ...editProfile.hypertensionInfo!, meds: e.target.value }})}
                     />
                   </div>
@@ -369,7 +352,7 @@ export default function ProfilePage() {
               </div>
             )}
 
-            {editProfile.chronicDiseases.includes('Colesterol') && (
+            {editProfile.chronicDiseases?.includes('Colesterol') && (
               <div className="space-y-4 p-6 border-l-4 border-accent bg-accent/5 rounded-r-xl animate-in slide-in-from-left duration-300">
                 <h4 className="font-bold text-accent-foreground flex items-center gap-2 text-lg"><Activity className="w-5 h-5" /> Colesterol</h4>
                 <div className="grid md:grid-cols-2 gap-6">
@@ -378,7 +361,7 @@ export default function ProfilePage() {
                     <Input 
                       placeholder="ex: 240"
                       className="h-12 bg-white"
-                      value={editProfile.cholesterolInfo?.highestReading}
+                      value={editProfile.cholesterolInfo?.highestReading || ""}
                       onChange={e => setEditProfile({...editProfile, cholesterolInfo: { ...editProfile.cholesterolInfo!, highestReading: e.target.value }})}
                     />
                   </div>
@@ -395,7 +378,7 @@ export default function ProfilePage() {
                     <Input 
                       placeholder="ex: Atorvastatina, Sinvastatina"
                       className="h-12 bg-white"
-                      value={editProfile.cholesterolInfo?.meds}
+                      value={editProfile.cholesterolInfo?.meds || ""}
                       onChange={e => setEditProfile({...editProfile, cholesterolInfo: { ...editProfile.cholesterolInfo!, meds: e.target.value }})}
                     />
                   </div>
@@ -409,7 +392,7 @@ export default function ProfilePage() {
                 id="others" 
                 placeholder="Descreva outras condições ou detalhes importantes que o assistente deva saber..." 
                 className="min-h-[120px] bg-white text-base"
-                value={editProfile.otherConditions}
+                value={editProfile.otherConditions || ""}
                 onChange={e => setEditProfile({...editProfile, otherConditions: e.target.value})}
               />
             </div>
@@ -421,7 +404,6 @@ export default function ProfilePage() {
           </CardFooter>
         </Card>
 
-        {/* Security & Privacy */}
         <div className="bg-green-50 p-6 rounded-2xl flex items-center gap-6 border border-green-100 shadow-sm">
           <div className="bg-green-100 p-4 rounded-full text-green-700">
             <ShieldCheck className="w-10 h-10" />

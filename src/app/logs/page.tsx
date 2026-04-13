@@ -1,6 +1,7 @@
+
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useHealth } from '@/components/health-context';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,17 +10,18 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { HeartPulse, Activity, Scale, ClipboardList, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { HeartPulse, Activity, Scale, ClipboardList, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
 export default function LogsPage() {
-  const { logs, addLog } = useHealth();
+  const { logs, addLog, userProfile, isLoading } = useHealth();
   const { toast } = useToast();
+  const router = useRouter();
   
-  // States for the new structured inputs
   const [systolic, setSystolic] = useState<string>('');
   const [diastolic, setDiastolic] = useState<string>('');
   const [activityType, setActivityType] = useState('');
@@ -27,10 +29,24 @@ export default function LogsPage() {
   const [weight, setWeight] = useState<string>('');
   const [notes, setNotes] = useState('');
 
-  // Dropdown ranges
-  const systolicRange = Array.from({ length: 151 }, (_, i) => i + 70); // 70 to 220
-  const diastolicRange = Array.from({ length: 91 }, (_, i) => i + 40); // 40 to 130
-  const weightRange = Array.from({ length: 161 }, (_, i) => i + 40); // 40 to 200
+  useEffect(() => {
+    if (!isLoading && !userProfile) {
+      router.push('/login');
+    }
+  }, [userProfile, isLoading, router]);
+
+  if (isLoading || !userProfile) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        <p className="text-muted-foreground italic">A carregar registos...</p>
+      </div>
+    );
+  }
+
+  const systolicRange = Array.from({ length: 151 }, (_, i) => i + 70);
+  const diastolicRange = Array.from({ length: 91 }, (_, i) => i + 40);
+  const weightRange = Array.from({ length: 161 }, (_, i) => i + 40);
   const durationOptions = [5, 10, 15, 20, 30, 45, 60, 90, 120, 180];
 
   const getBpStatus = (sys: number, dia: number) => {
@@ -72,7 +88,6 @@ export default function LogsPage() {
 
     addLog({ type, value, notes });
     
-    // Clear current tab inputs
     if (type === 'bp') { setSystolic(''); setDiastolic(''); }
     if (type === 'activity') { setActivityType(''); setActivityDuration(''); }
     if (type === 'weight') setWeight('');

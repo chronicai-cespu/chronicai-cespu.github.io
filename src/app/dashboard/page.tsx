@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useMemo } from 'react';
@@ -6,10 +7,11 @@ import { aiHealthAssistantAdvice } from '@/ai/flows/ai-health-assistant-advice-f
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Activity, Pill, History, ArrowRight, MessageCircle, User, HeartPulse, Lightbulb, TrendingUp } from 'lucide-react';
+import { Activity, Pill, History, ArrowRight, MessageCircle, User, HeartPulse, Lightbulb, TrendingUp, Loader2 } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { format, subDays, isSameDay, startOfDay } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -22,11 +24,19 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export default function Dashboard() {
-  const { userProfile, logs, meds } = useHealth();
+  const { userProfile, logs, meds, isLoading } = useHealth();
   const [didYouKnow, setDidYouKnow] = useState<string | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && !userProfile) {
+      router.push('/login');
+    }
+  }, [userProfile, isLoading, router]);
 
   useEffect(() => {
     async function fetchCuriosity() {
+      if (!userProfile) return;
       try {
         const response = await aiHealthAssistantAdvice({
           question: "Gera uma curiosidade útil sobre as minhas condições de saúde para o meu dashboard.",
@@ -37,11 +47,12 @@ export default function Dashboard() {
         console.error("Failed to fetch curiosity", error);
       }
     }
-    fetchCuriosity();
+    if (userProfile) {
+      fetchCuriosity();
+    }
   }, [userProfile]);
 
   const activityData = useMemo(() => {
-    // Gerar os últimos 7 dias
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = subDays(new Date(), 6 - i);
       return {
@@ -51,13 +62,11 @@ export default function Dashboard() {
       };
     });
 
-    // Preencher com os dados dos logs
     logs.filter(log => log.type === 'activity').forEach(log => {
       const logDate = startOfDay(log.timestamp);
       const dayData = last7Days.find(d => isSameDay(startOfDay(d.date), logDate));
       
       if (dayData) {
-        // Extrair minutos da string "Atividade (X min)"
         const match = log.value.match(/\((\d+)\s*min\)/);
         if (match && match[1]) {
           dayData.minutes += parseInt(match[1]);
@@ -68,13 +77,22 @@ export default function Dashboard() {
     return last7Days;
   }, [logs]);
 
+  if (isLoading || !userProfile) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        <p className="text-muted-foreground italic">A carregar os seus dados de saúde...</p>
+      </div>
+    );
+  }
+
   const recentLogs = logs.slice(0, 3);
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-8 space-y-8">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold font-headline text-secondary">Bom dia, {userProfile.name}</h1>
+          <h1 className="text-3xl md:text-4xl font-bold font-headline text-secondary">Bom dia, {userProfile.name || 'Utilizador'}</h1>
           <p className="text-muted-foreground text-lg">Aqui está o seu resumo de saúde e sugestões personalizadas.</p>
         </div>
         <div className="flex gap-2">
@@ -91,7 +109,6 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Secção de Informação Personalizada / Curiosidades */}
       {didYouKnow && (
         <Card className="border-none shadow-lg bg-gradient-to-r from-accent/20 to-accent/5 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500">
           <div className="p-1 bg-accent"></div>
@@ -112,7 +129,6 @@ export default function Dashboard() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Vital Stats Card */}
         <Card className="shadow-md border-none">
           <CardHeader className="bg-accent/10 rounded-t-lg">
             <CardTitle className="flex items-center gap-2 text-accent-foreground">
@@ -139,7 +155,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Activity Chart Card */}
         <Card className="md:col-span-2 shadow-md border-none">
           <CardHeader className="bg-secondary/5 rounded-t-lg">
             <div className="flex justify-between items-center">
@@ -182,7 +197,6 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-         {/* Profile Summary */}
          <Card className="shadow-md border-none">
           <CardHeader className="bg-primary/10 rounded-t-lg">
             <CardTitle className="flex items-center gap-2">
@@ -193,7 +207,7 @@ export default function Dashboard() {
             <div>
               <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">Patologias Registadas</p>
               <div className="flex flex-wrap gap-2 mt-2">
-                {userProfile.chronicDiseases.length > 0 ? userProfile.chronicDiseases.map(d => (
+                {userProfile.chronicDiseases && userProfile.chronicDiseases.length > 0 ? userProfile.chronicDiseases.map(d => (
                   <Badge key={d} variant="secondary" className="bg-secondary/10 text-secondary border-secondary/20">{d}</Badge>
                 )) : <p className="text-sm italic">Nenhuma patologia registada.</p>}
               </div>
@@ -201,7 +215,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="p-2 bg-muted rounded-lg">
                 <p className="text-muted-foreground text-xs">Atividade</p>
-                <p className="font-bold">{userProfile.physicalActivityLevel}</p>
+                <p className="font-bold">{userProfile.physicalActivityLevel || 'N/A'}</p>
               </div>
               <div className="p-2 bg-muted rounded-lg">
                 <p className="text-muted-foreground text-xs">Motivação</p>
@@ -214,7 +228,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Medication Card */}
         <Card className="md:col-span-1 shadow-md border-none">
           <CardHeader className="bg-secondary/10 rounded-t-lg">
             <CardTitle className="flex items-center gap-2 text-secondary">
@@ -222,7 +235,7 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6 space-y-4">
-            {meds.length > 0 ? (
+            {meds && meds.length > 0 ? (
               <div className="space-y-3">
                 {meds.slice(0, 2).map(m => (
                   <div key={m.id} className="flex justify-between items-center p-3 bg-muted rounded-lg">
@@ -243,7 +256,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Recent Activity Log */}
         <Card className="md:col-span-1 shadow-md border-none">
           <CardHeader>
             <div className="flex justify-between items-center">

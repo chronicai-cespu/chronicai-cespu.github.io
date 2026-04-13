@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useRef, useEffect } from 'react';
@@ -10,6 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
 import { Send, User, Bot, Loader2, Sparkles, PhoneCall } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AppLogo } from '@/components/app-logo';
 
@@ -22,16 +24,29 @@ type Message = {
 };
 
 export default function ChatPage() {
-  const { userProfile } = useHealth();
+  const { userProfile, isLoading: isHealthLoading } = useHealth();
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'assistant',
-      content: `Olá ${userProfile?.name || 'Utilizador'}. Sou o seu Assistente de Saúde. Como se sente hoje? Estou aqui para o ouvir com paciência e respeito. Pode contar-me sobre os seus sintomas ou dúvidas sobre a sua saúde.`
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isHealthLoading && !userProfile) {
+      router.push('/login');
+    }
+  }, [userProfile, isHealthLoading, router]);
+
+  useEffect(() => {
+    if (userProfile && messages.length === 0) {
+      setMessages([
+        {
+          role: 'assistant',
+          content: `Olá ${userProfile?.name || 'Utilizador'}. Sou o seu Assistente de Saúde. Como se sente hoje? Estou aqui para o ouvir com paciência e respeito. Pode contar-me sobre os seus sintomas ou dúvidas sobre a sua saúde.`
+        }
+      ]);
+    }
+  }, [userProfile, messages.length]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -86,6 +101,15 @@ export default function ChatPage() {
       setIsLoading(false);
     }
   };
+
+  if (isHealthLoading || !userProfile) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        <p className="text-muted-foreground italic">A iniciar o assistente...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] bg-background">

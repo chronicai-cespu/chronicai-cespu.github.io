@@ -42,21 +42,25 @@ export default function ResearcherPage() {
   const [deletionReason, setDeletionReason] = useState('');
   const [logToDelete, setLogToDelete] = useState<any>(null);
 
-  // Queries para a lista de pacientes
-  const patientsQuery = useMemoFirebase(() => db ? query(collection(db, 'patient_profiles')) : null, [db]);
+  // Queries guardadas por papel para evitar erros de permissão
+  const patientsQuery = useMemoFirebase(() => {
+    if (!db || (role !== 'researcher' && role !== 'admin')) return null;
+    return query(collection(db, 'patient_profiles'));
+  }, [db, role]);
+  
   const { data: allPatients, isLoading } = useCollection(patientsQuery);
 
   // Query para os registos do paciente selecionado
   const selectedPatientLogsQuery = useMemoFirebase(() => {
-    if (!db || !selectedPatient) return null;
+    if (!db || !selectedPatient || (role !== 'researcher' && role !== 'admin')) return null;
     return query(
       collection(db, 'patient_profiles', selectedPatient.userId, 'clinical_records'),
       orderBy('recordedAt', 'desc'),
       limit(50)
     );
-  }, [db, selectedPatient]);
+  }, [db, selectedPatient, role]);
   
-  const { data: patientLogs, isLoading: isLogsLoading } = useCollection(selectedPatientLogsQuery);
+  const { data: patientLogs } = useCollection(selectedPatientLogsQuery);
 
   // Query para os logs de eliminação (apenas para admin)
   const deletionLogsQuery = useMemoFirebase(() => {

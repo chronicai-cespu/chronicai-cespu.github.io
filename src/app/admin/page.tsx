@@ -3,7 +3,7 @@
 
 import { useHealth } from '@/components/health-context';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, doc, getDoc } from 'firebase/firestore';
+import { collection, query, doc } from 'firebase/firestore';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -32,7 +32,12 @@ export default function AdminPage() {
   const [editingUser, setEditingUser] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  const usersQuery = useMemoFirebase(() => db ? query(collection(db, 'users')) : null, [db]);
+  // Guardamos a query para garantir que só dispara quando o papel de admin é confirmado
+  const usersQuery = useMemoFirebase(() => {
+    if (!db || currentUserRole !== 'admin') return null;
+    return query(collection(db, 'users'));
+  }, [db, currentUserRole]);
+
   const { data: allUsers, isLoading } = useCollection(usersQuery);
 
   if (currentUserRole !== 'admin') {

@@ -197,7 +197,7 @@ export default function ResearcherPage() {
                           size="sm" 
                           className="text-primary hover:text-primary hover:bg-primary/10 w-full justify-start"
                           asChild
-                        ) >
+                        >
                           <Link href={`/logs?patientId=${patient.userId}`}>
                             <Plus className="mr-2 h-4 w-4" /> Inserir Registos
                           </Link>

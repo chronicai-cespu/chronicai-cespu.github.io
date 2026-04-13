@@ -182,7 +182,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 text-center text-muted-foreground space-y-4">
           <div>
             <p className="font-bold">© 2026 ChronicAI. Todos os direitos reservados.</p>
-            <p className="text-xs">DiTech | CESPU | LASI | Centro Algoritmi | Universidade do Minho</p>
+            <p className="text-xs">DiTech | CESPU & Centro Algoritmi | UMinho</p>
           </div>
           <p className="text-[10px] leading-tight max-w-2xl mx-auto italic">
             Aviso Médico: O ChronicAI fornece apenas informações informativas e conselhos de bem-estar. Não substitui o diagnóstico, tratamento ou aconselhamento por um profissional de saúde.

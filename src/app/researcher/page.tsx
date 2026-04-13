@@ -22,7 +22,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { ScrollArea } from '@/components/area-scroll';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
@@ -299,7 +299,7 @@ export default function ResearcherPage() {
                             <Badge variant="ghost" className={cn(
                               "text-[10px] h-5",
                               log.recordType === 'bp' ? "bg-red-50 text-red-600" : 
-                              log.recordType === 'activity' ? "bg-blue-50 text-blue-600" : "bg-green-50 text-green-600"
+                              log.recordType === 'activity' ? "bg-blue-50 text-blue-600" : "bg-green-50 text-green-500"
                             )}>
                               {log.recordType === 'bp' ? 'P. Arterial' : 
                                log.recordType === 'activity' ? 'Atividade' : 'Peso'}

@@ -27,7 +27,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: `Olá ${userProfile.name}. Sou o seu Assistente de Saúde. Como se sente hoje? Estou aqui para o ouvir com paciência e respeito. Pode contar-me sobre os seus sintomas ou dúvidas sobre a sua saúde.`
+      content: `Olá ${userProfile?.name || 'Utilizador'}. Sou o seu Assistente de Saúde. Como se sente hoje? Estou aqui para o ouvir com paciência e respeito. Pode contar-me sobre os seus sintomas ou dúvidas sobre a sua saúde.`
     }
   ]);
   const [isLoading, setIsLoading] = useState(false);
@@ -61,12 +61,12 @@ export default function ChatPage() {
         const response: AiHealthAssistantAdviceOutput = await aiHealthAssistantAdvice({
           question: userMsg,
           userProfile: {
-            age: userProfile.age,
-            gender: userProfile.gender,
-            chronicDiseases: userProfile.chronicDiseases,
-            medications: userProfile.medications,
-            allergies: userProfile.allergies,
-            recentHealthConcerns: userProfile.recentHealthConcerns,
+            age: userProfile?.age,
+            gender: userProfile?.gender,
+            chronicDiseases: userProfile?.chronicDiseases,
+            medications: userProfile?.medications,
+            allergies: userProfile?.allergies,
+            recentHealthConcerns: userProfile?.recentHealthConcerns,
           }
         });
 
@@ -91,12 +91,12 @@ export default function ChatPage() {
     <div className="flex flex-col h-[calc(100vh-64px)] bg-background">
       <div className="bg-primary/5 py-4 px-6 border-b flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-white shadow-sm">
+          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-white shadow-sm border">
             <AppLogo className="w-7 h-7" />
           </div>
           <div>
             <h2 className="font-bold text-lg">
-              Assistente <span className="bg-gradient-to-br from-[#FFD700] to-[#FF8C00] bg-clip-text text-transparent">ChronicAI</span>
+              Assistente <span className="bg-gradient-to-br from-primary to-secondary bg-clip-text text-transparent">ChronicAI</span>
             </h2>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Disponível para aconselhamento PT-PT
@@ -148,11 +148,11 @@ export default function ChatPage() {
                 </div>
 
                 {msg.recommendations && msg.recommendations.length > 0 && (
-                  <div className="bg-accent/10 border border-accent/20 p-4 rounded-xl w-full">
-                    <h4 className="font-bold text-sm mb-2 text-accent-foreground flex items-center gap-2">
+                  <div className="bg-primary/5 border border-primary/10 p-4 rounded-xl w-full">
+                    <h4 className="font-bold text-sm mb-2 text-primary flex items-center gap-2">
                       <Sparkles className="w-4 h-4" /> Sugestões de Bem-estar:
                     </h4>
-                    <ul className="list-disc list-inside space-y-1 text-sm text-accent-foreground">
+                    <ul className="list-disc list-inside space-y-1 text-sm text-foreground/80">
                       {msg.recommendations.map((rec, i) => (
                         <li key={i}>{rec}</li>
                       ))}

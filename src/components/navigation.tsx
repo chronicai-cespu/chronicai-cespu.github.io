@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from 'next/link';
@@ -42,8 +41,8 @@ export function Navigation() {
       href: '/chat', 
       label: 'Assistente IA', 
       icon: MessageCircle,
-      activeColor: "border-accent text-accent-foreground font-bold",
-      hoverColor: "hover:text-accent hover:border-accent",
+      activeColor: "border-primary text-primary font-bold",
+      hoverColor: "hover:text-primary hover:border-primary",
       show: role === 'patient'
     },
     { 
@@ -82,7 +81,7 @@ export function Navigation() {
                 <AppLogo className="w-7 h-7" />
               </div>
               <div className="flex flex-col -space-y-1">
-                <span className="font-bold text-xl font-headline hidden sm:block bg-gradient-to-br from-[#FFD700] to-[#FF8C00] bg-clip-text text-transparent">
+                <span className="font-bold text-xl font-headline hidden sm:block bg-gradient-to-br from-primary to-secondary bg-clip-text text-transparent">
                   ChronicAI
                 </span>
                 {assignedCode && (

@@ -14,8 +14,8 @@ export function AppLogo({ className }: { className?: string }) {
     >
       <defs>
         <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#FFD700" /> {/* Amarelo */}
-          <stop offset="100%" stopColor="#FF8C00" /> {/* Laranja */}
+          <stop offset="0%" stopColor="hsl(190, 90%, 30%)" /> {/* Primary Teal */}
+          <stop offset="100%" stopColor="hsl(220, 80%, 45%)" /> {/* Secondary Blue */}
         </linearGradient>
       </defs>
       <path

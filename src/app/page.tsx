@@ -1,4 +1,3 @@
-
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -15,7 +14,7 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="relative h-[600px] flex items-center justify-center text-center overflow-hidden bg-[#87CEEB]">
+      <section className="relative h-[600px] flex items-center justify-center text-center overflow-hidden bg-[#E0F2F1]">
         {heroImage && (
           <Image
             src={heroImage.imageUrl}
@@ -32,17 +31,17 @@ export default function Home() {
               <AppLogo className="text-primary w-12 h-12" />
             </div>
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 font-headline leading-tight text-white">
-            Gira a sua Saúde com <span className="bg-gradient-to-br from-[#FFD700] to-[#FF8C00] bg-clip-text text-transparent">ChronicAI</span>
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 font-headline leading-tight text-primary">
+            Gira a sua Saúde com <span className="bg-gradient-to-br from-primary to-secondary bg-clip-text text-transparent">ChronicAI</span>
           </h1>
-          <p className="text-xl md:text-2xl mb-10 text-white font-bold max-w-2xl mx-auto">
+          <p className="text-xl md:text-2xl mb-10 text-muted-foreground font-bold max-w-2xl mx-auto">
             Um companheiro de saúde dedicado. Monitorize sinais vitais, gira a medicação e fale com a IA para aconselhamento personalizado.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="text-lg px-10 h-14 rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg border-none">
               <Link href="/dashboard">Ir para o Meu Painel</Link>
             </Button>
-            <Button asChild size="lg" className="text-lg px-10 h-14 rounded-full bg-accent text-accent-foreground hover:bg-accent/90 border-none shadow-lg">
+            <Button asChild size="lg" className="text-lg px-10 h-14 rounded-full bg-secondary text-white hover:bg-secondary/90 border-none shadow-lg">
               <Link href="/chat">Falar com o Assistente</Link>
             </Button>
           </div>
@@ -66,12 +65,12 @@ export default function Home() {
               description="Registe facilmente a sua pressão arterial, atividade e peso com botões grandes e simples."
             />
             <FeatureCard 
-              icon={<Sparkles className="w-10 h-10 text-accent" />}
+              icon={<Sparkles className="w-10 h-10 text-secondary" />}
               title="Conselhos com IA"
               description="Obtenha recomendações personalizadas e respostas às suas perguntas de saúde instantaneamente."
             />
             <FeatureCard 
-              icon={<ShieldCheck className="w-10 h-10 text-secondary" />}
+              icon={<ShieldCheck className="w-10 h-10 text-primary" />}
               title="Cuidados Urgentes"
               description="O nosso assistente reconhece sintomas críticos e guia-o para ajuda imediata quando necessário."
             />
@@ -80,13 +79,13 @@ export default function Home() {
       </section>
 
       {/* Call to Action */}
-      <section className="py-20 bg-accent/20 border-y border-accent/30">
+      <section className="py-20 bg-primary/5 border-y border-primary/10">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-6 text-accent-foreground">Pronto para assumir o controlo da sua saúde?</h2>
+          <h2 className="text-3xl font-bold mb-6 text-primary">Pronto para assumir o controlo da sua saúde?</h2>
           <p className="text-lg text-muted-foreground mb-10">
             Junte-se a milhares de utilizadores que gerem as suas condições crónicas com confiança.
           </p>
-          <Button asChild size="lg" className="rounded-full px-12 h-14 bg-accent text-accent-foreground hover:bg-accent/90 shadow-md">
+          <Button asChild size="lg" className="rounded-full px-12 h-14 bg-primary text-white hover:bg-primary/90 shadow-md">
             <Link href="/profile">Configurar o seu Perfil</Link>
           </Button>
         </div>

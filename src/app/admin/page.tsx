@@ -3,7 +3,7 @@
 
 import { useHealth } from '@/components/health-context';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, doc, getDoc } from 'firebase/firestore';
+import { collection, query, doc } from 'firebase/firestore';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { ShieldAlert, Trash2, Edit, UserPlus, Search, Save, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
-import { deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import {
@@ -31,7 +31,6 @@ export default function AdminPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [editingUser, setEditingUser] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isFetchingProfile, setIsFetchingProfile] = useState(false);
 
   const usersQuery = useMemoFirebase(() => db ? query(collection(db, 'users')) : null, [db]);
   const { data: allUsers, isLoading } = useCollection(usersQuery);
@@ -54,24 +53,9 @@ export default function AdminPage() {
     }
   };
 
-  const handleEditClick = async (user: any) => {
-    setEditingUser({ ...user, fullName: '' });
+  const handleEditClick = (user: any) => {
+    setEditingUser({ ...user });
     setIsEditDialogOpen(true);
-
-    if (user.role === 'patient' && db) {
-      setIsFetchingProfile(true);
-      try {
-        const profileRef = doc(db, 'patient_profiles', user.id);
-        const profileSnap = await getDoc(profileRef);
-        if (profileSnap.exists()) {
-          setEditingUser((prev: any) => ({ ...prev, fullName: profileSnap.data().name || '' }));
-        }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      } finally {
-        setIsFetchingProfile(false);
-      }
-    }
   };
 
   const handleUpdateUser = () => {
@@ -79,17 +63,17 @@ export default function AdminPage() {
     
     const userRef = doc(db, 'users', editingUser.id);
     updateDocumentNonBlocking(userRef, {
+      name: editingUser.name || '',
       email: editingUser.email,
       role: editingUser.role,
       assignedCode: editingUser.assignedCode,
       mobileNumber: editingUser.mobileNumber || null
     });
 
-    // Se for paciente, atualizar também o perfil
     if (editingUser.role === 'patient') {
       const profileRef = doc(db, 'patient_profiles', editingUser.id);
       updateDocumentNonBlocking(profileRef, {
-        name: editingUser.fullName
+        name: editingUser.name || ''
       });
     }
 
@@ -99,7 +83,8 @@ export default function AdminPage() {
 
   const filteredUsers = allUsers?.filter(u => 
     u.assignedCode.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (u.email && u.email.toLowerCase().includes(searchTerm.toLowerCase()))
+    (u.email && u.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (u.name && u.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const cleanEmail = (email: string) => {
@@ -132,7 +117,7 @@ export default function AdminPage() {
             <div className="relative w-full md:w-64">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Pesquisar por código ou email..." 
+                placeholder="Pesquisar por nome, código ou email..." 
                 className="pl-9"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -145,6 +130,7 @@ export default function AdminPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Código</TableHead>
+                <TableHead>Nome Completo</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Papel</TableHead>
                 <TableHead>Criado em</TableHead>
@@ -155,6 +141,7 @@ export default function AdminPage() {
               {filteredUsers?.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-bold">{user.assignedCode}</TableCell>
+                  <TableCell>{user.name || <span className="text-muted-foreground italic">Não definido</span>}</TableCell>
                   <TableCell>{cleanEmail(user.email)}</TableCell>
                   <TableCell>
                     <Badge variant={user.role === 'admin' ? 'destructive' : user.role === 'researcher' ? 'secondary' : 'outline'}>
@@ -187,7 +174,7 @@ export default function AdminPage() {
               ))}
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
                     A carregar utilizadores...
                   </TableCell>
                 </TableRow>
@@ -203,21 +190,15 @@ export default function AdminPage() {
             <DialogTitle>Editar Utilizador: {editingUser?.assignedCode}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            {editingUser?.role === 'patient' && (
-              <div className="space-y-2">
-                <Label htmlFor="edit-name">Nome Completo</Label>
-                <div className="relative">
-                  <Input 
-                    id="edit-name" 
-                    value={editingUser?.fullName || ''} 
-                    onChange={(e) => setEditingUser({ ...editingUser, fullName: e.target.value })}
-                    placeholder="Carregando..."
-                    disabled={isFetchingProfile}
-                  />
-                  {isFetchingProfile && <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-muted-foreground" />}
-                </div>
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Nome Completo</Label>
+              <Input 
+                id="edit-name" 
+                value={editingUser?.name || ''} 
+                onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
+                placeholder="Introduza o nome completo"
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="edit-email">E-mail</Label>
               <Input 

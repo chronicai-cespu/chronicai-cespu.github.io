@@ -15,9 +15,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { collection, getDocs, query, where, doc } from 'firebase/firestore';
-import { Loader2 } from 'lucide-react';
+import { Loader2, User as UserIcon } from 'lucide-react';
 
 export default function RegisterPage() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mobile, setMobile] = useState('');
@@ -35,7 +36,6 @@ export default function RegisterPage() {
   };
 
   const validateMobile = (mobile: string) => {
-    // Validação para números portugueses (9 dígitos)
     return /^\d{9}$/.test(mobile.replace(/\s/g, ''));
   };
 
@@ -43,13 +43,21 @@ export default function RegisterPage() {
     e.preventDefault();
     if (isSubmitting) return;
 
+    if (!name.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Nome Necessário",
+        description: "Por favor, introduza o seu nome completo.",
+      });
+      return;
+    }
+
     const emailTrim = email.trim();
     const mobileTrim = mobile.trim().replace(/\s/g, '');
 
     const hasEmail = emailTrim !== '';
     const hasMobile = mobileTrim !== '';
 
-    // Validação: Pelo menos um campo deve estar preenchido
     if (!hasEmail && !hasMobile) {
       toast({
         variant: "destructive",
@@ -59,7 +67,6 @@ export default function RegisterPage() {
       return;
     }
 
-    // Validação: Se fornecidos, devem ser válidos
     if (hasEmail && !validateEmail(emailTrim)) {
       toast({
         variant: "destructive",
@@ -83,25 +90,21 @@ export default function RegisterPage() {
     try {
       if (!db || !auth) throw new Error("Erro de ligação aos serviços Firebase.");
 
-      // Se não houver email, geramos um técnico baseado no telemóvel para o Firebase Auth
-      // O login por telemóvel usará este email técnico internamente após pesquisa no Firestore
       const authEmail = hasEmail ? emailTrim : `${mobileTrim}@chronicai.pt`;
 
-      // Step 1: Gerar assignedCode
       const rolePrefix = role === 'patient' ? 'p' : 'r';
       const q = query(collection(db, 'users'), where('role', '==', role));
       const snapshot = await getDocs(q);
       const count = snapshot.size + 1;
       const assignedCode = `${rolePrefix}${count.toString().padStart(2, '0')}`;
 
-      // Step 2: Registar na Autenticação
       const userCredential = await initiateEmailSignUp(auth, authEmail, password);
       const user = userCredential.user;
 
-      // Step 3: Criar Documento de Utilizador
       const userRef = doc(db, 'users', user.uid);
       setDocumentNonBlocking(userRef, {
         id: user.uid,
+        name: name.trim(),
         email: authEmail,
         mobileNumber: hasMobile ? mobileTrim : null,
         role: role,
@@ -109,12 +112,11 @@ export default function RegisterPage() {
         createdAt: new Date().toISOString()
       }, { merge: true });
 
-      // Step 4: Criar Perfil de Paciente se aplicável
       if (role === 'patient') {
         const profileRef = doc(db, 'patient_profiles', user.uid);
         setDocumentNonBlocking(profileRef, {
           userId: user.uid,
-          name: '',
+          name: name.trim(),
           age: 0,
           birthDate: birthDate || '',
           gender: '',
@@ -130,7 +132,7 @@ export default function RegisterPage() {
 
       toast({
         title: "Conta Criada com Sucesso",
-        description: `Bem-vindo! O seu código de acesso é ${assignedCode}.`,
+        description: `Bem-vindo, ${name.trim()}! O seu código de acesso é ${assignedCode}.`,
       });
       router.push('/dashboard');
     } catch (error: any) {
@@ -177,6 +179,19 @@ export default function RegisterPage() {
                   <SelectItem value="researcher">Investigador</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome Completo</Label>
+              <Input 
+                id="name" 
+                type="text" 
+                placeholder="Introduza o seu nome" 
+                value={name} 
+                onChange={(e) => setName(e.target.value)} 
+                className="h-12" 
+                required
+                disabled={isSubmitting}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>

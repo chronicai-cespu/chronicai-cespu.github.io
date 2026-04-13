@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useFirestore } from '@/firebase';
-import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, serverTimestamp } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,9 +27,34 @@ export default function ContactPage() {
   const db = useFirestore();
   const { toast } = useToast();
 
+  const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const validatePhone = (phone: string) => {
+    // Validação simples para números com pelo menos 9 dígitos
+    return /^\d{9,}$/.test(phone.replace(/\s/g, ''));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
+
+    const { name, email, phone, subject, message } = formData;
+
+    // Validação: Pelo menos um método de contacto válido deve ser fornecido
+    const isEmailValid = email.trim() !== '' && validateEmail(email);
+    const isPhoneValid = phone.trim() !== '' && validatePhone(phone);
+
+    if (!isEmailValid && !isPhoneValid) {
+      toast({
+        variant: "destructive",
+        title: "Dados de Contacto Necessários",
+        description: "Por favor, introduza um E-mail ou um Telefone válido para que possamos responder.",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -37,7 +62,11 @@ export default function ContactPage() {
 
       const contactRef = collection(db, 'contact_messages');
       addDocumentNonBlocking(contactRef, {
-        ...formData,
+        name,
+        email: isEmailValid ? email : null,
+        phone: isPhoneValid ? phone : null,
+        subject,
+        message,
         createdAt: serverTimestamp()
       });
 
@@ -105,10 +134,10 @@ export default function ContactPage() {
                   <Input 
                     id="email" 
                     type="email" 
-                    required 
                     className="h-12"
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    placeholder="exemplo@email.com"
                   />
                 </div>
               </div>
@@ -116,13 +145,14 @@ export default function ContactPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="phone" className="flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-primary" /> Telefone (Opcional)
+                    <Phone className="w-4 h-4 text-primary" /> Telefone
                   </Label>
                   <Input 
                     id="phone" 
                     className="h-12"
                     value={formData.phone}
                     onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    placeholder="9XXXXXXXX"
                   />
                 </div>
                 <div className="space-y-2">

@@ -121,7 +121,6 @@ export default function RegisterPage() {
       }
 
       // 2. Verificação de Combinação Única (Contacto + Data Nascimento)
-      // Esta regra é intrínseca se o e-mail/telemóvel já forem únicos, mas reforçamos a lógica.
       const profilesRef = collection(db, 'patient_profiles');
       const qBirth = query(profilesRef, where('birthDate', '==', birthDate));
       const snapBirth = await getDocs(qBirth);
@@ -173,13 +172,19 @@ export default function RegisterPage() {
           email: hasEmail ? emailTrim : null,
           mobileNumber: hasMobile ? mobileTrim : null
         }, { merge: true });
+        
+        toast({
+          title: "Conta Criada",
+          description: `Bem-vindo! O seu código é ${assignedCode}.`,
+        });
+        router.push('/');
+      } else {
+        toast({
+          title: "Conta Criada",
+          description: `Investigador registado com o código ${assignedCode}.`,
+        });
+        router.push('/researcher');
       }
-
-      toast({
-        title: "Conta Criada",
-        description: `Bem-vindo! O seu código é ${assignedCode}.`,
-      });
-      router.push('/dashboard');
     } catch (error: any) {
       console.error(error);
       toast({

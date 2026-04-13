@@ -83,14 +83,20 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (profileData) {
-      setLocalProfile(profileData as any);
-    } else if (userData && userData.role === 'admin') {
       setLocalProfile({
-        name: 'Administrador',
-        role: 'admin',
+        ...(profileData as any),
+        role: userData?.role,
+        assignedCode: userData?.assignedCode
+      });
+    } else if (userData) {
+      setLocalProfile({
+        name: userData.role === 'admin' ? 'Administrador' : (userData.name || 'Utilizador'),
+        role: userData.role,
         assignedCode: userData.assignedCode,
         chronicDiseases: []
       } as any);
+    } else {
+      setLocalProfile(null);
     }
   }, [profileData, userData]);
 

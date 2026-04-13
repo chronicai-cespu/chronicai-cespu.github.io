@@ -94,8 +94,24 @@ export default function LoginPage() {
         throw new Error("Não foi encontrado nenhum utilizador com os dados introduzidos.");
       }
 
-      await initiateEmailSignIn(auth, loginEmail, loginPass);
-      router.push('/dashboard');
+      const userCredential = await initiateEmailSignIn(auth, loginEmail, loginPass);
+      const user = userCredential.user;
+
+      // Obter o papel para redirecionamento inteligente
+      const usersRef = collection(db, 'users');
+      const qUser = query(usersRef, where('id', '==', user.uid), limit(1));
+      const snapUser = await getDocs(qUser);
+      const userData = snapUser.docs[0]?.data();
+
+      if (userData?.role === 'patient') {
+        router.push('/');
+      } else if (userData?.role === 'admin') {
+        router.push('/admin');
+      } else if (userData?.role === 'researcher') {
+        router.push('/researcher');
+      } else {
+        router.push('/');
+      }
     } catch (error: any) {
       console.error("Login Error:", error);
       let message = "Dados de acesso inválidos. Por favor, tente novamente.";

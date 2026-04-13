@@ -33,7 +33,7 @@ export default function Home() {
             Gira a sua Saúde com <span className="bg-gradient-to-br from-[#FFD700] to-[#FF8C00] bg-clip-text text-transparent">ChronicAI</span>
           </h1>
           <p className="text-xl md:text-2xl mb-10 text-white font-bold max-w-2xl mx-auto">
-            Um companheiro de saúde dedicado aos seniores. Monitorize sinais vitais, gira a medicação e fale com a IA para aconselhamento personalizado.
+            Um companheiro de saúde dedicado. Monitorize sinais vitais, gira a medicação e fale com a IA para aconselhamento personalizado.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="text-lg px-10 h-14 rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg border-none">

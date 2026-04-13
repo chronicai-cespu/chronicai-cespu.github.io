@@ -1,0 +1,156 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * CHRONIC AI SECURITY RULES
+     *
+     * CORE PHILOSOPHY:
+     * This ruleset implements a hierarchical, role-based access control (RBAC) model using Database Access Control (DBAC).
+     * It prioritizes Authorization Independence through denormalization, ensuring rules are fast and atomic.
+     *
+     * DATA STRUCTURE:
+     * - /users/{userId}: Core user identity, roles, and assigned codes.
+     * - /roles_admin/{uid} & /roles_researcher/{uid}: Marker collections used to verify high-privilege roles without custom claims.
+     * - /patient_profiles/{patientUserId}: Clinical and personal data, linked 1:1 with the patient's user account.
+     * - /patient_profiles/{patientUserId}/clinical_records & activity_logs: Historical data subcollections.
+     * - /chronic_diseases & /medications: Global reference data.
+     *
+     * KEY SECURITY DECISIONS:
+     * 1. Roles are tiered: Admins (full control), Researchers (create/edit/view patients), and Patients (owner-only access).
+     * 2. Admins are the only users permitted to perform 'delete' operations on any user-related data.
+     * 3. Authorization Independence: Subcollection documents (e.g., ClinicalRecord) store the owner's UID internally 
+     *    to allow for immediate authorization checks without traversing the document tree via get() calls.
+     * 4. Structural Segregation: Role-specific markers are kept in separate collections (/roles_admin) to simplify 
+     *    role verification logic.
+     */
+
+    // --- GLOBAL HELPER FUNCTIONS ---
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+
+    function isResearcher() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_researcher/$(request.auth.uid));
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // --- COLLECTION RULES ---
+
+    /**
+     * @description Rules for user account documents. Controls core profile data and role/code assignments.
+     * @path /users/{userId}
+     * @allow (get) Any signed-in user viewing their own profile or an Admin/Researcher viewing any profile.
+     * @deny (delete) Any non-admin user attempting to delete a user record.
+     * @principle Validates relational integrity by ensuring the internal 'id' matches the document path.
+     */
+    match /users/{userId} {
+      allow get: if isSignedIn() && (isOwner(userId) || isResearcher() || isAdmin());
+      allow list: if isAdmin() || isResearcher();
+      allow create: if (isOwner(userId) || isResearcher() || isAdmin()) && request.resource.data.id == userId;
+      allow update: if resource != null && (isOwner(userId) || isResearcher() || isAdmin()) && request.resource.data.id == resource.data.id;
+      allow delete: if resource != null && isAdmin();
+    }
+
+    /**
+     * @description Marker collection for Admin role. Presence of a document grants superuser access.
+     * @path /roles_admin/{adminId}
+     * @allow (get) The user themselves checking their role or a system admin.
+     * @deny (write) Any non-admin attempting to elevate their own or others' privileges.
+     * @principle DBAC (Database Access Control) using document existence for role verification.
+     */
+    match /roles_admin/{adminId} {
+      allow get: if isSignedIn() && (isOwner(adminId) || isAdmin());
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description Marker collection for Researcher role. Presence grants access to manage patient data.
+     * @path /roles_researcher/{researcherId}
+     * @allow (get) The user checking their own role or an Admin.
+     * @deny (create) Any non-admin attempting to assign researcher roles.
+     * @principle Restricts high-level role management to superusers only.
+     */
+    match /roles_researcher/{researcherId} {
+      allow get: if isSignedIn() && (isOwner(researcherId) || isAdmin());
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description Global reference for chronic diseases. Read-only for most, Admin-managed.
+     * @path /chronic_diseases/{diseaseId}
+     * @allow (get, list) All authenticated users.
+     * @deny (create, update, delete) Any non-admin user.
+     * @principle Provides public read access to reference data while centralizing maintenance.
+     */
+    match /chronic_diseases/{diseaseId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description Global reference for medications. Read-only for most, Admin-managed.
+     * @path /medications/{medicationId}
+     * @allow (get, list) All authenticated users.
+     * @deny (create, update, delete) Any non-admin user.
+     * @principle Protects the integrity of standardized lookup data.
+     */
+    match /medications/{medicationId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description Patient clinical profiles. Managed by the patient themselves, researchers, or admins.
+     * @path /patient_profiles/{patientUserId}
+     * @allow (create) Patients creating their own profile or Researchers/Admins creating for others.
+     * @deny (delete) Researchers or Patients attempting to delete a profile (Admin only).
+     * @principle Enforces path-based ownership and relational consistency between Auth UID and profile data.
+     */
+    match /patient_profiles/{patientUserId} {
+      allow get: if isSignedIn() && (isOwner(patientUserId) || isResearcher() || isAdmin());
+      allow list: if isAdmin() || isResearcher();
+      allow create: if (isOwner(patientUserId) || isResearcher() || isAdmin()) && request.resource.data.userId == patientUserId;
+      allow update: if resource != null && (isOwner(patientUserId) || isResearcher() || isAdmin()) && request.resource.data.userId == resource.data.userId;
+      allow delete: if resource != null && isAdmin();
+
+      /**
+       * @description Historical clinical records for a specific patient.
+       * @path /patient_profiles/{patientUserId}/clinical_records/{recordId}
+       * @allow (list) The profile owner or authorized clinical staff (Researchers/Admins).
+       * @principle Authorization independence: validates internal patientProfileId against path parameters.
+       */
+      match /clinical_records/{recordId} {
+        allow get: if isSignedIn() && (isOwner(patientUserId) || isResearcher() || isAdmin());
+        allow list: if isSignedIn() && (isOwner(patientUserId) || isResearcher() || isAdmin());
+        allow create: if (isOwner(patientUserId) || isResearcher() || isAdmin()) && request.resource.data.patientProfileId == patientUserId;
+        allow update: if resource != null && (isOwner(patientUserId) || isResearcher() || isAdmin()) && request.resource.data.patientProfileId == resource.data.patientProfileId;
+        allow delete: if resource != null && isAdmin();
+      }
+
+      /**
+       * @description Physical activity logs for a specific patient.
+       * @path /patient_profiles/{patientUserId}/activity_logs/{logId}
+       * @allow (create) The patient logging their own exercise or staff recording it.
+       * @principle Ensures data consistency by forcing the record to be linked to the parent path's UID.
+       */
+      match /activity_logs/{logId} {
+        allow get: if isSignedIn() && (isOwner(patientUserId) || isResearcher() || isAdmin());
+        allow list: if isSignedIn() && (isOwner(patientUserId) || isResearcher() || isAdmin());
+        allow create: if (isOwner(patientUserId) || isResearcher() || isAdmin()) && request.resource.data.patientProfileId == patientUserId;
+        allow update: if resource != null && (isOwner(patientUserId) || isResearcher() || isAdmin()) && request.resource.data.patientProfileId == resource.data.patientProfileId;
+        allow delete: if resource != null && isAdmin();
+      }
+    }
+  }
+}

@@ -31,18 +31,33 @@ import { pt } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
 export default function ResearcherPage() {
-  const { role, isLoading: isContextLoading } = useHealth();
+  const { role, assignedCode: currentResearcherCode, isLoading: isContextLoading } = useHealth();
   const db = useFirestore();
   const { toast } = useToast();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  
+  // Edição de Paciente
   const [isEditingPatient, setIsEditingPatient] = useState(false);
   const [editPatientData, setEditPatientData] = useState<any>(null);
+  
+  // Justificação de Alterações
+  const [isJustifyOpen, setIsJustifyOpen] = useState(false);
+  const [justification, setJustification] = useState('');
+  const [pendingAction, setPendingAction] = useState<{type: 'profile' | 'record', data: any} | null>(null);
 
+  // Edição de Registos
+  const [editingRecord, setEditingRecord] = useState<any>(null);
+  const [isEditRecordOpen, setIsEditRecordOpen] = useState(false);
+
+  // Eliminação (Apenas Admin)
   const [isDeleteReasonDialogOpen, setIsDeleteReasonDialogOpen] = useState(false);
   const [deletionReason, setDeletionReason] = useState('');
   const [logToDelete, setLogToDelete] = useState<any>(null);
+
+  const isAdmin = role === 'admin';
 
   const patientsQuery = useMemoFirebase(() => {
     if (!db || isContextLoading || (role !== 'researcher' && role !== 'admin')) return null;
@@ -62,16 +77,16 @@ export default function ResearcherPage() {
   
   const { data: patientLogs } = useCollection(selectedPatientLogsQuery);
 
-  const deletionLogsQuery = useMemoFirebase(() => {
-    if (!db || !selectedPatient || role !== 'admin') return null;
+  const auditLogsQuery = useMemoFirebase(() => {
+    if (!db || !selectedPatient) return null;
     return query(
-      collection(db, 'patient_profiles', selectedPatient.userId, 'deletion_logs'),
-      orderBy('deletedAt', 'desc'),
-      limit(20)
+      collection(db, 'patient_profiles', selectedPatient.userId, 'audit_logs'),
+      orderBy('timestamp', 'desc'),
+      limit(30)
     );
-  }, [db, selectedPatient, role]);
+  }, [db, selectedPatient]);
 
-  const { data: deletionHistory } = useCollection(deletionLogsQuery);
+  const { data: auditHistory } = useCollection(auditLogsQuery);
 
   if (!isContextLoading && role !== 'researcher' && role !== 'admin') {
     return (
@@ -93,59 +108,101 @@ export default function ResearcherPage() {
     setIsDetailsOpen(true);
   };
 
-  const handleEditPatient = (patient: any) => {
+  // Iniciar edição de perfil
+  const handleEditPatientClick = (patient: any) => {
     setEditPatientData({ ...patient });
     setIsEditingPatient(true);
   };
 
-  const handleSavePatientEdit = () => {
-    if (!db || !editPatientData) return;
-    const profileRef = doc(db, 'patient_profiles', editPatientData.userId);
-    updateDocumentNonBlocking(profileRef, editPatientData);
-    
-    // Também atualizar na coleção users se necessário
-    const userRef = doc(db, 'users', editPatientData.userId);
-    updateDocumentNonBlocking(userRef, { name: editPatientData.name });
-
-    setIsEditingPatient(false);
-    setSelectedPatient(editPatientData); // Atualizar o paciente selecionado no estado local
-    toast({ title: "Perfil Atualizado", description: "Dados do paciente guardados com sucesso." });
+  // Guardar edição de perfil (solicita justificativa)
+  const handleSavePatientRequest = () => {
+    setPendingAction({ type: 'profile', data: editPatientData });
+    setJustification('');
+    setIsJustifyOpen(true);
   };
 
+  // Iniciar edição de registo clínico
+  const handleEditRecordClick = (record: any) => {
+    setEditingRecord({ ...record });
+    setIsEditRecordOpen(true);
+  };
+
+  // Guardar edição de registo (solicita justificativa)
+  const handleSaveRecordRequest = () => {
+    setPendingAction({ type: 'record', data: editingRecord });
+    setJustification('');
+    setIsJustifyOpen(true);
+  };
+
+  // Executar a ação pendente após justificativa
+  const handleExecuteAction = () => {
+    if (!db || !pendingAction || !justification.trim() || !selectedPatient) return;
+
+    const auditRef = doc(collection(db, 'patient_profiles', selectedPatient.userId, 'audit_logs'));
+    const auditData = {
+      actionType: pendingAction.type === 'profile' ? 'profile_update' : 'record_update',
+      justification: justification.trim(),
+      performedBy: currentResearcherCode || role,
+      timestamp: serverTimestamp(),
+      previousData: pendingAction.type === 'profile' ? selectedPatient : null // Idealmente guardar snapshot anterior
+    };
+
+    if (pendingAction.type === 'profile') {
+      const profileRef = doc(db, 'patient_profiles', pendingAction.data.userId);
+      updateDocumentNonBlocking(profileRef, pendingAction.data);
+      
+      const userRef = doc(db, 'users', pendingAction.data.userId);
+      updateDocumentNonBlocking(userRef, { name: pendingAction.data.name });
+      
+      setSelectedPatient(pendingAction.data);
+      setIsEditingPatient(false);
+    } else {
+      const recordRef = doc(db, 'patient_profiles', selectedPatient.userId, 'clinical_records', pendingAction.data.id);
+      updateDocumentNonBlocking(recordRef, {
+        value: pendingAction.data.value,
+        notes: pendingAction.data.notes
+      });
+      setIsEditRecordOpen(false);
+    }
+
+    // Criar log de auditoria
+    setDocumentNonBlocking(auditRef, auditData, { merge: true });
+
+    setIsJustifyOpen(false);
+    setPendingAction(null);
+    toast({ title: "Alteração Guardada", description: "O log de auditoria foi atualizado." });
+  };
+
+  // Eliminação (Apenas Admin)
   const initiateDelete = (log: any) => {
+    if (!isAdmin) {
+      toast({ variant: "destructive", title: "Ação Bloqueada", description: "Apenas administradores podem apagar registos." });
+      return;
+    }
     setLogToDelete(log);
     setDeletionReason('');
     setIsDeleteReasonDialogOpen(true);
   };
 
   const handleConfirmDelete = () => {
-    if (!db || !selectedPatient || !logToDelete || !deletionReason.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Justificação Necessária",
-        description: "Por favor, indique o motivo da eliminação.",
-      });
-      return;
-    }
+    if (!db || !selectedPatient || !logToDelete || !deletionReason.trim()) return;
 
     const logRef = doc(db, 'patient_profiles', selectedPatient.userId, 'clinical_records', logToDelete.id);
-    const deletionLogRef = doc(collection(db, 'patient_profiles', selectedPatient.userId, 'deletion_logs'));
+    const auditRef = doc(collection(db, 'patient_profiles', selectedPatient.userId, 'audit_logs'));
 
-    setDocumentNonBlocking(deletionLogRef, {
-      originalRecord: logToDelete,
-      reason: deletionReason.trim(),
-      deletedBy: role,
-      deletedAt: serverTimestamp()
+    setDocumentNonBlocking(auditRef, {
+      actionType: 'record_deletion',
+      originalData: logToDelete,
+      justification: deletionReason.trim(),
+      performedBy: currentResearcherCode || role,
+      timestamp: serverTimestamp()
     }, { merge: true });
 
     deleteDocumentNonBlocking(logRef);
 
     setIsDeleteReasonDialogOpen(false);
     setLogToDelete(null);
-    toast({
-      title: "Registo Apagado",
-      description: "O registo clínico foi removido e o motivo foi guardado no log de auditoria.",
-    });
+    toast({ title: "Registo Apagado", description: "Eliminação registada em auditoria." });
   };
 
   return (
@@ -261,7 +318,7 @@ export default function ResearcherPage() {
                 variant="outline" 
                 size="sm" 
                 className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-                onClick={() => handleEditPatient(selectedPatient)}
+                onClick={() => handleEditPatientClick(selectedPatient)}
               >
                 <Edit className="mr-2 h-4 w-4" /> Editar Perfil
               </Button>
@@ -319,7 +376,7 @@ export default function ResearcherPage() {
                         <TableHead>Tipo</TableHead>
                         <TableHead>Valor</TableHead>
                         <TableHead>Notas</TableHead>
-                        {(role === 'admin' || role === 'researcher') && <TableHead className="text-right">Ações</TableHead>}
+                        <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -342,18 +399,26 @@ export default function ResearcherPage() {
                           <TableCell className="text-xs text-muted-foreground italic max-w-[200px] truncate">
                             {log.notes || '---'}
                           </TableCell>
-                          {(role === 'admin' || role === 'researcher') && (
-                            <TableCell className="text-right">
+                          <TableCell className="text-right space-x-1">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-primary hover:bg-primary/10"
+                              onClick={() => handleEditRecordClick(log)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            {isAdmin && (
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                className="h-8 w-8 text-destructive hover:bg-destructive/10"
                                 onClick={() => initiateDelete(log)}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
-                            </TableCell>
-                          )}
+                            )}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -361,28 +426,33 @@ export default function ResearcherPage() {
                 </div>
               </section>
 
-              {role === 'admin' && deletionHistory && deletionHistory.length > 0 && (
-                <section className="space-y-4 pt-4">
-                  <h3 className="text-lg font-bold flex items-center gap-2 border-b pb-2 text-destructive">
-                    <History className="h-5 w-5" /> Log de Registos Apagados (Apenas Admin)
-                  </h3>
-                  <div className="space-y-3">
-                    {deletionHistory.map((del) => (
-                      <Card key={del.id} className="border-destructive/20 bg-destructive/5">
-                        <CardContent className="p-4 text-sm">
-                          <div className="flex justify-between items-start mb-2">
-                            <Badge variant="destructive" className="text-[10px]">Apagado em: {del.deletedAt?.toDate ? format(del.deletedAt.toDate(), "dd/MM HH:mm") : 'N/A'}</Badge>
-                            <span className="text-[10px] font-bold text-destructive">Motivo: {del.reason}</span>
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            <strong>Dado Original:</strong> {del.originalRecord?.value} ({del.originalRecord?.recordType})
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </section>
-              )}
+              <section className="space-y-4 pt-4">
+                <h3 className="text-lg font-bold flex items-center gap-2 border-b pb-2 text-muted-foreground">
+                  <History className="h-5 w-5" /> Log de Auditoria (Alterações e Eliminações)
+                </h3>
+                <div className="space-y-3">
+                  {auditHistory && auditHistory.length > 0 ? auditHistory.map((del) => (
+                    <Card key={del.id} className={cn("border-l-4", del.actionType === 'record_deletion' ? "border-l-destructive bg-destructive/5" : "border-l-primary bg-primary/5")}>
+                      <CardContent className="p-4 text-sm">
+                        <div className="flex justify-between items-start mb-2">
+                          <Badge variant={del.actionType === 'record_deletion' ? "destructive" : "outline"} className="text-[10px]">
+                            {del.actionType === 'record_deletion' ? 'ELIMINAÇÃO' : 'EDIÇÃO'} - {del.timestamp?.toDate ? format(del.timestamp.toDate(), "dd/MM HH:mm") : 'N/A'}
+                          </Badge>
+                          <span className="text-[10px] font-bold text-muted-foreground">Por: {del.performedBy}</span>
+                        </div>
+                        <p className="font-medium text-xs mb-1">Justificativa: {del.justification}</p>
+                        {del.actionType === 'record_deletion' ? (
+                          <p className="text-[10px] text-muted-foreground"><strong>Dado Apagado:</strong> {del.originalData?.value} ({del.originalData?.recordType})</p>
+                        ) : (
+                          <p className="text-[10px] text-muted-foreground">Alteração efetuada em {del.actionType === 'profile_update' ? 'Perfil' : 'Registo Clínico'}.</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )) : (
+                    <p className="text-center text-xs text-muted-foreground italic">Sem histórico de auditoria.</p>
+                  )}
+                </div>
+              </section>
             </div>
           </ScrollArea>
           
@@ -394,6 +464,7 @@ export default function ResearcherPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Dialogo de Edição de Perfil */}
       <Dialog open={isEditingPatient} onOpenChange={setIsEditingPatient}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -435,29 +506,94 @@ export default function ResearcherPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditingPatient(false)}>Cancelar</Button>
-            <Button onClick={handleSavePatientEdit} className="bg-primary">
+            <Button onClick={handleSavePatientRequest} className="bg-primary">
               <Save className="mr-2 h-4 w-4" /> Guardar Alterações
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isDeleteReasonDialogOpen} onOpenChange={setIsDeleteReasonDialogOpen}>
+      {/* Dialogo de Edição de Registo */}
+      <Dialog open={isEditRecordOpen} onOpenChange={setIsEditRecordOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar Registo Clínico</DialogTitle>
+            <DialogDescription>Alterar valor ou notas da medição.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Valor do Registo</Label>
+              <Input 
+                value={editingRecord?.value || ''} 
+                onChange={e => setEditingRecord({...editingRecord, value: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Notas</Label>
+              <Textarea 
+                value={editingRecord?.notes || ''} 
+                onChange={e => setEditingRecord({...editingRecord, notes: e.target.value})}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditRecordOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSaveRecordRequest} className="bg-primary">
+              <Save className="mr-2 h-4 w-4" /> Continuar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialogo de Justificação (CRÍTICO) */}
+      <Dialog open={isJustifyOpen} onOpenChange={setIsJustifyOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-destructive">
-              <AlertCircle className="h-5 w-5" /> Confirmar Eliminação
+            <DialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-primary" /> Justificação da Alteração
             </DialogTitle>
             <DialogDescription>
-              Esta ação é permanente. Indique o motivo da eliminação para fins de auditoria.
+              Todas as alterações efetuadas por investigadores devem ser justificadas para auditoria.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="reason">Motivo / Justificação</Label>
+              <Label htmlFor="justification">Motivo da Alteração</Label>
               <Textarea 
-                id="reason" 
-                placeholder="Ex: Medição incorreta, erro de digitação, duplicado..." 
+                id="justification" 
+                placeholder="Ex: Correção de erro de digitação, atualização de dados após consulta..." 
+                value={justification}
+                onChange={(e) => setJustification(e.target.value)}
+                className="min-h-[120px]"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setIsJustifyOpen(false); setPendingAction(null); }}>Cancelar</Button>
+            <Button onClick={handleExecuteAction} disabled={!justification.trim()} className="bg-primary">
+              Confirmar e Guardar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialogo de Eliminação (Admin Only) */}
+      <Dialog open={isDeleteReasonDialogOpen} onOpenChange={setIsDeleteReasonDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-5 w-5" /> Confirmar Eliminação (ADMIN)
+            </DialogTitle>
+            <DialogDescription>
+              Esta ação é permanente e será registada em auditoria.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="del-reason">Justificação da Eliminação</Label>
+              <Textarea 
+                id="del-reason" 
+                placeholder="Indique o motivo da remoção..." 
                 value={deletionReason}
                 onChange={(e) => setDeletionReason(e.target.value)}
                 className="min-h-[100px]"

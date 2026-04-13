@@ -35,17 +35,19 @@ service cloud.firestore {
     }
 
     match /roles_admin/{adminId} {
+      // Permite que o dono crie o marcador para resolver erro de inicialização
       allow get: if isSignedIn() && (isOwner(adminId) || isAdmin());
       allow list: if isAdmin();
-      allow create: if isOwner(adminId) || isAdmin();
-      allow update, delete: if isAdmin();
+      allow create, update: if isOwner(adminId) || isAdmin();
+      allow delete: if isAdmin();
     }
 
     match /roles_researcher/{researcherId} {
+      // Permite que o dono crie o marcador para resolver erro de inicialização
       allow get: if isSignedIn() && (isOwner(researcherId) || isAdmin());
       allow list: if isSignedIn() && (isResearcher() || isAdmin());
-      allow create: if isOwner(researcherId) || isAdmin();
-      allow update, delete: if isAdmin();
+      allow create, update: if isOwner(researcherId) || isAdmin();
+      allow delete: if isAdmin();
     }
 
     match /patient_profiles/{patientUserId} {
@@ -70,8 +72,16 @@ service cloud.firestore {
         allow delete: if resource != null && isAdmin();
       }
 
+      // Logs de auditoria acessíveis por admin e investigadores
+      match /audit_logs/{logId} {
+        allow get, list: if isAdmin() || isResearcher();
+        allow create: if isAdmin() || isResearcher();
+        allow update, delete: if isAdmin();
+      }
+
+      // Legado (opcional se quiser manter retrocompatibilidade com deletion_logs)
       match /deletion_logs/{logId} {
-        allow get, list: if isAdmin();
+        allow get, list: if isAdmin() || isResearcher();
         allow create: if isAdmin();
         allow update, delete: if isAdmin();
       }

@@ -36,9 +36,11 @@ export default function RegisterPage() {
     setIsSubmitting(true);
     
     try {
+      if (!db || !auth) throw new Error("Erro de ligação aos serviços Firebase.");
+
       // Step 1: Generate assignedCode
       const rolePrefix = role === 'patient' ? 'p' : 'r';
-      const q = query(collection(db!, 'users'), where('role', '==', role));
+      const q = query(collection(db, 'users'), where('role', '==', role));
       const snapshot = await getDocs(q);
       const count = snapshot.size + 1;
       const assignedCode = `${rolePrefix}${count.toString().padStart(2, '0')}`;
@@ -48,7 +50,7 @@ export default function RegisterPage() {
       const user = userCredential.user;
 
       // Step 3: Create User Document in Firestore
-      const userRef = doc(db!, 'users', user.uid);
+      const userRef = doc(db, 'users', user.uid);
       setDocumentNonBlocking(userRef, {
         id: user.uid,
         email: email,
@@ -60,7 +62,7 @@ export default function RegisterPage() {
 
       // Step 4: Create Patient Profile if role is patient
       if (role === 'patient') {
-        const profileRef = doc(db!, 'patient_profiles', user.uid);
+        const profileRef = doc(db, 'patient_profiles', user.uid);
         setDocumentNonBlocking(profileRef, {
           userId: user.uid,
           name: '',
@@ -86,7 +88,7 @@ export default function RegisterPage() {
       toast({
         variant: "destructive",
         title: "Erro no Registo",
-        description: error.message,
+        description: error.message || "Ocorreu um erro ao criar a conta.",
       });
     } finally {
       setIsSubmitting(false);
@@ -114,8 +116,8 @@ export default function RegisterPage() {
                   <SelectValue placeholder="Selecione o papel..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="patient">Paciente (pXX)</SelectItem>
-                  <SelectItem value="researcher">Investigador (rXX)</SelectItem>
+                  <SelectItem value="patient">Paciente</SelectItem>
+                  <SelectItem value="researcher">Investigador</SelectItem>
                 </SelectContent>
               </Select>
             </div>

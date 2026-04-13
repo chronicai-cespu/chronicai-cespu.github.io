@@ -97,19 +97,24 @@ export default function Home() {
       {/* Institutional Section */}
       <section className="py-16 bg-muted/30">
         <div className="max-w-7xl mx-auto px-4 text-center space-y-12">
-          <div className="space-y-4">
+          <div className="space-y-6">
             <h2 className="text-2xl font-bold text-secondary italic">Colaboração Institucional</h2>
-            <p className="text-muted-foreground leading-relaxed max-w-5xl mx-auto">
-              Este projeto resulta de uma colaboração estratégica entre a unidade de investigação 
-              <strong> "Digital Health & Technology" (DiTech Health)</strong>, integrada no 
-              <strong> GI2 - Gabinete para a Investigação & a Inovação</strong> da 
-              <strong> CESPU - Cooperativa de Ensino Superior Politécnico e Universitário</strong>, 
-              e o <strong>Intelligent Systems Associate Laboratory (LASI)</strong>, do centro de investigação 
-              <strong> Centro Algoritmi</strong> da <strong>Universidade do Minho</strong>.
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Referência: <strong>ChronicAI-GI2-CESPU-2025</strong>
-            </p>
+            <div className="bg-white/50 p-8 rounded-2xl shadow-sm border border-secondary/10">
+              <p className="text-lg font-bold text-primary mb-2">
+                ChronicAI – Integrating Self-Care and Artificial Intelligence in Chronic Disease Management
+              </p>
+              <p className="text-sm text-muted-foreground font-mono mb-6">
+                Referência: ChronicAI-GI2-CESPU-2025
+              </p>
+              <p className="text-muted-foreground leading-relaxed max-w-5xl mx-auto">
+                Este projeto resulta de uma colaboração estratégica entre a unidade de investigação 
+                <strong> "Digital Health & Technology" (DiTech Health)</strong>, integrada no 
+                <strong> GI2 - Gabinete para a Investigação & a Inovação</strong> da 
+                <strong> CESPU - Cooperativa de Ensino Superior Politécnico e Universitário</strong>, 
+                e o <strong>Intelligent Systems Associate Laboratory (LASI)</strong>, do centro de investigação 
+                <strong> Centro Algoritmi</strong> da <strong>Universidade do Minho</strong>.
+              </p>
+            </div>
           </div>
 
           {/* Logos Display Area */}

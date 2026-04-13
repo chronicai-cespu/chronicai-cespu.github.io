@@ -1,4 +1,3 @@
-
 # ChronicAI - O Seu Companheiro de Saúde
 
 O **ChronicAI** é uma aplicação Next.js moderna concebida para ajudar a gerir condições de saúde crónicas (como Diabetes, Hipertensão e Colesterol) de forma autónoma e informada.
@@ -25,23 +24,6 @@ Este projeto resulta de uma colaboração estratégica entre:
 ## Contacto
 Para questões relacionadas com o projeto ou suporte:
 **Email:** chronicai.cespu@gmail.com
-
-## Como Começar (Desenvolvimento Local)
-
-Após descarregar o código do Firebase Studio:
-
-1. **Instalar dependências:**
-   ```bash
-   npm install
-   ```
-
-2. **Configurar variáveis de ambiente:**
-   Crie um ficheiro `.env` na raiz do projeto com as suas chaves do Firebase e a chave de API do Google Gemini.
-
-3. **Executar em modo de desenvolvimento:**
-   ```bash
-   npm run dev
-   ```
 
 ## Aviso Médico
 O ChronicAI fornece apenas informações informativas e conselhos de bem-estar. Não substitui o diagnóstico ou tratamento por um profissional de saúde. Em caso de emergência, contacte sempre o 112 ou o SNS 24 (808 24 24 24).

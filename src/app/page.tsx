@@ -99,7 +99,7 @@ export default function Home() {
             <h2 className="text-2xl font-bold text-secondary italic">Contexto do Projeto</h2>
             <p className="text-muted-foreground leading-relaxed max-w-3xl mx-auto">
               Esta aplicação faz parte do projeto <strong>"ChronicAI – Integrating Self-Care and Artificial Intelligence in Chronic Disease Management"</strong> 
-              (<span className="font-mono text-xs">ChronicAI-GI2-CESPU-2025</span>).
+              (<span>ChronicAI-GI2-CESPU-2025</span>).
             </p>
             <p className="text-sm text-muted-foreground">
               Desenvolvido pela unidade de investigação <strong>"Digital Health & Technology" (DiTech Health)</strong>, 

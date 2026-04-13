@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -170,9 +171,9 @@ export default function Home() {
               </a>
             </Button>
             <Button asChild variant="ghost" className="rounded-full">
-              <a href="https://forms.gle/placeholder" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+              <Link href="/contact" className="flex items-center gap-2">
                 <ExternalLink className="w-4 h-4" /> Formulário de Contacto
-              </a>
+              </Link>
             </Button>
           </div>
         </div>

@@ -33,6 +33,20 @@
         "chronicDiseases": { "type": "array", "items": { "type": "string" } },
         "assignedCode": { "type": "string" }
       }
+    },
+    "ContactMessage": {
+      "title": "ContactMessage",
+      "type": "object",
+      "description": "Mensagem de contacto enviada via formulário web.",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "subject", "message"]
     }
   },
   "auth": {
@@ -54,6 +68,10 @@
     "/roles_researcher/{uid}": {
       "schema": { "type": "object", "properties": {} },
       "description": "Marcador de investigador."
+    },
+    "/contact_messages/{messageId}": {
+      "schema": { "$ref": "#/backend/entities/ContactMessage" },
+      "description": "Mensagens de contacto recebidas."
     }
   }
 }

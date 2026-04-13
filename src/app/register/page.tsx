@@ -15,7 +15,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { collection, getDocs, query, where, doc } from 'firebase/firestore';
-import { Loader2, User as UserIcon } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -39,6 +39,10 @@ export default function RegisterPage() {
     return /^\d{9}$/.test(mobile.replace(/\s/g, ''));
   };
 
+  const validateBirthDate = (date: string) => {
+    return /^\d{2}\/\d{2}\/\d{4}$/.test(date);
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
@@ -48,6 +52,15 @@ export default function RegisterPage() {
         variant: "destructive",
         title: "Nome Necessário",
         description: "Por favor, introduza o seu nome completo.",
+      });
+      return;
+    }
+
+    if (!birthDate.trim() || !validateBirthDate(birthDate)) {
+      toast({
+        variant: "destructive",
+        title: "Data de Nascimento Inválida",
+        description: "Por favor, introduza a data no formato DD/MM/AAAA.",
       });
       return;
     }
@@ -90,13 +103,43 @@ export default function RegisterPage() {
     try {
       if (!db || !auth) throw new Error("Erro de ligação aos serviços Firebase.");
 
-      const authEmail = hasEmail ? emailTrim : `${mobileTrim}@chronicai.pt`;
+      // 1. Verificação de Unicidade (E-mail e Telemóvel)
+      if (hasEmail) {
+        const qEmail = query(collection(db, 'users'), where('email', '==', emailTrim));
+        const snapEmail = await getDocs(qEmail);
+        if (!snapEmail.empty) {
+          throw new Error("Este e-mail já se encontra registado. Por favor, utilize outro ou faça login.");
+        }
+      }
 
+      if (hasMobile) {
+        const qMobile = query(collection(db, 'users'), where('mobileNumber', '==', mobileTrim));
+        const snapMobile = await getDocs(qMobile);
+        if (!snapMobile.empty) {
+          throw new Error("Este número de telemóvel já se encontra registado.");
+        }
+      }
+
+      // 2. Verificação de Combinação Única (Contacto + Data Nascimento)
+      // Esta regra é intrínseca se o e-mail/telemóvel já forem únicos, mas reforçamos a lógica.
+      const profilesRef = collection(db, 'patient_profiles');
+      const qBirth = query(profilesRef, where('birthDate', '==', birthDate));
+      const snapBirth = await getDocs(qBirth);
+      
+      const alreadyExists = snapBirth.docs.some(doc => {
+        const data = doc.data();
+        return (hasEmail && data.email === emailTrim) || (hasMobile && data.mobileNumber === mobileTrim);
+      });
+
+      if (alreadyExists) {
+        throw new Error("Já existe um utilizador registado com estes dados de contacto e data de nascimento.");
+      }
+
+      const authEmail = hasEmail ? emailTrim : `${mobileTrim}@chronicai.pt`;
       const rolePrefix = role === 'patient' ? 'p' : 'r';
-      const q = query(collection(db, 'users'), where('role', '==', role));
-      const snapshot = await getDocs(q);
-      const count = snapshot.size + 1;
-      const assignedCode = `${rolePrefix}${count.toString().padStart(2, '0')}`;
+      const qCount = query(collection(db, 'users'), where('role', '==', role));
+      const snapshotCount = await getDocs(qCount);
+      const assignedCode = `${rolePrefix}${(snapshotCount.size + 1).toString().padStart(2, '0')}`;
 
       const userCredential = await initiateEmailSignUp(auth, authEmail, password);
       const user = userCredential.user;
@@ -118,7 +161,7 @@ export default function RegisterPage() {
           userId: user.uid,
           name: name.trim(),
           age: 0,
-          birthDate: birthDate || '',
+          birthDate: birthDate,
           gender: '',
           education: '',
           householdSize: '',
@@ -126,28 +169,23 @@ export default function RegisterPage() {
           weight: 0,
           height: 0,
           chronicDiseases: [],
-          assignedCode: assignedCode
+          assignedCode: assignedCode,
+          email: hasEmail ? emailTrim : null,
+          mobileNumber: hasMobile ? mobileTrim : null
         }, { merge: true });
       }
 
       toast({
-        title: "Conta Criada com Sucesso",
-        description: `Bem-vindo, ${name.trim()}! O seu código de acesso é ${assignedCode}.`,
+        title: "Conta Criada",
+        description: `Bem-vindo! O seu código é ${assignedCode}.`,
       });
       router.push('/dashboard');
     } catch (error: any) {
       console.error(error);
-      let errorMsg = "Ocorreu um erro ao criar a conta.";
-      if (error.code === 'auth/email-already-in-use') {
-        errorMsg = "Este e-mail ou telemóvel já está associado a uma conta.";
-      } else if (error.code === 'auth/weak-password') {
-        errorMsg = "A palavra-passe deve ter pelo menos 6 caracteres.";
-      }
-
       toast({
         variant: "destructive",
         title: "Erro no Registo",
-        description: errorMsg,
+        description: error.message || "Ocorreu um erro ao criar a conta.",
       });
     } finally {
       setIsSubmitting(false);
@@ -184,8 +222,7 @@ export default function RegisterPage() {
               <Label htmlFor="name">Nome Completo</Label>
               <Input 
                 id="name" 
-                type="text" 
-                placeholder="Introduza o seu nome" 
+                placeholder="Nome completo" 
                 value={name} 
                 onChange={(e) => setName(e.target.value)} 
                 className="h-12" 
@@ -221,11 +258,11 @@ export default function RegisterPage() {
               <Label htmlFor="birthDate">Data de Nascimento</Label>
               <Input 
                 id="birthDate" 
-                type="text" 
                 placeholder="DD/MM/AAAA" 
                 value={birthDate} 
                 onChange={(e) => setBirthDate(e.target.value)} 
                 className="h-12" 
+                required
                 disabled={isSubmitting}
               />
             </div>

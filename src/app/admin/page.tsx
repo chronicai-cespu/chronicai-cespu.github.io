@@ -3,12 +3,12 @@
 
 import { useHealth } from '@/components/health-context';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, doc } from 'firebase/firestore';
+import { collection, query, doc, getDoc } from 'firebase/firestore';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShieldAlert, Trash2, Edit, UserPlus, Search, Save, Loader2 } from 'lucide-react';
+import { ShieldAlert, Trash2, Edit, UserPlus, Search, Save } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -62,23 +62,27 @@ export default function AdminPage() {
     if (!editingUser || !db) return;
     
     const userRef = doc(db, 'users', editingUser.id);
-    updateDocumentNonBlocking(userRef, {
+    const updatedData = {
       name: editingUser.name || '',
-      email: editingUser.email,
+      email: editingUser.email?.replace(/^"|"$/g, '') || '',
       role: editingUser.role,
       assignedCode: editingUser.assignedCode,
       mobileNumber: editingUser.mobileNumber || null
-    });
+    };
+
+    updateDocumentNonBlocking(userRef, updatedData);
 
     if (editingUser.role === 'patient') {
       const profileRef = doc(db, 'patient_profiles', editingUser.id);
       updateDocumentNonBlocking(profileRef, {
-        name: editingUser.name || ''
+        name: editingUser.name || '',
+        email: updatedData.email,
+        mobileNumber: updatedData.mobileNumber
       });
     }
 
     setIsEditDialogOpen(false);
-    toast({ title: "Utilizador Atualizado", description: `Os dados de ${editingUser.assignedCode} foram guardados.` });
+    toast({ title: "Utilizador Atualizado", description: `Dados de ${editingUser.assignedCode} guardados.` });
   };
 
   const filteredUsers = allUsers?.filter(u => 
@@ -99,7 +103,7 @@ export default function AdminPage() {
           <h1 className="text-3xl font-bold text-primary flex items-center gap-3">
             <ShieldAlert className="h-8 w-8" /> Painel de Administração
           </h1>
-          <p className="text-muted-foreground">Gestão total de utilizadores, perfis e segurança.</p>
+          <p className="text-muted-foreground">Gestão de utilizadores e perfis clínicos.</p>
         </div>
         <div className="flex gap-2">
           <Button asChild className="rounded-full bg-secondary text-white">
@@ -113,11 +117,11 @@ export default function AdminPage() {
       <Card className="shadow-lg border-none">
         <CardHeader className="bg-muted/50">
           <div className="flex flex-col md:flex-row justify-between gap-4">
-            <CardTitle>Todos os Utilizadores do Sistema</CardTitle>
+            <CardTitle>Utilizadores do Sistema</CardTitle>
             <div className="relative w-full md:w-64">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Pesquisar por nome, código ou email..." 
+                placeholder="Nome, código ou e-mail..." 
                 className="pl-9"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -131,9 +135,9 @@ export default function AdminPage() {
               <TableRow>
                 <TableHead>Código</TableHead>
                 <TableHead>Nome Completo</TableHead>
-                <TableHead>Email</TableHead>
+                <TableHead>E-mail</TableHead>
                 <TableHead>Papel</TableHead>
-                <TableHead>Criado em</TableHead>
+                <TableHead>Registo</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -141,11 +145,11 @@ export default function AdminPage() {
               {filteredUsers?.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-bold">{user.assignedCode}</TableCell>
-                  <TableCell>{user.name || <span className="text-muted-foreground italic">Não definido</span>}</TableCell>
+                  <TableCell>{user.name || 'N/A'}</TableCell>
                   <TableCell>{cleanEmail(user.email)}</TableCell>
                   <TableCell>
                     <Badge variant={user.role === 'admin' ? 'destructive' : user.role === 'researcher' ? 'secondary' : 'outline'}>
-                      {user.role.toUpperCase()}
+                      {user.role?.toUpperCase()}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
@@ -174,8 +178,8 @@ export default function AdminPage() {
               ))}
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
-                    A carregar utilizadores...
+                  <TableCell colSpan={6} className="text-center py-10">
+                    A carregar...
                   </TableCell>
                 </TableRow>
               )}
@@ -187,7 +191,7 @@ export default function AdminPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Editar Utilizador: {editingUser?.assignedCode}</DialogTitle>
+            <DialogTitle>Editar: {editingUser?.assignedCode}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -196,7 +200,6 @@ export default function AdminPage() {
                 id="edit-name" 
                 value={editingUser?.name || ''} 
                 onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
-                placeholder="Introduza o nome completo"
               />
             </div>
             <div className="space-y-2">
@@ -222,7 +225,7 @@ export default function AdminPage() {
                 onValueChange={(v) => setEditingUser({ ...editingUser, role: v })}
               >
                 <SelectTrigger id="edit-role">
-                  <SelectValue placeholder="Selecione o papel" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="patient">Paciente</SelectItem>
@@ -231,19 +234,11 @@ export default function AdminPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-code">Código Atribuído</Label>
-              <Input 
-                id="edit-code" 
-                value={editingUser?.assignedCode || ''} 
-                onChange={(e) => setEditingUser({ ...editingUser, assignedCode: e.target.value })}
-              />
-            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancelar</Button>
             <Button onClick={handleUpdateUser} className="bg-primary">
-              <Save className="mr-2 h-4 w-4" /> Guardar Alterações
+              <Save className="mr-2 h-4 w-4" /> Guardar
             </Button>
           </DialogFooter>
         </DialogContent>

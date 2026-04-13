@@ -8,7 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FlaskConical, Search, Eye, FileText, Activity, HeartPulse, Scale, Calendar, Plus, Trash2, History, AlertCircle, Edit, UserPlus, Save } from 'lucide-react';
+import { FlaskConical, Search, Eye, FileText, Activity, HeartPulse, Scale, Calendar, Plus, Trash2, History, AlertCircle, Edit, UserPlus, Save, Mail, Phone } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { deleteDocumentNonBlocking, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -145,7 +145,11 @@ export default function ResearcherPage() {
       updateDocumentNonBlocking(profileRef, pendingAction.data);
       
       const userRef = doc(db, 'users', pendingAction.data.userId);
-      updateDocumentNonBlocking(userRef, { name: pendingAction.data.name });
+      updateDocumentNonBlocking(userRef, { 
+        name: pendingAction.data.name,
+        email: pendingAction.data.email,
+        mobileNumber: pendingAction.data.mobileNumber
+      });
       
       setSelectedPatient(pendingAction.data);
       setIsEditingPatient(false);
@@ -466,6 +470,23 @@ export default function ResearcherPage() {
               <Input 
                 value={editPatientData?.name || ''} 
                 onChange={e => setEditPatientData({...editPatientData, name: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2"><Mail className="w-4 h-4" /> E-mail</Label>
+              <Input 
+                type="email"
+                placeholder="exemplo@email.com"
+                value={editPatientData?.email || ''} 
+                onChange={e => setEditPatientData({...editPatientData, email: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2"><Phone className="w-4 h-4" /> Telemóvel</Label>
+              <Input 
+                placeholder="912345678"
+                value={editPatientData?.mobileNumber || ''} 
+                onChange={e => setEditPatientData({...editPatientData, mobileNumber: e.target.value})}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">

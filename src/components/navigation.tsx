@@ -23,6 +23,7 @@ export function Navigation() {
 
   const welcomeName = role === 'admin' ? 'Admin' : (userProfile?.name || '');
 
+  // Definição dos itens de navegação com lógica de exibição e nomes dinâmicos
   const navItems = [
     { 
       href: '/admin', 
@@ -41,14 +42,6 @@ export function Navigation() {
       show: role === 'researcher' || role === 'admin'
     },
     { 
-      href: '/logs', 
-      label: 'Registos de Pacientes', 
-      icon: ClipboardList,
-      activeColor: "border-secondary text-secondary",
-      hoverColor: "hover:text-secondary hover:border-secondary",
-      show: role === 'patient' || role === 'admin'
-    },
-    { 
       href: '/dashboard', 
       label: 'Os meus dados', 
       icon: Home,
@@ -57,8 +50,16 @@ export function Navigation() {
       show: role === 'patient'
     },
     { 
+      href: '/logs', 
+      label: role === 'admin' ? 'Registos de Pacientes' : 'Registos', 
+      icon: ClipboardList,
+      activeColor: "border-secondary text-secondary",
+      hoverColor: "hover:text-secondary hover:border-secondary",
+      show: role === 'patient' || role === 'admin'
+    },
+    { 
       href: '/chat', 
-      label: 'Assistente IA', 
+      label: 'Assistente de IA', 
       icon: MessageCircle,
       activeColor: "border-primary text-primary font-bold",
       hoverColor: "hover:text-primary hover:border-primary",
@@ -90,7 +91,7 @@ export function Navigation() {
               </div>
             </Link>
 
-            {/* Welcome message between logo and tabs */}
+            {/* Mensagem de Boas-vindas dinâmica */}
             {role && welcomeName && (
               <div className="ml-6 px-4 py-1.5 bg-secondary/10 text-secondary rounded-full text-sm font-bold border border-secondary/20 hidden md:flex items-center animate-in fade-in slide-in-from-left-4 duration-500">
                 Bem-vindo, {welcomeName}
@@ -118,7 +119,7 @@ export function Navigation() {
                       <Icon className="w-5 h-5" />
                       <span className="hidden lg:inline">{item.label}</span>
                     </div>
-                    {/* Exibir o código sob o item de menu correspondente ao papel */}
+                    {/* Código do utilizador visível sob o item de menu relevante */}
                     {assignedCode && (
                       (item.href === '/profile' && role === 'patient') ||
                       (item.href === '/admin' && role === 'admin') ||

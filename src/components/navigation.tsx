@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from 'next/link';
@@ -81,9 +82,14 @@ export function Navigation() {
                 <AppLogo className="w-7 h-7" />
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-xl font-headline hidden sm:block bg-gradient-to-br from-primary to-secondary bg-clip-text text-transparent">
+                <span className="font-bold text-xl font-headline hidden sm:block bg-gradient-to-br from-primary to-secondary bg-clip-text text-transparent leading-none">
                   ChronicAI
                 </span>
+                {assignedCode && (
+                  <span className="text-[10px] text-muted-foreground hidden sm:block font-mono mt-0.5">
+                    {assignedCode}
+                  </span>
+                )}
               </div>
             </Link>
           </div>

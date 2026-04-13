@@ -3,7 +3,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, collection, query, orderBy, limit } from 'firebase/firestore';
+import { doc, collection, query, orderBy, limit, serverTimestamp } from 'firebase/firestore';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 export type Medication = {
   id: string;
@@ -48,6 +49,7 @@ interface HealthContextType {
   userProfile: UserProfile | null;
   setUserProfile: (profile: UserProfile) => void;
   logs: HealthEntry[];
+  addLog: (log: { type: 'bp' | 'activity' | 'weight', value: string, notes?: string }) => void;
   meds: Medication[];
   role: string | null;
   assignedCode: string | null;
@@ -83,7 +85,6 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     if (profileData) {
       setLocalProfile(profileData as any);
     } else if (userData && userData.role === 'admin') {
-      // Perfil básico para o admin se ele não tiver um clinical profile
       setLocalProfile({
         name: 'Administrador',
         role: 'admin',
@@ -93,6 +94,18 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [profileData, userData]);
 
+  const addLog = ({ type, value, notes }: { type: 'bp' | 'activity' | 'weight', value: string, notes?: string }) => {
+    if (!db || !user) return;
+    const colRef = collection(db, 'patient_profiles', user.uid, 'clinical_records');
+    addDocumentNonBlocking(colRef, {
+      patientProfileId: user.uid,
+      recordType: type,
+      value,
+      notes: notes || '',
+      recordedAt: serverTimestamp()
+    });
+  };
+
   const value = {
     userProfile: localProfile,
     setUserProfile: (p: UserProfile) => setLocalProfile(p),
@@ -100,10 +113,11 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       id: l.id,
       type: l.recordType,
       value: l.value,
-      timestamp: l.recordedAt?.toDate ? l.recordedAt.toDate() : new Date(l.recordedAt),
+      timestamp: l.recordedAt?.toDate ? l.recordedAt.toDate() : (l.recordedAt ? new Date(l.recordedAt) : new Date()),
       notes: l.notes,
       patientProfileId: l.patientProfileId
     })) as HealthEntry[],
+    addLog,
     meds: [], 
     role: userData?.role || null,
     assignedCode: userData?.assignedCode || null,

@@ -3,6 +3,9 @@
 
 import { useState, useEffect } from 'react';
 import { useHealth } from '@/components/health-context';
+import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
+import { collection, query, orderBy, limit, serverTimestamp } from 'firebase/firestore';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { HeartPulse, Activity, Scale, ClipboardList, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
+import { HeartPulse, Activity, Scale, ClipboardList, CheckCircle2, AlertTriangle, Loader2, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -18,10 +21,13 @@ import { pt } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
 export default function LogsPage() {
-  const { logs, addLog, userProfile, isLoading } = useHealth();
+  const { user } = useUser();
+  const { role, userProfile, isLoading: isContextLoading } = useHealth();
+  const db = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
   
+  const [targetPatientId, setTargetPatientId] = useState<string>('');
   const [systolic, setSystolic] = useState<string>('');
   const [diastolic, setDiastolic] = useState<string>('');
   const [activityType, setActivityType] = useState('');
@@ -29,13 +35,30 @@ export default function LogsPage() {
   const [weight, setWeight] = useState<string>('');
   const [notes, setNotes] = useState('');
 
-  useEffect(() => {
-    if (!isLoading && !userProfile) {
-      router.push('/login');
-    }
-  }, [userProfile, isLoading, router]);
+  // Se for admin, carregar lista de pacientes para seleção
+  const patientsQuery = useMemoFirebase(() => (db && role === 'admin') ? query(collection(db, 'patient_profiles')) : null, [db, role]);
+  const { data: allPatients } = useCollection(patientsQuery);
 
-  if (isLoading || !userProfile) {
+  // Definir ID alvo para o registo e histórico
+  useEffect(() => {
+    if (role !== 'admin' && user) {
+      setTargetPatientId(user.uid);
+    }
+  }, [role, user]);
+
+  // Carregar logs do paciente selecionado (ou do próprio utilizador)
+  const logsQuery = useMemoFirebase(() => {
+    if (!db || !targetPatientId) return null;
+    return query(
+      collection(db, 'patient_profiles', targetPatientId, 'clinical_records'),
+      orderBy('recordedAt', 'desc'),
+      limit(10)
+    );
+  }, [db, targetPatientId]);
+  
+  const { data: displayLogs, isLoading: isLogsLoading } = useCollection(logsQuery);
+
+  if (isContextLoading || !userProfile) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
@@ -60,8 +83,12 @@ export default function LogsPage() {
   const bpStatus = getBpStatus(parseInt(systolic), parseInt(diastolic));
 
   const handleLog = (type: 'bp' | 'activity' | 'weight') => {
+    if (!targetPatientId) {
+      toast({ title: "Erro", description: "Por favor, selecione um paciente primeiro.", variant: "destructive" });
+      return;
+    }
+
     let value = '';
-    
     if (type === 'bp') {
       if (!systolic || !diastolic) {
         toast({ title: "Erro", description: "Por favor, selecione os valores de pressão arterial.", variant: "destructive" });
@@ -69,7 +96,6 @@ export default function LogsPage() {
       }
       value = `${systolic}/${diastolic} mmHg`;
     }
-    
     if (type === 'activity') {
       if (!activityType || !activityDuration) {
         toast({ title: "Erro", description: "Por favor, preencha o tipo e a duração da atividade.", variant: "destructive" });
@@ -77,7 +103,6 @@ export default function LogsPage() {
       }
       value = `${activityType} (${activityDuration} min)`;
     }
-    
     if (type === 'weight') {
       if (!weight) {
         toast({ title: "Erro", description: "Por favor, selecione o seu peso.", variant: "destructive" });
@@ -86,26 +111,58 @@ export default function LogsPage() {
       value = `${weight} kg`;
     }
 
-    addLog({ type, value, notes });
-    
-    if (type === 'bp') { setSystolic(''); setDiastolic(''); }
-    if (type === 'activity') { setActivityType(''); setActivityDuration(''); }
-    if (type === 'weight') setWeight('');
-    setNotes('');
+    if (db) {
+      const colRef = collection(db, 'patient_profiles', targetPatientId, 'clinical_records');
+      addDocumentNonBlocking(colRef, {
+        patientProfileId: targetPatientId,
+        recordType: type,
+        value,
+        notes: notes || '',
+        recordedAt: serverTimestamp()
+      });
 
-    toast({
-      title: "Sucesso",
-      description: "O seu registo foi guardado com sucesso!",
-    });
+      toast({
+        title: "Sucesso",
+        description: role === 'admin' ? "Registo inserido para o paciente." : "O seu registo foi guardado com sucesso!",
+      });
+
+      if (type === 'bp') { setSystolic(''); setDiastolic(''); }
+      if (type === 'activity') { setActivityType(''); setActivityDuration(''); }
+      if (type === 'weight') setWeight('');
+      setNotes('');
+    }
   };
 
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-8 space-y-8">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold font-headline text-secondary flex items-center gap-3">
-          <ClipboardList className="h-8 w-8 text-primary" /> Registo de Saúde Diário
-        </h1>
-        <p className="text-muted-foreground text-lg">Mantenha o seu histórico atualizado. É simples e rápido.</p>
+      <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold font-headline text-secondary flex items-center gap-3">
+            <ClipboardList className="h-8 w-8 text-primary" /> 
+            {role === 'admin' ? 'Inserção de Registos Clínicos' : 'Registo de Saúde Diário'}
+          </h1>
+          <p className="text-muted-foreground text-lg">
+            {role === 'admin' ? 'Adicione medições para um paciente participante.' : 'Mantenha o seu histórico atualizado. É simples e rápido.'}
+          </p>
+        </div>
+        
+        {role === 'admin' && (
+          <div className="w-full md:w-80 space-y-2">
+            <Label className="text-xs font-bold uppercase text-primary">Selecionar Paciente</Label>
+            <Select value={targetPatientId} onValueChange={setTargetPatientId}>
+              <SelectTrigger className="h-12 border-primary bg-primary/5">
+                <SelectValue placeholder="Escolha um paciente..." />
+              </SelectTrigger>
+              <SelectContent>
+                {allPatients?.map(p => (
+                  <SelectItem key={p.userId} value={p.userId}>
+                    {p.assignedCode} - {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
@@ -131,7 +188,7 @@ export default function LogsPage() {
                       <Label className="text-sm font-bold">Sistólica (Máxima)</Label>
                       <Select value={systolic} onValueChange={setSystolic}>
                         <SelectTrigger className="h-14 text-xl">
-                          <SelectValue placeholder="Selecione..." />
+                          <SelectValue placeholder="..." />
                         </SelectTrigger>
                         <SelectContent>
                           {systolicRange.map(v => <SelectItem key={v} value={v.toString()}>{v}</SelectItem>)}
@@ -142,7 +199,7 @@ export default function LogsPage() {
                       <Label className="text-sm font-bold">Diastólica (Mínima)</Label>
                       <Select value={diastolic} onValueChange={setDiastolic}>
                         <SelectTrigger className="h-14 text-xl">
-                          <SelectValue placeholder="Selecione..." />
+                          <SelectValue placeholder="..." />
                         </SelectTrigger>
                         <SelectContent>
                           {diastolicRange.map(v => <SelectItem key={v} value={v.toString()}>{v}</SelectItem>)}
@@ -160,12 +217,12 @@ export default function LogsPage() {
                       )}
                       <div>
                         <p className={cn("font-bold", bpStatus.color)}>{bpStatus.label}</p>
-                        <p className="text-xs text-muted-foreground">Estado atual baseado nos valores inseridos.</p>
+                        <p className="text-xs text-muted-foreground">Estado baseado nos valores inseridos.</p>
                       </div>
                     </div>
                   )}
 
-                  <LogFields notes={notes} setNotes={setNotes} onLog={() => handleLog('bp')} />
+                  <LogFields notes={notes} setNotes={setNotes} onLog={() => handleLog('bp')} isAdmin={role === 'admin'} />
                 </TabsContent>
 
                 <TabsContent value="activity" className="space-y-6 mt-0">
@@ -191,7 +248,7 @@ export default function LogsPage() {
                       </Select>
                     </div>
                   </div>
-                  <LogFields notes={notes} setNotes={setNotes} onLog={() => handleLog('activity')} />
+                  <LogFields notes={notes} setNotes={setNotes} onLog={() => handleLog('activity')} isAdmin={role === 'admin'} />
                 </TabsContent>
 
                 <TabsContent value="weight" className="space-y-6 mt-0">
@@ -206,7 +263,7 @@ export default function LogsPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <LogFields notes={notes} setNotes={setNotes} onLog={() => handleLog('weight')} />
+                  <LogFields notes={notes} setNotes={setNotes} onLog={() => handleLog('weight')} isAdmin={role === 'admin'} />
                 </TabsContent>
               </div>
             </Tabs>
@@ -216,34 +273,51 @@ export default function LogsPage() {
         <div className="md:col-span-5 space-y-6">
           <Card className="shadow-md border-none h-full bg-secondary/5">
             <CardHeader className="border-b bg-white rounded-t-lg">
-              <CardTitle className="text-xl">Registos Recentes</CardTitle>
+              <CardTitle className="text-xl flex items-center justify-between">
+                <span>Registos Recentes</span>
+                {targetPatientId && role === 'admin' && (
+                  <Badge variant="outline" className="text-[10px] font-mono">
+                    {allPatients?.find(p => p.userId === targetPatientId)?.assignedCode}
+                  </Badge>
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
               <div className="space-y-4">
-                {logs.length > 0 ? (
-                  logs.map((log) => (
+                {isLogsLoading ? (
+                  <div className="flex justify-center py-10">
+                    <Loader2 className="animate-spin h-6 w-6 text-muted-foreground" />
+                  </div>
+                ) : displayLogs && displayLogs.length > 0 ? (
+                  displayLogs.map((log) => (
                     <div key={log.id} className="flex items-start gap-4 p-4 bg-white rounded-xl shadow-sm border border-secondary/10">
                       <div className={cn(
                         "p-2 rounded-lg",
-                        log.type === 'bp' ? "bg-red-50 text-red-500" : 
-                        log.type === 'activity' ? "bg-blue-50 text-blue-500" : "bg-green-50 text-green-500"
+                        log.recordType === 'bp' ? "bg-red-50 text-red-500" : 
+                        log.recordType === 'activity' ? "bg-blue-50 text-blue-500" : "bg-green-50 text-green-500"
                       )}>
-                        {log.type === 'bp' ? <HeartPulse className="w-5 h-5" /> : 
-                         log.type === 'activity' ? <Activity className="w-5 h-5" /> : <Scale className="w-5 h-5" />}
+                        {log.recordType === 'bp' ? <HeartPulse className="w-5 h-5" /> : 
+                         log.recordType === 'activity' ? <Activity className="w-5 h-5" /> : <Scale className="w-5 h-5" />}
                       </div>
                       <div className="flex-1">
                         <div className="flex justify-between items-start">
                           <p className="font-bold text-lg">{log.value}</p>
-                          <span className="text-xs text-muted-foreground">{format(log.timestamp, 'HH:mm')}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {log.recordedAt?.toDate ? format(log.recordedAt.toDate(), 'HH:mm') : '...'}
+                          </span>
                         </div>
                         {log.notes && <p className="text-sm text-muted-foreground italic mt-1">"{log.notes}"</p>}
-                        <p className="text-[10px] text-muted-foreground mt-1">{format(log.timestamp, "d 'de' MMM", { locale: pt })}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          {log.recordedAt?.toDate ? format(log.recordedAt.toDate(), "d 'de' MMM", { locale: pt }) : ''}
+                        </p>
                       </div>
                     </div>
                   ))
                 ) : (
                   <div className="text-center py-10">
-                    <p className="text-muted-foreground italic">Nenhum registo efetuado hoje.</p>
+                    <p className="text-muted-foreground italic">
+                      {targetPatientId ? "Nenhum registo encontrado para este paciente." : "Selecione um paciente para ver o histórico."}
+                    </p>
                   </div>
                 )}
               </div>
@@ -255,14 +329,14 @@ export default function LogsPage() {
   );
 }
 
-function LogFields({ notes, setNotes, onLog }: { notes: string, setNotes: (v: string) => void, onLog: () => void }) {
+function LogFields({ notes, setNotes, onLog, isAdmin }: { notes: string, setNotes: (v: string) => void, onLog: () => void, isAdmin?: boolean }) {
   return (
     <div className="space-y-4 pt-4 border-t">
       <div className="space-y-2">
-        <Label htmlFor="notes">Notas ou Sentimentos (Opcional)</Label>
+        <Label htmlFor="notes">Notas ou Observações Clínicas</Label>
         <Textarea 
           id="notes" 
-          placeholder="Como se sente no momento?" 
+          placeholder={isAdmin ? "Adicione observações sobre a medição..." : "Como se sente no momento?"} 
           className="min-h-[100px] text-lg bg-muted/20"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
@@ -270,9 +344,12 @@ function LogFields({ notes, setNotes, onLog }: { notes: string, setNotes: (v: st
       </div>
       <Button 
         onClick={onLog} 
-        className="w-full h-14 text-xl rounded-full bg-primary hover:bg-primary/90 shadow-lg"
+        className={cn(
+          "w-full h-14 text-xl rounded-full shadow-lg",
+          isAdmin ? "bg-secondary hover:bg-secondary/90" : "bg-primary hover:bg-primary/90"
+        )}
       >
-        <CheckCircle2 className="mr-2 h-6 w-6" /> Guardar no Histórico
+        <CheckCircle2 className="mr-2 h-6 w-6" /> {isAdmin ? "Confirmar Registo Clínico" : "Guardar no Histórico"}
       </Button>
     </div>
   );

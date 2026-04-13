@@ -120,20 +120,6 @@ export default function RegisterPage() {
         }
       }
 
-      // 2. Verificação de Combinação Única (Contacto + Data Nascimento)
-      const profilesRef = collection(db, 'patient_profiles');
-      const qBirth = query(profilesRef, where('birthDate', '==', birthDate));
-      const snapBirth = await getDocs(qBirth);
-      
-      const alreadyExists = snapBirth.docs.some(doc => {
-        const data = doc.data();
-        return (hasEmail && data.email === emailTrim) || (hasMobile && data.mobileNumber === mobileTrim);
-      });
-
-      if (alreadyExists) {
-        throw new Error("Já existe um utilizador registado com estes dados de contacto e data de nascimento.");
-      }
-
       const authEmail = hasEmail ? emailTrim : `${mobileTrim}@chronicai.pt`;
       const rolePrefix = role === 'patient' ? 'p' : 'r';
       const qCount = query(collection(db, 'users'), where('role', '==', role));
@@ -179,6 +165,10 @@ export default function RegisterPage() {
         });
         router.push('/');
       } else {
+        // Marcador de Investigador para as Security Rules
+        const researcherRoleRef = doc(db, 'roles_researcher', user.uid);
+        setDocumentNonBlocking(researcherRoleRef, { active: true }, { merge: true });
+
         toast({
           title: "Conta Criada",
           description: `Investigador registado com o código ${assignedCode}.`,

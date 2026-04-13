@@ -26,45 +26,47 @@ service cloud.firestore {
     // --- COLLECTION RULES ---
 
     match /users/{userId} {
-      allow get: if true;
-      allow list: if true;
+      allow get: if isSignedIn();
+      allow list: if isSignedIn() && (isResearcher() || isAdmin());
       
-      allow create: if (isOwner(userId) || isResearcher() || isAdmin()) && request.resource.data.id == userId;
-      allow update: if resource != null && (isOwner(userId) || isResearcher() || isAdmin()) && request.resource.data.id == resource.data.id;
-      allow delete: if resource != null && isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
     }
 
     match /roles_admin/{adminId} {
       allow get: if isSignedIn() && (isOwner(adminId) || isAdmin());
       allow list: if isAdmin();
-      allow create, update, delete: if isAdmin();
+      allow create: if isOwner(adminId) || isAdmin();
+      allow update, delete: if isAdmin();
     }
 
     match /roles_researcher/{researcherId} {
       allow get: if isSignedIn() && (isOwner(researcherId) || isAdmin());
-      allow list: if isAdmin();
-      allow create, update, delete: if isAdmin();
+      allow list: if isSignedIn() && (isResearcher() || isAdmin());
+      allow create: if isOwner(researcherId) || isAdmin();
+      allow update, delete: if isAdmin();
     }
 
     match /patient_profiles/{patientUserId} {
-      allow get: if true;
-      allow list: if true;
+      allow get: if isSignedIn();
+      allow list: if isSignedIn() && (isResearcher() || isAdmin());
       
-      allow create: if (isOwner(patientUserId) || isResearcher() || isAdmin()) && request.resource.data.userId == patientUserId;
-      allow update: if resource != null && (isOwner(patientUserId) || isResearcher() || isAdmin()) && request.resource.data.userId == resource.data.userId;
+      allow create: if isOwner(patientUserId) || isAdmin();
+      allow update: if resource != null && (isOwner(patientUserId) || isAdmin());
       allow delete: if resource != null && isAdmin();
 
       match /clinical_records/{recordId} {
         allow get, list: if isSignedIn() && (isOwner(patientUserId) || isResearcher() || isAdmin());
-        allow create: if (isOwner(patientUserId) || isResearcher() || isAdmin()) && request.resource.data.patientProfileId == patientUserId;
-        allow update: if resource != null && (isOwner(patientUserId) || isResearcher() || isAdmin()) && request.resource.data.patientProfileId == resource.data.patientProfileId;
+        allow create: if (isOwner(patientUserId) || isAdmin());
+        allow update: if resource != null && (isOwner(patientUserId) || isAdmin());
         allow delete: if resource != null && isAdmin();
       }
 
       match /activity_logs/{logId} {
         allow get, list: if isSignedIn() && (isOwner(patientUserId) || isResearcher() || isAdmin());
-        allow create: if (isOwner(patientUserId) || isResearcher() || isAdmin()) && request.resource.data.patientProfileId == patientUserId;
-        allow update: if resource != null && (isOwner(patientUserId) || isResearcher() || isAdmin()) && request.resource.data.patientProfileId == resource.data.patientProfileId;
+        allow create: if (isOwner(patientUserId) || isAdmin());
+        allow update: if resource != null && (isOwner(patientUserId) || isAdmin());
         allow delete: if resource != null && isAdmin();
       }
 
@@ -83,6 +85,11 @@ service cloud.firestore {
     match /medications/{medicationId} {
       allow get, list: if isSignedIn();
       allow create, update, delete: if isAdmin();
+    }
+
+    match /contact_messages/{messageId} {
+      allow create: if true;
+      allow get, list, update, delete: if isAdmin();
     }
   }
 }

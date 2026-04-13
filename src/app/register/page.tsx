@@ -126,11 +126,11 @@ export default function RegisterPage() {
               <Input id="email" type="email" placeholder="jose@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="mobile">Telemóvel (Opcional)</Label>
+              <Label htmlFor="mobile">Telemóvel</Label>
               <Input id="mobile" type="tel" placeholder="912345678" value={mobile} onChange={(e) => setMobile(e.target.value)} className="h-12" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="birthDate">Data de Nascimento (Opcional)</Label>
+              <Label htmlFor="birthDate">Data de Nascimento</Label>
               <Input id="birthDate" type="text" placeholder="DD/MM/AAAA" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} className="h-12" />
             </div>
             <div className="space-y-2">

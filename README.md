@@ -8,7 +8,7 @@ Este projeto faz parte da iniciativa:
 
 ## Colaboração Institucional
 Este projeto resulta de uma colaboração estratégica entre:
-- **Digital Health & Technology (DiTech Health)**: Unidade de investigação integrada no **GI2- Gabinete para a Investigação & a Inovação** da **CESPU - Cooperativa de Ensino Superior Politécnico e Universitário**.
+- **Digital Health & Technology (DiTech)**: Unidade de investigação integrada no **GI2- Gabinete para a Investigação & a Inovação** da **CESPU - Cooperativa de Ensino Superior Politécnico e Universitário**.
 - **Intelligent Systems Associate Laboratory (LASI)**: Do **Centro Algoritmi** da **Universidade do Minho**.
 
 ## Funcionalidades Principais
@@ -29,4 +29,4 @@ Para questões relacionadas com o projeto ou suporte:
 O ChronicAI fornece apenas informações informativas e conselhos de bem-estar. Não substitui o diagnóstico ou tratamento por um profissional de saúde. Em caso de emergência, contacte sempre o 112 ou o SNS 24 (808 24 24 24).
 
 ---
-© 2026 ChronicAI Health | DiTech Health (CESPU) | LASI (Centro Algoritmi - UMinho). Todos os direitos reservados.
+© 2026 ChronicAI Health | DiTech (CESPU) | LASI (Centro Algoritmi - UMinho). Todos os direitos reservados.

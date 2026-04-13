@@ -95,7 +95,7 @@ export default function Home() {
               </p>
               <p className="text-muted-foreground leading-relaxed max-w-5xl mx-auto text-sm sm:text-base">
                 Este projeto resulta de uma colaboração estratégica entre a unidade de investigação 
-                <strong> "Digital Health & Technology" (DiTech Health)</strong>, integrada no 
+                <strong> "Digital Health & Technology" (DiTech)</strong>, integrada no 
                 <strong> GI2 - Gabinete para a Investigação & a Inovação</strong> da 
                 <strong> CESPU - Cooperativa de Ensino Superior Politécnico e Universitário</strong>, 
                 e o <strong>Intelligent Systems Associate Laboratory (LASI)</strong>, do 
@@ -182,7 +182,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 text-center text-muted-foreground space-y-4">
           <div>
             <p className="font-bold">© 2026 ChronicAI Health. Todos os direitos reservados.</p>
-            <p className="text-xs">DiTech Health | CESPU | LASI | Centro Algoritmi | Universidade do Minho</p>
+            <p className="text-xs">DiTech | CESPU | LASI | Centro Algoritmi | Universidade do Minho</p>
           </div>
           <p className="text-[10px] leading-tight max-w-2xl mx-auto italic">
             Aviso Médico: O ChronicAI fornece apenas informações informativas e conselhos de bem-estar. Não substitui o diagnóstico, tratamento ou aconselhamento por um profissional de saúde.

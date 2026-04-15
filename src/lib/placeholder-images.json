@@ -17,6 +17,36 @@
       "description": "Um avatar de perfil amigável",
       "imageUrl": "https://picsum.photos/seed/user-avatar-1/150/150",
       "imageHint": "person portrait"
+    },
+    {
+      "id": "logo-ditech",
+      "description": "Logótipo DiTech Research Unit",
+      "imageUrl": "https://picsum.photos/seed/ditech-logo/300/150",
+      "imageHint": "research logo"
+    },
+    {
+      "id": "logo-cespu",
+      "description": "Logótipo CESPU",
+      "imageUrl": "https://picsum.photos/seed/cespu-logo/300/100",
+      "imageHint": "university logo"
+    },
+    {
+      "id": "logo-lasi",
+      "description": "Logótipo LASI",
+      "imageUrl": "https://picsum.photos/seed/lasi-logo/300/100",
+      "imageHint": "research lab"
+    },
+    {
+      "id": "logo-uminho",
+      "description": "Logótipo Universidade do Minho",
+      "imageUrl": "https://picsum.photos/seed/uminho-logo/300/100",
+      "imageHint": "university logo"
+    },
+    {
+      "id": "logo-algoritmi",
+      "description": "Logótipo Centro Algoritmi",
+      "imageUrl": "https://picsum.photos/seed/algoritmi-logo/300/100",
+      "imageHint": "research center"
     }
   ]
 }

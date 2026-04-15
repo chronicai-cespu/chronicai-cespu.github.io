@@ -26,7 +26,13 @@ const chartConfig = {
 export default function Dashboard() {
   const { userProfile, logs, meds, role, isLoading } = useHealth();
   const [didYouKnow, setDidYouKnow] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
+
+  // Garante que o componente só renderiza conteúdo dinâmico após hidratação
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Redirecionamento se não estiver autenticado ou se não for paciente
   useEffect(() => {
@@ -60,6 +66,8 @@ export default function Dashboard() {
   }, [userProfile, role]);
 
   const activityData = useMemo(() => {
+    if (!isMounted) return [];
+
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = subDays(new Date(), 6 - i);
       return {
@@ -82,9 +90,9 @@ export default function Dashboard() {
     });
 
     return last7Days;
-  }, [logs]);
+  }, [logs, isMounted]);
 
-  if (isLoading || !userProfile || role !== 'patient') {
+  if (!isMounted || isLoading || !userProfile || role !== 'patient') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />

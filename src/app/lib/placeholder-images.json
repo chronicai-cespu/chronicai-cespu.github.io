@@ -1,3 +1,4 @@
+
 {
   "placeholderImages": [
     {
@@ -20,33 +21,33 @@
     },
     {
       "id": "logo-ditech",
-      "description": "Logótipo DiTech Research Unit",
-      "imageUrl": "https://picsum.photos/seed/ditech-logo/300/150",
-      "imageHint": "research logo"
+      "description": "1. Logótipo DiTech Research Unit",
+      "imageUrl": "https://picsum.photos/seed/ditech-logo-1/400/200",
+      "imageHint": "medical research"
     },
     {
       "id": "logo-cespu",
-      "description": "Logótipo CESPU",
-      "imageUrl": "https://picsum.photos/seed/cespu-logo/300/100",
+      "description": "2. Logótipo CESPU",
+      "imageUrl": "https://picsum.photos/seed/cespu-logo-1/400/200",
       "imageHint": "university logo"
     },
     {
       "id": "logo-lasi",
-      "description": "Logótipo LASI",
-      "imageUrl": "https://picsum.photos/seed/lasi-logo/300/100",
-      "imageHint": "research lab"
-    },
-    {
-      "id": "logo-uminho",
-      "description": "Logótipo Universidade do Minho",
-      "imageUrl": "https://picsum.photos/seed/uminho-logo/300/100",
-      "imageHint": "university logo"
+      "description": "3. Logótipo LASI",
+      "imageUrl": "https://picsum.photos/seed/lasi-logo-1/400/200",
+      "imageHint": "technology lab"
     },
     {
       "id": "logo-algoritmi",
-      "description": "Logótipo Centro Algoritmi",
-      "imageUrl": "https://picsum.photos/seed/algoritmi-logo/300/100",
-      "imageHint": "research center"
+      "description": "4. Logótipo Centro Algoritmi",
+      "imageUrl": "https://picsum.photos/seed/algoritmi-logo-1/400/200",
+      "imageHint": "algorithm research"
+    },
+    {
+      "id": "logo-uminho",
+      "description": "5. Logótipo Universidade do Minho",
+      "imageUrl": "https://picsum.photos/seed/uminho-logo-1/400/200",
+      "imageHint": "academic branding"
     }
   ]
 }

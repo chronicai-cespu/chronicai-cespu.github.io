@@ -12,8 +12,8 @@ export default function Home() {
   const ditechLogo = PlaceHolderImages.find(img => img.id === 'logo-ditech');
   const cespuLogo = PlaceHolderImages.find(img => img.id === 'logo-cespu');
   const lasiLogo = PlaceHolderImages.find(img => img.id === 'logo-lasi');
-  const uminhoLogo = PlaceHolderImages.find(img => img.id === 'logo-uminho');
   const algoritmiLogo = PlaceHolderImages.find(img => img.id === 'logo-algoritmi');
+  const uminhoLogo = PlaceHolderImages.find(img => img.id === 'logo-uminho');
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -110,10 +110,10 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Logos Display Area */}
+          {/* Logos Display Area with fixed heights for consistency */}
           <div className="flex flex-wrap items-center justify-center gap-10 md:gap-16 opacity-90">
             {ditechLogo && (
-              <div className="relative w-32 h-16 md:w-40 md:h-20">
+              <div className="relative w-40 h-20">
                 <Image 
                   src={ditechLogo.imageUrl} 
                   alt={ditechLogo.description} 
@@ -124,7 +124,7 @@ export default function Home() {
               </div>
             )}
             {cespuLogo && (
-              <div className="relative w-32 h-12 md:w-40 md:h-16">
+              <div className="relative w-40 h-20">
                 <Image 
                   src={cespuLogo.imageUrl} 
                   alt={cespuLogo.description} 
@@ -135,7 +135,7 @@ export default function Home() {
               </div>
             )}
             {lasiLogo && (
-              <div className="relative w-32 h-12 md:w-40 md:h-16">
+              <div className="relative w-40 h-20">
                 <Image 
                   src={lasiLogo.imageUrl} 
                   alt={lasiLogo.description} 
@@ -146,7 +146,7 @@ export default function Home() {
               </div>
             )}
             {algoritmiLogo && (
-              <div className="relative w-32 h-12 md:w-40 md:h-16">
+              <div className="relative w-40 h-20">
                 <Image 
                   src={algoritmiLogo.imageUrl} 
                   alt={algoritmiLogo.description} 
@@ -157,7 +157,7 @@ export default function Home() {
               </div>
             )}
             {uminhoLogo && (
-              <div className="relative w-32 h-12 md:w-40 md:h-16">
+              <div className="relative w-40 h-20">
                 <Image 
                   src={uminhoLogo.imageUrl} 
                   alt={uminhoLogo.description} 

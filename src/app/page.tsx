@@ -10,7 +10,7 @@ import { AppLogo } from '@/components/app-logo';
 export default function Home() {
   const heroImage = PlaceHolderImages.find(img => img.id === 'health-hero');
   
-  // Garantir a ordem específica solicitada
+  // Ordem específica dos logótipos institucionais
   const logos = [
     PlaceHolderImages.find(img => img.id === 'logo-1-ditech'),
     PlaceHolderImages.find(img => img.id === 'logo-2-cespu'),

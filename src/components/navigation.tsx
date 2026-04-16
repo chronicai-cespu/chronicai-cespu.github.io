@@ -117,10 +117,7 @@ export function Navigation() {
                       <Icon className="w-5 h-5" />
                       <span className="hidden lg:inline">{item.label}</span>
                     </div>
-                    {assignedCode && (
-                      (item.href === '/profile') ||
-                      (item.href === '/admin' && role === 'admin')
-                    ) && (
+                    {assignedCode && item.href === '/profile' && (
                       <span className="text-[10px] font-mono leading-none mt-0.5 opacity-70">
                         {assignedCode}
                       </span>

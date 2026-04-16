@@ -9,13 +9,15 @@ import { AppLogo } from '@/components/app-logo';
 
 export default function Home() {
   const heroImage = PlaceHolderImages.find(img => img.id === 'health-hero');
-  const logo1 = PlaceHolderImages.find(img => img.id === 'logo-1-ditech');
-  const logo2 = PlaceHolderImages.find(img => img.id === 'logo-2-cespu');
-  const logo3 = PlaceHolderImages.find(img => img.id === 'logo-3-lasi');
-  const logo4 = PlaceHolderImages.find(img => img.id === 'logo-4-algoritmi');
-  const logo5 = PlaceHolderImages.find(img => img.id === 'logo-5-uminho');
-
-  const logos = [logo1, logo2, logo3, logo4, logo5].filter(Boolean);
+  
+  // Garantir a ordem específica solicitada
+  const logos = [
+    PlaceHolderImages.find(img => img.id === 'logo-1-ditech'),
+    PlaceHolderImages.find(img => img.id === 'logo-2-cespu'),
+    PlaceHolderImages.find(img => img.id === 'logo-3-lasi'),
+    PlaceHolderImages.find(img => img.id === 'logo-4-algoritmi'),
+    PlaceHolderImages.find(img => img.id === 'logo-5-uminho')
+  ].filter(Boolean);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -112,10 +114,10 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Logos Display Area with fixed heights for consistency */}
+          {/* Logos com dimensões uniformes */}
           <div className="grid grid-cols-2 md:grid-cols-5 items-center justify-center gap-6 md:gap-8 opacity-95 max-w-6xl mx-auto">
             {logos.map((logo, index) => (
-              <div key={logo?.id || index} className="flex justify-center items-center h-28 bg-white p-4 rounded-xl shadow-sm border">
+              <div key={logo?.id || index} className="flex justify-center items-center h-28 bg-white p-4 rounded-xl shadow-sm border overflow-hidden">
                 <div className="relative w-full h-full">
                   <Image 
                     src={logo!.imageUrl} 

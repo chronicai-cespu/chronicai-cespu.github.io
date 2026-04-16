@@ -50,7 +50,7 @@ export function Navigation() {
     },
     { 
       href: '/logs', 
-      label: (role === 'admin' || role === 'researcher') ? 'Registos de Pacientes' : 'Registos', 
+      label: 'Registos', 
       icon: ClipboardList,
       activeColor: "border-secondary text-secondary",
       hoverColor: "hover:text-secondary hover:border-secondary",

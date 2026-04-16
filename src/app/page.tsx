@@ -110,61 +110,71 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Logos Display Area with fixed heights for consistency */}
-          <div className="flex flex-wrap items-center justify-center gap-10 md:gap-16 opacity-90">
+          {/* Logos Display Area with fixed heights for consistency and exact order requested */}
+          <div className="grid grid-cols-2 md:grid-cols-5 items-center justify-center gap-8 md:gap-12 opacity-95 max-w-6xl mx-auto">
             {ditechLogo && (
-              <div className="relative w-40 h-20">
-                <Image 
-                  src={ditechLogo.imageUrl} 
-                  alt={ditechLogo.description} 
-                  fill 
-                  className="object-contain" 
-                  data-ai-hint={ditechLogo.imageHint}
-                />
+              <div className="flex justify-center items-center h-24 bg-white p-4 rounded-xl shadow-sm">
+                <div className="relative w-full h-full">
+                  <Image 
+                    src={ditechLogo.imageUrl} 
+                    alt={ditechLogo.description} 
+                    fill 
+                    className="object-contain" 
+                    data-ai-hint={ditechLogo.imageHint}
+                  />
+                </div>
               </div>
             )}
             {cespuLogo && (
-              <div className="relative w-40 h-20">
-                <Image 
-                  src={cespuLogo.imageUrl} 
-                  alt={cespuLogo.description} 
-                  fill 
-                  className="object-contain" 
-                  data-ai-hint={cespuLogo.imageHint}
-                />
+              <div className="flex justify-center items-center h-24 bg-white p-4 rounded-xl shadow-sm">
+                <div className="relative w-full h-full">
+                  <Image 
+                    src={cespuLogo.imageUrl} 
+                    alt={cespuLogo.description} 
+                    fill 
+                    className="object-contain" 
+                    data-ai-hint={cespuLogo.imageHint}
+                  />
+                </div>
               </div>
             )}
             {lasiLogo && (
-              <div className="relative w-40 h-20">
-                <Image 
-                  src={lasiLogo.imageUrl} 
-                  alt={lasiLogo.description} 
-                  fill 
-                  className="object-contain" 
-                  data-ai-hint={lasiLogo.imageHint}
-                />
+              <div className="flex justify-center items-center h-24 bg-white p-4 rounded-xl shadow-sm">
+                <div className="relative w-full h-full">
+                  <Image 
+                    src={lasiLogo.imageUrl} 
+                    alt={lasiLogo.description} 
+                    fill 
+                    className="object-contain" 
+                    data-ai-hint={lasiLogo.imageHint}
+                  />
+                </div>
               </div>
             )}
             {algoritmiLogo && (
-              <div className="relative w-40 h-20">
-                <Image 
-                  src={algoritmiLogo.imageUrl} 
-                  alt={algoritmiLogo.description} 
-                  fill 
-                  className="object-contain" 
-                  data-ai-hint={algoritmiLogo.imageHint}
-                />
+              <div className="flex justify-center items-center h-24 bg-white p-4 rounded-xl shadow-sm">
+                <div className="relative w-full h-full">
+                  <Image 
+                    src={algoritmiLogo.imageUrl} 
+                    alt={algoritmiLogo.description} 
+                    fill 
+                    className="object-contain" 
+                    data-ai-hint={algoritmiLogo.imageHint}
+                  />
+                </div>
               </div>
             )}
             {uminhoLogo && (
-              <div className="relative w-40 h-20">
-                <Image 
-                  src={uminhoLogo.imageUrl} 
-                  alt={uminhoLogo.description} 
-                  fill 
-                  className="object-contain" 
-                  data-ai-hint={uminhoLogo.imageHint}
-                />
+              <div className="flex justify-center items-center h-24 bg-white p-4 rounded-xl shadow-sm">
+                <div className="relative w-full h-full">
+                  <Image 
+                    src={uminhoLogo.imageUrl} 
+                    alt={uminhoLogo.description} 
+                    fill 
+                    className="object-contain" 
+                    data-ai-hint={uminhoLogo.imageHint}
+                  />
+                </div>
               </div>
             )}
           </div>

@@ -3,49 +3,49 @@
     {
       "id": "health-hero",
       "description": "Uma cena calma que representa saúde e bem-estar",
-      "imageUrl": "https://picsum.photos/seed/chronic-health-1/1200/600",
+      "imageUrl": "https://picsum.photos/seed/chronic-health-hero/1200/600",
       "imageHint": "health wellness"
     },
     {
       "id": "elderly-wellness",
       "description": "Estilo de vida saudável para seniores",
-      "imageUrl": "https://picsum.photos/seed/senior-fit/800/600",
+      "imageUrl": "https://picsum.photos/seed/senior-wellness/800/600",
       "imageHint": "active senior"
     },
     {
       "id": "avatar-default",
       "description": "Um avatar de perfil amigável",
-      "imageUrl": "https://picsum.photos/seed/user-avatar-1/150/150",
+      "imageUrl": "https://picsum.photos/seed/user-avatar-default/150/150",
       "imageHint": "person portrait"
     },
     {
       "id": "logo-ditech",
       "description": "1. Logótipo DiTech Research Unit",
-      "imageUrl": "https://picsum.photos/seed/ditech-logo-1/400/200",
+      "imageUrl": "https://picsum.photos/seed/ditech-logo-final-1/400/200",
       "imageHint": "medical research"
     },
     {
       "id": "logo-cespu",
       "description": "2. Logótipo CESPU",
-      "imageUrl": "https://picsum.photos/seed/cespu-logo-1/400/200",
+      "imageUrl": "https://picsum.photos/seed/cespu-logo-final-2/400/200",
       "imageHint": "university logo"
     },
     {
       "id": "logo-lasi",
       "description": "3. Logótipo LASI",
-      "imageUrl": "https://picsum.photos/seed/lasi-logo-1/400/200",
+      "imageUrl": "https://picsum.photos/seed/lasi-logo-final-3/400/200",
       "imageHint": "technology lab"
     },
     {
       "id": "logo-algoritmi",
       "description": "4. Logótipo Centro Algoritmi",
-      "imageUrl": "https://picsum.photos/seed/algoritmi-logo-1/400/200",
+      "imageUrl": "https://picsum.photos/seed/algoritmi-logo-final-4/400/200",
       "imageHint": "algorithm research"
     },
     {
       "id": "logo-uminho",
       "description": "5. Logótipo Universidade do Minho",
-      "imageUrl": "https://picsum.photos/seed/uminho-logo-1/400/200",
+      "imageUrl": "https://picsum.photos/seed/uminho-logo-final-5/400/200",
       "imageHint": "academic branding"
     }
   ]

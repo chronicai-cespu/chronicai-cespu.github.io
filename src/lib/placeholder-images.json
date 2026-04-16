@@ -20,33 +20,33 @@
     },
     {
       "id": "logo-1-ditech",
-      "description": "1. Logótipo DiTech Research Unit",
-      "imageUrl": "https://picsum.photos/seed/101/400/200",
-      "imageHint": "medical laboratory"
+      "description": "Logo DiTech Health",
+      "imageUrl": "https://drive.google.com/file/d/1TVNdd48Jg0HlQbA78FN2cbcXGLoVTIhM/view?usp=drive_link",
+      "imageHint": "ditech"
     },
     {
       "id": "logo-2-cespu",
-      "description": "2. Logótipo CESPU",
-      "imageUrl": "https://picsum.photos/seed/102/400/200",
-      "imageHint": "university building"
+      "description": "Logo CESPU",
+      "imageUrl": "https://drive.google.com/file/d/14t3VJmkZYW0JTdaQL_PnOW69g-sBZ9bO/view?usp=drive_link",
+      "imageHint": "cespu"
     },
     {
       "id": "logo-3-lasi",
-      "description": "3. Logótipo LASI",
-      "imageUrl": "https://picsum.photos/seed/103/400/200",
-      "imageHint": "intelligence lab"
+      "description": "Logo LASI",
+      "imageUrl": "https://drive.google.com/file/d/1nh5xCsGfhst1-O8GXudp4UFxKhCmJT5r/view?usp=drive_link",
+      "imageHint": "lasi"
     },
     {
       "id": "logo-4-algoritmi",
-      "description": "4. Logótipo Centro Algoritmi",
-      "imageUrl": "https://picsum.photos/seed/104/400/200",
-      "imageHint": "computer center"
+      "description": "Logo Centro Algoritmi",
+      "imageUrl": "https://drive.google.com/file/d/1qzruvgzGWCp381Av-MQTfYLA-GHtyv3E/view?usp=drive_link",
+      "imageHint": "algoritmi"
     },
     {
       "id": "logo-5-uminho",
-      "description": "5. Logótipo Universidade do Minho",
-      "imageUrl": "https://picsum.photos/seed/105/400/200",
-      "imageHint": "academic crest"
+      "description": "Logo UMinho",
+      "imageUrl": "hhttps://drive.google.com/file/d/1EbnRmcPvjNTf3DqhHI8QHE987nDa285n/view?usp=drive_link",
+      "imageHint": "uminho"
     }
   ]
 }

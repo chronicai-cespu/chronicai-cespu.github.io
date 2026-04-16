@@ -9,11 +9,13 @@ import { AppLogo } from '@/components/app-logo';
 
 export default function Home() {
   const heroImage = PlaceHolderImages.find(img => img.id === 'health-hero');
-  const ditechLogo = PlaceHolderImages.find(img => img.id === 'logo-ditech');
-  const cespuLogo = PlaceHolderImages.find(img => img.id === 'logo-cespu');
-  const lasiLogo = PlaceHolderImages.find(img => img.id === 'logo-lasi');
-  const algoritmiLogo = PlaceHolderImages.find(img => img.id === 'logo-algoritmi');
-  const uminhoLogo = PlaceHolderImages.find(img => img.id === 'logo-uminho');
+  const logo1 = PlaceHolderImages.find(img => img.id === 'logo-1-ditech');
+  const logo2 = PlaceHolderImages.find(img => img.id === 'logo-2-cespu');
+  const logo3 = PlaceHolderImages.find(img => img.id === 'logo-3-lasi');
+  const logo4 = PlaceHolderImages.find(img => img.id === 'logo-4-algoritmi');
+  const logo5 = PlaceHolderImages.find(img => img.id === 'logo-5-uminho');
+
+  const logos = [logo1, logo2, logo3, logo4, logo5].filter(Boolean);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -110,73 +112,21 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Logos Display Area with fixed heights for consistency and exact order requested */}
-          <div className="grid grid-cols-2 md:grid-cols-5 items-center justify-center gap-8 md:gap-12 opacity-95 max-w-6xl mx-auto">
-            {ditechLogo && (
-              <div className="flex justify-center items-center h-24 bg-white p-4 rounded-xl shadow-sm">
+          {/* Logos Display Area with fixed heights for consistency */}
+          <div className="grid grid-cols-2 md:grid-cols-5 items-center justify-center gap-6 md:gap-8 opacity-95 max-w-6xl mx-auto">
+            {logos.map((logo, index) => (
+              <div key={logo?.id || index} className="flex justify-center items-center h-28 bg-white p-4 rounded-xl shadow-sm border">
                 <div className="relative w-full h-full">
                   <Image 
-                    src={ditechLogo.imageUrl} 
-                    alt={ditechLogo.description} 
+                    src={logo!.imageUrl} 
+                    alt={logo!.description} 
                     fill 
                     className="object-contain" 
-                    data-ai-hint={ditechLogo.imageHint}
+                    data-ai-hint={logo!.imageHint}
                   />
                 </div>
               </div>
-            )}
-            {cespuLogo && (
-              <div className="flex justify-center items-center h-24 bg-white p-4 rounded-xl shadow-sm">
-                <div className="relative w-full h-full">
-                  <Image 
-                    src={cespuLogo.imageUrl} 
-                    alt={cespuLogo.description} 
-                    fill 
-                    className="object-contain" 
-                    data-ai-hint={cespuLogo.imageHint}
-                  />
-                </div>
-              </div>
-            )}
-            {lasiLogo && (
-              <div className="flex justify-center items-center h-24 bg-white p-4 rounded-xl shadow-sm">
-                <div className="relative w-full h-full">
-                  <Image 
-                    src={lasiLogo.imageUrl} 
-                    alt={lasiLogo.description} 
-                    fill 
-                    className="object-contain" 
-                    data-ai-hint={lasiLogo.imageHint}
-                  />
-                </div>
-              </div>
-            )}
-            {algoritmiLogo && (
-              <div className="flex justify-center items-center h-24 bg-white p-4 rounded-xl shadow-sm">
-                <div className="relative w-full h-full">
-                  <Image 
-                    src={algoritmiLogo.imageUrl} 
-                    alt={algoritmiLogo.description} 
-                    fill 
-                    className="object-contain" 
-                    data-ai-hint={algoritmiLogo.imageHint}
-                  />
-                </div>
-              </div>
-            )}
-            {uminhoLogo && (
-              <div className="flex justify-center items-center h-24 bg-white p-4 rounded-xl shadow-sm">
-                <div className="relative w-full h-full">
-                  <Image 
-                    src={uminhoLogo.imageUrl} 
-                    alt={uminhoLogo.description} 
-                    fill 
-                    className="object-contain" 
-                    data-ai-hint={uminhoLogo.imageHint}
-                  />
-                </div>
-              </div>
-            )}
+            ))}
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">

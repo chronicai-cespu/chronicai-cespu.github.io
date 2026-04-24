@@ -9,6 +9,9 @@ import { FirebaseClientProvider } from '@/firebase';
 export const metadata: Metadata = {
   title: 'ChronicAI - O Seu Companheiro de Saúde',
   description: 'Acompanhamento de saúde e assistente com IA para cuidados crónicos.',
+  manifest: '/manifest.json',
+  themeColor: '#008ba3',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0',
 };
 
 export default function RootLayout({

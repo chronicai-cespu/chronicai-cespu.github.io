@@ -2,9 +2,9 @@
   "placeholderImages": [
     {
       "id": "health-hero",
-      "description": "Uma cena calma que representa saúde e bem-estar",
-      "imageUrl": "https://picsum.photos/seed/chronic-health-hero-2025/1200/600",
-      "imageHint": "health wellness"
+      "description": "Sénior a utilizar tecnologia para monitorização de saúde",
+      "imageUrl": "https://picsum.photos/seed/chronicai-senior-care/1920/1080",
+      "imageHint": "senior healthcare"
     },
     {
       "id": "elderly-wellness",

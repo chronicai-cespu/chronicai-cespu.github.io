@@ -22,13 +22,13 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="relative h-[600px] flex items-center justify-center text-center overflow-hidden bg-background">
+      <section className="relative h-[600px] flex items-center justify-center text-center overflow-hidden bg-slate-900">
         {heroImage && (
           <Image
             src={heroImage.imageUrl}
             alt={heroImage.description}
             fill
-            className="object-cover opacity-10"
+            className="object-cover opacity-30"
             priority
             data-ai-hint={heroImage.imageHint}
           />
@@ -39,10 +39,10 @@ export default function Home() {
               <AppLogo className="text-primary w-12 h-12" />
             </div>
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 font-headline leading-tight text-primary">
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 font-headline leading-tight text-white drop-shadow-md">
             Gira a sua Saúde com <span className="bg-gradient-to-br from-primary to-secondary bg-clip-text text-transparent">ChronicAI</span>
           </h1>
-          <p className="text-xl md:text-2xl mb-10 text-muted-foreground font-bold max-w-2xl mx-auto">
+          <p className="text-xl md:text-2xl mb-10 text-slate-100 font-bold max-w-2xl mx-auto drop-shadow-sm">
             Um companheiro de saúde dedicado. Monitorize sinais vitais, gira a medicação e fale com a IA para aconselhamento personalizado.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

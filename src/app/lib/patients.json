@@ -1,0 +1,25 @@
+
+[
+  {
+    "id": "patient-id-1",
+    "name": "Maria Silva",
+    "email": "maria.silva@email.com",
+    "password": "maria123",
+    "role": "patient",
+    "assignedCode": "p01",
+    "mobileNumber": "930000001",
+    "createdAt": "2025-01-15T14:30:00.000Z",
+    "chronicDiseases": ["Diabetes", "Hipertensão"]
+  },
+  {
+    "id": "patient-id-2",
+    "name": "João Pereira",
+    "email": "joao.pereira@email.com",
+    "password": "joao123",
+    "role": "patient",
+    "assignedCode": "p02",
+    "mobileNumber": "930000002",
+    "createdAt": "2025-01-16T09:15:00.000Z",
+    "chronicDiseases": ["Colesterol"]
+  }
+]

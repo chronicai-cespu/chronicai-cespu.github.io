@@ -11,6 +11,14 @@ Este projeto resulta de uma colaboração estratégica entre:
 - **Digital Health & Technology (DiTech)**: Unidade de investigação integrada no **GI2- Gabinete para a Investigação & a Inovação** da **CESPU - Cooperativa de Ensino Superior Politécnico e Universitário**.
 - **Intelligent Systems Associate Laboratory (LASI)**: Do **Centro Algoritmi** da **Universidade do Minho**.
 
+## Segurança e Armazenamento de Dados
+
+A aplicação utiliza a infraestrutura **Firebase** para garantir a máxima segurança dos dados:
+
+- **Autenticação e Palavras-passe:** Geridas pelo **Firebase Authentication**. As palavras-passe são encriptadas e geridas pela Google, não sendo acessíveis em texto limpo nem guardadas na base de dados da aplicação.
+- **Perfis e Registos Clínicos:** Guardados no **Cloud Firestore**. Os dados são protegidos por **Security Rules** que garantem que apenas o próprio utilizador (ou investigadores autorizados com justificativa) podem aceder ou editar informações sensíveis.
+- **Auditoria:** Todas as alterações feitas por investigadores em perfis de pacientes são registadas num log de auditoria imutável.
+
 ## Funcionalidades Principais
 
 - **Painel de Controlo (Dashboard):** Resumo visual dos sinais vitais e progresso de atividade física semanal com gráficos dinâmicos.
@@ -19,7 +27,6 @@ Este projeto resulta de uma colaboração estratégica entre:
 - **Questionário de Perfil Abrangente:** Recolha detalhada de dados biométricos, hábitos de estilo de vida e medicação habitual.
 - **Segurança de Emergência:** A IA identifica sintomas de urgência e guia o utilizador para o 112 ou SNS 24.
 - **Sistema Multi-Papel:** Diferenciação entre Pacientes (pXX), Investigadores (rXX) e Administrador.
-- **Login Flexível:** Acesso via Código, Email, Telemóvel ou Data de Nascimento.
 
 ## Contacto
 Para questões relacionadas com o projeto ou suporte:

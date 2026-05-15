@@ -2,34 +2,25 @@
 "use client"
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Home, MessageCircle, User, ClipboardList, ShieldAlert, FlaskConical, LogOut } from 'lucide-react';
 import { AppLogo } from '@/components/app-logo';
 import { useHealth } from '@/components/health-context';
-import { useAuth } from '@/firebase';
 import { Button } from './ui/button';
 
 export function Navigation() {
   const pathname = usePathname();
-  const { role, assignedCode, userProfile } = useHealth();
-  const auth = useAuth();
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    await auth.signOut();
-    router.push('/login');
-  };
+  const { role, assignedCode, userProfile, logout } = useHealth();
 
   const welcomeName = role === 'admin' ? 'Admin' : (userProfile?.name || '');
 
   const navItems = [
     { 
       href: '/admin', 
-      label: 'Administração', 
+      label: 'Administração JSON', 
       icon: ShieldAlert,
       activeColor: "border-red-500 text-red-500",
-      hoverColor: "hover:text-red-500 hover:border-red-500",
       show: role === 'admin'
     },
     { 
@@ -37,7 +28,6 @@ export function Navigation() {
       label: 'Lista de Pacientes', 
       icon: FlaskConical,
       activeColor: "border-purple-500 text-purple-500",
-      hoverColor: "hover:text-purple-500 hover:border-purple-500",
       show: role === 'researcher' || role === 'admin'
     },
     { 
@@ -45,7 +35,6 @@ export function Navigation() {
       label: 'Os meus dados', 
       icon: Home,
       activeColor: "border-primary text-primary",
-      hoverColor: "hover:text-primary hover:border-primary",
       show: role === 'patient'
     },
     { 
@@ -53,7 +42,6 @@ export function Navigation() {
       label: 'Registos', 
       icon: ClipboardList,
       activeColor: "border-secondary text-secondary",
-      hoverColor: "hover:text-secondary hover:border-secondary",
       show: role === 'patient' || role === 'admin' || role === 'researcher'
     },
     { 
@@ -61,7 +49,6 @@ export function Navigation() {
       label: 'Assistente de IA', 
       icon: MessageCircle,
       activeColor: "border-primary text-primary font-bold",
-      hoverColor: "hover:text-primary hover:border-primary",
       show: role === 'patient'
     },
     { 
@@ -69,8 +56,7 @@ export function Navigation() {
       label: 'Perfil', 
       icon: User,
       activeColor: "border-primary text-primary",
-      hoverColor: "hover:text-primary hover:border-primary",
-      show: role === 'patient' || role === 'researcher' || role === 'admin'
+      show: !!role
     },
   ];
 
@@ -83,21 +69,19 @@ export function Navigation() {
               <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border">
                 <AppLogo className="w-7 h-7" />
               </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-xl font-headline hidden sm:block bg-gradient-to-br from-primary to-secondary bg-clip-text text-transparent leading-none">
-                  ChronicAI
-                </span>
-              </div>
+              <span className="font-bold text-xl font-headline hidden sm:block bg-gradient-to-br from-primary to-secondary bg-clip-text text-transparent">
+                ChronicAI
+              </span>
             </Link>
 
             {role && welcomeName && (
-              <div className="ml-6 px-4 py-1.5 bg-secondary/10 text-secondary rounded-full text-sm font-bold border border-secondary/20 hidden md:flex items-center animate-in fade-in slide-in-from-left-4 duration-500">
+              <div className="ml-6 px-4 py-1.5 bg-secondary/10 text-secondary rounded-full text-sm font-bold hidden md:flex items-center">
                 Bem-vindo, {welcomeName}
               </div>
             )}
           </div>
           
-          <div className="flex items-center space-x-2 sm:space-x-4 md:space-x-8 h-full">
+          <div className="flex items-center space-x-2 md:space-x-8">
             {navItems.filter(i => i.show).map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -106,31 +90,20 @@ export function Navigation() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "inline-flex items-center px-1 pt-1 text-sm font-medium transition-colors border-b-2 h-full gap-2",
-                    isActive 
-                      ? item.activeColor 
-                      : cn("border-transparent text-muted-foreground", item.hoverColor)
+                    "inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 h-full gap-2",
+                    isActive ? item.activeColor : "border-transparent text-muted-foreground"
                   )}
                 >
-                  <div className="flex flex-col items-center">
-                    <div className="flex items-center gap-2">
-                      <Icon className="w-5 h-5" />
-                      <span className="hidden lg:inline">{item.label}</span>
-                    </div>
-                    {assignedCode && item.href === '/profile' && (
-                      <span className="text-[10px] font-mono leading-none mt-0.5 opacity-70">
-                        {assignedCode}
-                      </span>
-                    )}
-                  </div>
+                  <Icon className="w-5 h-5" />
+                  <span className="hidden lg:inline">{item.label}</span>
                 </Link>
               );
             })}
             
             {!role ? (
-              <Link href="/login" className="text-sm font-bold text-primary hover:underline">Entrar</Link>
+              <Link href="/login" className="text-sm font-bold text-primary">Entrar</Link>
             ) : (
-              <Button variant="ghost" size="icon" onClick={handleLogout} className="text-muted-foreground hover:text-destructive">
+              <Button variant="ghost" size="icon" onClick={logout} className="text-muted-foreground hover:text-destructive">
                 <LogOut className="w-5 h-5" />
               </Button>
             )}

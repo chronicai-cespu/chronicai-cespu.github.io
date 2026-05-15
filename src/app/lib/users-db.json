@@ -1,0 +1,13 @@
+
+[
+  {
+    "id": "admin-initial-id",
+    "name": "Administrador ChronicAI",
+    "email": "chronicai.cespu@gmail.com",
+    "password": "ditechAI2526",
+    "role": "admin",
+    "assignedCode": "admin2526",
+    "mobileNumber": "910000000",
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  }
+]

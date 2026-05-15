@@ -1,101 +1,65 @@
 
 "use client"
 
-import { useHealth } from '@/components/health-context';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, doc } from 'firebase/firestore';
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShieldAlert, Trash2, Edit, UserPlus, Search, Save } from 'lucide-react';
+import { ShieldAlert, Trash2, Edit, UserPlus, Save, RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react';
-import { deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getUsers, updateUser, deleteUser } from '@/lib/user-actions';
 
-/**
- * EDIÇÃO E REMOÇÃO (ADMIN)
- * O Admin pode editar qualquer campo de qualquer utilizador e remover contas.
- */
 export default function AdminPage() {
-  const { role: currentUserRole, isLoading: isContextLoading } = useHealth();
-  const db = useFirestore();
-  const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [users, setUsers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [editingUser, setEditingUser] = useState<any>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const { toast } = useToast();
 
-  const usersQuery = useMemoFirebase(() => {
-    if (!db || currentUserRole !== 'admin') return null;
-    return query(collection(db, 'users'));
-  }, [db, currentUserRole]);
+  const loadUsers = async () => {
+    setIsLoading(true);
+    const data = await getUsers();
+    setUsers(data);
+    setIsLoading(false);
+  };
 
-  const { data: allUsers, isLoading: isUsersLoading } = useCollection(usersQuery);
+  useEffect(() => { loadUsers(); }, []);
 
-  // REMOÇÃO
-  const handleDelete = (userId: string, code: string, userRole: string) => {
-    if (window.confirm(`Tem a certeza que deseja apagar o utilizador ${code}?`)) {
-      // 1. Remover do documento de utilizador
-      deleteDocumentNonBlocking(doc(db!, 'users', userId));
-      
-      // 2. Limpar perfis e marcadores associados
-      if (userRole === 'patient') deleteDocumentNonBlocking(doc(db!, 'patient_profiles', userId));
-      if (userRole === 'researcher') deleteDocumentNonBlocking(doc(db!, 'roles_researcher', userId));
-      if (userRole === 'admin') deleteDocumentNonBlocking(doc(db!, 'roles_admin', userId));
-
-      toast({ title: "Removido", description: `Utilizador ${code} apagado com sucesso.` });
+  const handleDelete = async (id: string, code: string) => {
+    if (window.confirm(`Apagar definitivamente ${code}?`)) {
+      await deleteUser(id);
+      toast({ title: "Removido", description: "Utilizador apagado do JSON." });
+      loadUsers();
     }
   };
 
-  // EDIÇÃO (GRAVAR)
-  const handleUpdateUser = () => {
-    if (!editingUser || !db) return;
-    
-    const userRef = doc(db, 'users', editingUser.id);
-    const updatedData = {
-      name: editingUser.name,
-      email: editingUser.email,
-      role: editingUser.role,
-      assignedCode: editingUser.assignedCode,
-      mobileNumber: editingUser.mobileNumber || null
-    };
-
-    // 1. Atualizar Documento Base
-    updateDocumentNonBlocking(userRef, updatedData);
-
-    // 2. Sincronizar Papéis (Roles markers)
-    if (editingUser.role === 'admin') setDocumentNonBlocking(doc(db, 'roles_admin', editingUser.id), { active: true }, { merge: true });
-    if (editingUser.role === 'researcher') setDocumentNonBlocking(doc(db, 'roles_researcher', editingUser.id), { active: true }, { merge: true });
-
-    // 3. Sincronizar Perfil Clínico se for Paciente
-    if (editingUser.role === 'patient') {
-      const profileRef = doc(db, 'patient_profiles', editingUser.id);
-      setDocumentNonBlocking(profileRef, {
-        name: editingUser.name,
-        email: updatedData.email,
-        mobileNumber: updatedData.mobileNumber
-      }, { merge: true });
+  const handleUpdate = async () => {
+    if (!editingUser) return;
+    try {
+      await updateUser(editingUser.id, editingUser);
+      toast({ title: "Atualizado", description: "Dados guardados no JSON." });
+      setEditingUser(null);
+      loadUsers();
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Erro", description: e.message });
     }
-
-    setIsEditDialogOpen(false);
-    toast({ title: "Atualizado", description: "As alterações foram guardadas." });
   };
-
-  if (currentUserRole !== 'admin' && !isContextLoading) return <div>Acesso Negado</div>;
 
   return (
     <div className="max-w-7xl mx-auto p-8 space-y-8">
       <header className="flex justify-between items-end">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2"><ShieldAlert /> Gestão de Utilizadores</h1>
-          <p className="text-muted-foreground">Administração total do sistema.</p>
+          <h1 className="text-3xl font-bold flex items-center gap-2"><ShieldAlert /> Gestão JSON de Utilizadores</h1>
+          <p className="text-muted-foreground">Administração direta via sistema de ficheiros.</p>
         </div>
-        <Button asChild className="rounded-full"><Link href="/register"><UserPlus className="mr-2" /> Novo Utilizador</Link></Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={loadUsers}><RefreshCw className="mr-2 h-4 w-4" /> Atualizar</Button>
+          <Button asChild className="rounded-full"><Link href="/register"><UserPlus className="mr-2" /> Novo</Link></Button>
+        </div>
       </header>
 
       <Card className="border-none shadow-lg">
@@ -103,21 +67,25 @@ export default function AdminPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Código</TableHead>
+                <TableHead>Cód.</TableHead>
                 <TableHead>Nome</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Password</TableHead>
                 <TableHead>Papel</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {allUsers?.filter(u => u.name.includes(searchTerm) || u.assignedCode.includes(searchTerm)).map((user) => (
+              {users.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-bold">{user.assignedCode}</TableCell>
                   <TableCell>{user.name}</TableCell>
-                  <TableCell><Badge>{user.role}</Badge></TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">{user.password}</TableCell>
+                  <TableCell><Badge variant="outline">{user.role}</Badge></TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button size="icon" variant="ghost" onClick={() => { setEditingUser(user); setIsEditDialogOpen(true); }}><Edit className="h-4 w-4" /></Button>
-                    <Button size="icon" variant="ghost" className="text-destructive" disabled={user.role === 'admin'} onClick={() => handleDelete(user.id, user.assignedCode, user.role)}><Trash2 className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" onClick={() => setEditingUser(user)}><Edit className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" className="text-destructive" onClick={() => handleDelete(user.id, user.assignedCode)}><Trash2 className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -126,12 +94,13 @@ export default function AdminPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Editar Utilizador: {editingUser?.assignedCode}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Editar: {editingUser?.assignedCode}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-4">
             <Input label="Nome" value={editingUser?.name || ''} onChange={e => setEditingUser({...editingUser, name: e.target.value})} />
             <Input label="E-mail" value={editingUser?.email || ''} onChange={e => setEditingUser({...editingUser, email: e.target.value})} />
+            <Input label="Password" value={editingUser?.password || ''} onChange={e => setEditingUser({...editingUser, password: e.target.value})} />
             <Select value={editingUser?.role} onValueChange={v => setEditingUser({...editingUser, role: v})}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -142,7 +111,7 @@ export default function AdminPage() {
             </Select>
           </div>
           <DialogFooter>
-            <Button onClick={handleUpdateUser}><Save className="mr-2 h-4 w-4" /> Guardar</Button>
+            <Button onClick={handleUpdate}><Save className="mr-2 h-4 w-4" /> Gravar no JSON</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

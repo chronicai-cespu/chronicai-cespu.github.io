@@ -2,8 +2,6 @@
 "use client"
 
 import { useState } from 'react';
-import { useAuth, useFirestore } from '@/firebase';
-import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,15 +10,13 @@ import { AppLogo } from '@/components/app-logo';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
+import { authenticateUser } from '@/lib/user-actions';
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const auth = useAuth();
-  const db = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -29,103 +25,23 @@ export default function LoginPage() {
     if (isLoggingIn) return;
     setIsLoggingIn(true);
 
-    let loginEmail = '';
-    const loginPass = password;
-
     try {
-      if (!db) throw new Error("Erro de ligação à base de dados.");
-
-      // 1. Caso especial: Username Admin Direto
-      if (identifier === 'admin2526') {
-        loginEmail = 'chronicai.cespu@gmail.com';
-      } 
-      // 2. Identificador por Email direto
-      else if (identifier.includes('@')) {
-        loginEmail = identifier;
-      } 
-      // 3. Pesquisa em Firestore (Código, Telemóvel ou Data de Nascimento)
-      else {
-        const usersRef = collection(db, 'users');
-        const profilesRef = collection(db, 'patient_profiles');
-
-        // Pesquisa por Código de Utilizador (pXX ou rXX)
-        const qCode = query(usersRef, where('assignedCode', '==', identifier), limit(1));
-        const snapCode = await getDocs(qCode);
-        
-        if (!snapCode.empty) {
-          loginEmail = snapCode.docs[0].data().email;
-        } else {
-          // Pesquisa por Telemóvel
-          const qMobile = query(usersRef, where('mobileNumber', '==', identifier), limit(1));
-          const snapMobile = await getDocs(qMobile);
-          
-          if (!snapMobile.empty) {
-            loginEmail = snapMobile.docs[0].data().email;
-          } else {
-            // Pesquisa por Data de Nascimento (formato DD/MM/AAAA)
-            const isBirthDatePattern = /^\d{2}\/\d{2}\/\d{4}$/.test(identifier);
-            if (isBirthDatePattern) {
-              const qBirth = query(profilesRef, where('birthDate', '==', identifier), limit(1));
-              const snapBirth = await getDocs(qBirth);
-              
-              if (!snapBirth.empty) {
-                const profileData = snapBirth.docs[0].data();
-                const userId = profileData.userId;
-                
-                // Obter o papel do utilizador para verificar se é admin
-                const qUser = query(usersRef, where('id', '==', userId), limit(1));
-                const snapUser = await getDocs(qUser);
-                
-                if (!snapUser.empty) {
-                  const userData = snapUser.docs[0].data();
-                  // Regra Crítica: Admin não pode usar data de nascimento para login
-                  if (userData.role === 'admin') {
-                    throw new Error("Administradores não podem utilizar a data de nascimento para entrar no sistema.");
-                  }
-                  loginEmail = userData.email;
-                }
-              }
-            }
-          }
-        }
-      }
-
-      if (!loginEmail) {
-        throw new Error("Não foi encontrado nenhum utilizador com os dados introduzidos.");
-      }
-
-      const userCredential = await initiateEmailSignIn(auth, loginEmail, loginPass);
-      const user = userCredential.user;
-
-      // Obter o papel para redirecionamento inteligente
-      const usersRef = collection(db, 'users');
-      const qUser = query(usersRef, where('id', '==', user.uid), limit(1));
-      const snapUser = await getDocs(qUser);
-      const userData = snapUser.docs[0]?.data();
-
-      if (userData?.role === 'patient') {
-        router.push('/');
-      } else if (userData?.role === 'admin') {
-        router.push('/admin');
-      } else if (userData?.role === 'researcher') {
-        router.push('/researcher');
-      } else {
-        router.push('/');
-      }
-    } catch (error: any) {
-      console.error("Login Error:", error);
-      let message = "Dados de acesso inválidos. Por favor, tente novamente.";
+      const user = await authenticateUser(identifier, password);
       
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        message = "O email ou a palavra-passe estão incorretos.";
-      } else if (error.message) {
-        message = error.message;
-      }
+      // Simular sessão (Numa app real usaríamos cookies/JWT)
+      localStorage.setItem('chronic_user', JSON.stringify(user));
 
+      toast({ title: "Bem-vindo", description: `Sessão iniciada como ${user.name}` });
+
+      if (user.role === 'admin') router.push('/admin');
+      else if (user.role === 'researcher') router.push('/researcher');
+      else router.push('/dashboard');
+
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Erro no Acesso",
-        description: message,
+        description: error.message || "Dados de acesso inválidos.",
       });
     } finally {
       setIsLoggingIn(false);
@@ -142,21 +58,19 @@ export default function LoginPage() {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold">Entrar no ChronicAI</CardTitle>
-          <p className="text-muted-foreground">Inicie sessão para acompanhar a sua saúde.</p>
+          <p className="text-muted-foreground">Inicie sessão via Base de Dados JSON.</p>
         </CardHeader>
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="identifier">Identificador</Label>
+              <Label htmlFor="identifier">Identificador (Código, Email ou Telemóvel)</Label>
               <Input 
                 id="identifier" 
-                type="text" 
-                placeholder="Código, Email, Telemóvel ou DD/MM/AAAA" 
+                placeholder="Ex: p01 ou email@exemplo.com" 
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 required
                 className="h-12 text-lg"
-                disabled={isLoggingIn}
               />
             </div>
             <div className="space-y-2">
@@ -168,12 +82,8 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="h-12 text-lg"
-                disabled={isLoggingIn}
               />
             </div>
-            <p className="text-[10px] text-muted-foreground text-center">
-              Recuperação: <a href="mailto:chronicai.cespu@gmail.com" className="text-primary hover:underline font-bold">chronicai.cespu@gmail.com</a>
-            </p>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
             <Button type="submit" disabled={isLoggingIn} className="w-full h-14 text-xl rounded-full bg-primary hover:bg-primary/90 shadow-md">

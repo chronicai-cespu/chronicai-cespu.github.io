@@ -1,4 +1,3 @@
-
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,6 @@ import { AppLogo } from '@/components/app-logo';
 export default function Home() {
   const heroImage = PlaceHolderImages.find(img => img.id === 'health-hero');
   
-  // Ordem específica dos logótipos institucionais
   const logos = [
     PlaceHolderImages.find(img => img.id === 'logo-1-ditech'),
     PlaceHolderImages.find(img => img.id === 'logo-2-cespu'),
@@ -114,7 +112,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Logos com dimensões uniformes */}
           <div className="grid grid-cols-2 md:grid-cols-5 items-center justify-center gap-6 md:gap-8 opacity-95 max-w-6xl mx-auto">
             {logos.map((logo, index) => (
               <div key={logo?.id || index} className="flex justify-center items-center h-28 bg-white p-4 rounded-xl shadow-sm border overflow-hidden">

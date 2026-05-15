@@ -1,9 +1,8 @@
-
 import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'ChronicAI - Saúde',
+    name: 'ChronicAI - Gestão de Saúde',
     short_name: 'ChronicAI',
     description: 'Acompanhamento de saúde e assistente com IA para cuidados crónicos.',
     start_url: '/',

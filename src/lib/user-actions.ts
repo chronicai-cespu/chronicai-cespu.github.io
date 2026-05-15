@@ -10,6 +10,15 @@ const PATHS = {
   patient: path.join(process.cwd(), 'src/app/lib/patients.json'),
 };
 
+async function ensureDirectoryExists(filePath: string) {
+  const dirname = path.dirname(filePath);
+  try {
+    await fs.access(dirname);
+  } catch {
+    await fs.mkdir(dirname, { recursive: true });
+  }
+}
+
 async function readJson(filePath: string) {
   try {
     const data = await fs.readFile(filePath, 'utf8');
@@ -20,6 +29,7 @@ async function readJson(filePath: string) {
 }
 
 async function writeJson(filePath: string, data: any[]) {
+  await ensureDirectoryExists(filePath);
   await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
 }
 
@@ -47,7 +57,6 @@ export async function createUser(userData: any) {
   const role: keyof typeof PATHS = userData.role;
   const users = await readJson(PATHS[role]);
   
-  // Gerar código sequencial para o papel específico
   const prefix = role === 'patient' ? 'p' : role === 'researcher' ? 'r' : 'adm';
   const code = `${prefix}${(users.length + 1).toString().padStart(2, '0')}`;
 

@@ -1,4 +1,3 @@
-
 'use server';
 
 import fs from 'fs/promises';
@@ -65,7 +64,6 @@ export async function createUser(userData: any) {
 }
 
 export async function updateUser(userId: string, updates: any) {
-  // Primeiro identificar o papel para saber qual ficheiro editar
   const allUsers = await getUsers();
   const originalUser = allUsers.find(u => u.id === userId);
   if (!originalUser) throw new Error("Utilizador não encontrado.");

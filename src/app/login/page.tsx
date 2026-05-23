@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { AppLogo } from '@/components/app-logo';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, LogIn } from 'lucide-react';
@@ -22,12 +21,12 @@ export default function LoginPage() {
   const { toast } = useToast();
   const { userProfile, setUserProfile, isLoading: isAuthLoading } = useHealth();
 
-  // Redirecionar se já estiver logado
   useEffect(() => {
     if (!isAuthLoading && userProfile) {
-      if (userProfile.role === 'admin') router.push('/admin');
-      else if (userProfile.role === 'researcher') router.push('/researcher');
-      else router.push('/dashboard');
+      const role = userProfile.role;
+      if (role === 'admin') router.replace('/admin');
+      else if (role === 'researcher') router.replace('/researcher');
+      else router.replace('/dashboard');
     }
   }, [userProfile, isAuthLoading, router]);
 
@@ -39,15 +38,18 @@ export default function LoginPage() {
     try {
       const user = await authenticateUser(identifier, password);
       
-      // Atualizar contexto
+      // Atualizar contexto global
       setUserProfile(user as any);
 
       toast({ 
         title: "Sessão Iniciada", 
-        description: `Bem-vindo, ${user.name}. A carregar o seu painel...` 
+        description: `Bem-vindo, ${user.name}.` 
       });
 
-      // O useEffect acima tratará do redirecionamento assim que o estado mudar
+      // Redirecionamento forçado imediato
+      const target = user.role === 'admin' ? '/admin' : user.role === 'researcher' ? '/researcher' : '/dashboard';
+      router.replace(target);
+      
     } catch (error: any) {
       console.error("Login Error:", error);
       toast({
@@ -90,6 +92,7 @@ export default function LoginPage() {
                 onChange={(e) => setIdentifier(e.target.value)}
                 required
                 className="h-12 text-lg"
+                disabled={isLoggingIn}
               />
             </div>
             <div className="space-y-2">
@@ -101,6 +104,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="h-12 text-lg"
+                disabled={isLoggingIn}
               />
             </div>
           </CardContent>

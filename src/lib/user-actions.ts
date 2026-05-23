@@ -28,6 +28,7 @@ async function readJson(filePath: string) {
     if (!data || data.trim() === '') return [];
     return JSON.parse(data);
   } catch (error) {
+    console.error(`Error reading file ${filePath}:`, error);
     return [];
   }
 }
@@ -47,18 +48,22 @@ export async function getUsers() {
 }
 
 export async function authenticateUser(identifier: string, pass: string) {
-  const cleanId = identifier.trim();
+  const cleanId = identifier.trim().toLowerCase();
   const cleanPass = pass.trim();
   
   const users = await getUsers();
   const user = users.find((u: any) => 
-    (u.email === cleanId || u.assignedCode === cleanId || u.mobileNumber === cleanId) && 
+    (u.email?.toLowerCase() === cleanId || 
+     u.assignedCode?.toLowerCase() === cleanId || 
+     u.mobileNumber === cleanId) && 
     u.password === cleanPass
   );
   
-  if (!user) throw new Error("Credenciais inválidas. Verifique o código e a password.");
+  if (!user) {
+    throw new Error("Credenciais inválidas. Verifique o código e a password.");
+  }
   
-  // Criar uma cópia segura sem a password
+  // Criar uma cópia segura sem a password para o cliente
   const { password, ...safeUser } = user;
   return safeUser;
 }

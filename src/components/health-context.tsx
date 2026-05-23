@@ -36,8 +36,8 @@ interface HealthContextType {
   assignedCode: string | null;
   isLoading: boolean;
   logout: () => void;
-  logs: any[]; // Adicionado para compatibilidade com dashboard
-  meds: any[]; // Adicionado para compatibilidade com dashboard
+  logs: any[];
+  meds: any[];
 }
 
 const HealthContext = createContext<HealthContextType | undefined>(undefined);
@@ -50,8 +50,12 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     const stored = localStorage.getItem('chronic_user');
     if (stored) {
       try {
-        setUserProfileState(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        if (parsed && parsed.id) {
+          setUserProfileState(parsed);
+        }
       } catch (e) {
+        console.error("Failed to parse stored user", e);
         localStorage.removeItem('chronic_user');
       }
     }
@@ -61,26 +65,27 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     localStorage.removeItem('chronic_user');
     setUserProfileState(null);
-    // Forçar recarregamento para limpar estados residuais
     window.location.href = '/login';
+  };
+
+  const setUserProfile = (p: UserProfile | null) => {
+    setUserProfileState(p);
+    if (p) {
+      localStorage.setItem('chronic_user', JSON.stringify(p));
+    } else {
+      localStorage.removeItem('chronic_user');
+    }
   };
 
   const value = {
     userProfile,
-    setUserProfile: (p: UserProfile | null) => {
-      setUserProfileState(p);
-      if (p) {
-        localStorage.setItem('chronic_user', JSON.stringify(p));
-      } else {
-        localStorage.removeItem('chronic_user');
-      }
-    },
+    setUserProfile,
     role: userProfile?.role || null,
     assignedCode: userProfile?.assignedCode || null,
     isLoading,
     logout,
-    logs: [], // Inicializado vazio, seria carregado do Firestore
-    meds: []  // Inicializado vazio
+    logs: [],
+    meds: []
   };
 
   return (

@@ -55,7 +55,6 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
           setUserProfileState(parsed);
         }
       } catch (e) {
-        console.error("Failed to parse stored user", e);
         localStorage.removeItem('chronic_user');
       }
     }

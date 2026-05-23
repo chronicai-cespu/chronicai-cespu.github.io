@@ -21,12 +21,11 @@ export default function LoginPage() {
   const { toast } = useToast();
   const { userProfile, setUserProfile, isLoading: isAuthLoading } = useHealth();
 
+  // Redirecionamento automático se já estiver logado
   useEffect(() => {
     if (!isAuthLoading && userProfile) {
-      const role = userProfile.role;
-      if (role === 'admin') router.replace('/admin');
-      else if (role === 'researcher') router.replace('/researcher');
-      else router.replace('/dashboard');
+      const target = userProfile.role === 'admin' ? '/admin' : userProfile.role === 'researcher' ? '/researcher' : '/dashboard';
+      router.replace(target);
     }
   }, [userProfile, isAuthLoading, router]);
 
@@ -38,7 +37,7 @@ export default function LoginPage() {
     try {
       const user = await authenticateUser(identifier, password);
       
-      // Atualizar contexto global
+      // 1. Atualizar o localStorage e o estado imediatamente
       setUserProfile(user as any);
 
       toast({ 
@@ -46,12 +45,11 @@ export default function LoginPage() {
         description: `Bem-vindo, ${user.name}.` 
       });
 
-      // Redirecionamento forçado imediato
+      // 2. Redirecionamento imediato forçado
       const target = user.role === 'admin' ? '/admin' : user.role === 'researcher' ? '/researcher' : '/dashboard';
       router.replace(target);
       
     } catch (error: any) {
-      console.error("Login Error:", error);
       toast({
         variant: "destructive",
         title: "Erro no Acesso",

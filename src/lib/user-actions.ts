@@ -28,7 +28,6 @@ async function readJson(filePath: string) {
     if (!data || data.trim() === '') return [];
     return JSON.parse(data);
   } catch (error) {
-    console.error(`Error reading file ${filePath}:`, error);
     return [];
   }
 }
@@ -63,7 +62,6 @@ export async function authenticateUser(identifier: string, pass: string) {
     throw new Error("Credenciais inválidas. Verifique o código e a password.");
   }
   
-  // Criar uma cópia segura sem a password para o cliente
   const { password, ...safeUser } = user;
   return safeUser;
 }

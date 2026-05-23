@@ -6,33 +6,55 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShieldAlert, Trash2, Edit, UserPlus, Save, RefreshCw } from 'lucide-react';
+import { ShieldAlert, Trash2, Edit, UserPlus, Save, RefreshCw, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getUsers, updateUser, deleteUser } from '@/lib/user-actions';
+import { useHealth } from '@/components/health-context';
+import { useRouter } from 'next/navigation';
 
 export default function AdminPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingUser, setEditingUser] = useState<any>(null);
+  const { role, isLoading: isAuthLoading } = useHealth();
   const { toast } = useToast();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isAuthLoading) {
+      if (role !== 'admin') {
+        router.push('/login');
+      } else {
+        loadUsers();
+      }
+    }
+  }, [role, isAuthLoading, router]);
 
   const loadUsers = async () => {
     setIsLoading(true);
-    const data = await getUsers();
-    setUsers(data);
-    setIsLoading(false);
+    try {
+      const data = await getUsers();
+      setUsers(data);
+    } catch (e) {
+      console.error(e);
+      toast({ variant: "destructive", title: "Erro", description: "Não foi possível carregar os utilizadores." });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  useEffect(() => { loadUsers(); }, []);
-
   const handleDelete = async (id: string, code: string) => {
+    if (code.includes('admin')) {
+      toast({ variant: "destructive", title: "Ação Bloqueada", description: "Não é possível remover contas de administrador pela interface." });
+      return;
+    }
     if (window.confirm(`Apagar definitivamente ${code}?`)) {
       await deleteUser(id);
-      toast({ title: "Removido", description: "Utilizador apagado do JSON." });
+      toast({ title: "Removido", description: "Utilizador apagado do sistema." });
       loadUsers();
     }
   };
@@ -41,7 +63,7 @@ export default function AdminPage() {
     if (!editingUser) return;
     try {
       await updateUser(editingUser.id, editingUser);
-      toast({ title: "Atualizado", description: "Dados guardados no JSON." });
+      toast({ title: "Atualizado", description: "Dados guardados com sucesso." });
       setEditingUser(null);
       loadUsers();
     } catch (e: any) {
@@ -49,69 +71,108 @@ export default function AdminPage() {
     }
   };
 
+  if (isAuthLoading || role !== 'admin') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        <p className="text-muted-foreground italic">A verificar permissões...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-7xl mx-auto p-8 space-y-8">
-      <header className="flex justify-between items-end">
+    <div className="max-w-7xl mx-auto p-4 sm:p-8 space-y-8">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2"><ShieldAlert /> Gestão JSON de Utilizadores</h1>
-          <p className="text-muted-foreground">Administração direta via sistema de ficheiros.</p>
+          <h1 className="text-3xl font-bold flex items-center gap-2"><ShieldAlert className="text-primary" /> Gestão de Utilizadores</h1>
+          <p className="text-muted-foreground">Administração central de contas e permissões (Base de Dados JSON).</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={loadUsers}><RefreshCw className="mr-2 h-4 w-4" /> Atualizar</Button>
-          <Button asChild className="rounded-full"><Link href="/register"><UserPlus className="mr-2" /> Novo</Link></Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={loadUsers} className="flex-1 sm:flex-none"><RefreshCw className="mr-2 h-4 w-4" /> Atualizar</Button>
+          <Button asChild className="rounded-full flex-1 sm:flex-none"><Link href="/register"><UserPlus className="mr-2 h-4 w-4" /> Novo Utilizador</Link></Button>
         </div>
       </header>
 
-      <Card className="border-none shadow-lg">
+      <Card className="border-none shadow-lg overflow-hidden">
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Cód.</TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Password</TableHead>
-                <TableHead>Papel</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-bold">{user.assignedCode}</TableCell>
-                  <TableCell>{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">{user.password}</TableCell>
-                  <TableCell><Badge variant="outline">{user.role}</Badge></TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Button size="icon" variant="ghost" onClick={() => setEditingUser(user)}><Edit className="h-4 w-4" /></Button>
-                    <Button size="icon" variant="ghost" className="text-destructive" onClick={() => handleDelete(user.id, user.assignedCode)}><Trash2 className="h-4 w-4" /></Button>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow>
+                  <TableHead className="w-[100px]">Código</TableHead>
+                  <TableHead>Nome</TableHead>
+                  <TableHead className="hidden md:table-cell">Email</TableHead>
+                  <TableHead className="hidden lg:table-cell">Password</TableHead>
+                  <TableHead>Papel</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center">A carregar dados...</TableCell>
+                  </TableRow>
+                ) : users.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center">Nenhum utilizador encontrado.</TableCell>
+                  </TableRow>
+                ) : users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-bold font-mono">{user.assignedCode}</TableCell>
+                    <TableCell>{user.name}</TableCell>
+                    <TableCell className="hidden md:table-cell text-muted-foreground">{user.email}</TableCell>
+                    <TableCell className="hidden lg:table-cell font-mono text-xs text-muted-foreground/60">{user.password}</TableCell>
+                    <TableCell>
+                      <Badge variant={user.role === 'admin' ? 'destructive' : user.role === 'researcher' ? 'secondary' : 'outline'}>
+                        {user.role}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right space-x-1">
+                      <Button size="icon" variant="ghost" onClick={() => setEditingUser(user)}><Edit className="h-4 w-4" /></Button>
+                      <Button size="icon" variant="ghost" className="text-destructive" onClick={() => handleDelete(user.id, user.assignedCode)}><Trash2 className="h-4 w-4" /></Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
       <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Editar: {editingUser?.assignedCode}</DialogTitle></DialogHeader>
-          <div className="space-y-4 py-4">
-            <Input label="Nome" value={editingUser?.name || ''} onChange={e => setEditingUser({...editingUser, name: e.target.value})} />
-            <Input label="E-mail" value={editingUser?.email || ''} onChange={e => setEditingUser({...editingUser, email: e.target.value})} />
-            <Input label="Password" value={editingUser?.password || ''} onChange={e => setEditingUser({...editingUser, password: e.target.value})} />
-            <Select value={editingUser?.role} onValueChange={v => setEditingUser({...editingUser, role: v})}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="patient">Paciente</SelectItem>
-                <SelectItem value="researcher">Investigador</SelectItem>
-                <SelectItem value="admin">Administrador</SelectItem>
-              </SelectContent>
-            </Select>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Editar: {editingUser?.assignedCode}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label className="text-sm font-bold">Nome Completo</label>
+              <Input value={editingUser?.name || ''} onChange={e => setEditingUser({...editingUser, name: e.target.value})} />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-bold">E-mail de Acesso</label>
+              <Input type="email" value={editingUser?.email || ''} onChange={e => setEditingUser({...editingUser, email: e.target.value})} />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-bold">Palavra-passe</label>
+              <Input value={editingUser?.password || ''} onChange={e => setEditingUser({...editingUser, password: e.target.value})} />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-bold">Papel no Sistema</label>
+              <Select value={editingUser?.role} onValueChange={v => setEditingUser({...editingUser, role: v})}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="patient">Paciente</SelectItem>
+                  <SelectItem value="researcher">Investigador</SelectItem>
+                  <SelectItem value="admin">Administrador</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleUpdate}><Save className="mr-2 h-4 w-4" /> Gravar no JSON</Button>
+            <Button onClick={handleUpdate} className="w-full sm:w-auto"><Save className="mr-2 h-4 w-4" /> Guardar Alterações</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

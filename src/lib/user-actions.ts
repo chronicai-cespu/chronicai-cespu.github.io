@@ -25,6 +25,7 @@ async function readJson(filePath: string) {
   await ensureDir();
   try {
     const data = await fs.readFile(filePath, 'utf8');
+    if (!data || data.trim() === '') return [];
     return JSON.parse(data);
   } catch (error) {
     return [];
@@ -57,6 +58,7 @@ export async function authenticateUser(identifier: string, pass: string) {
   
   if (!user) throw new Error("Credenciais inválidas. Verifique o código e a password.");
   
+  // Criar uma cópia segura sem a password
   const { password, ...safeUser } = user;
   return safeUser;
 }

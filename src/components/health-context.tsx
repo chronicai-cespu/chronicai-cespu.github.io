@@ -6,20 +6,38 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 export type UserProfile = {
   id: string;
   name: string;
-  role: string;
+  role: 'patient' | 'admin' | 'researcher';
   assignedCode: string;
   email?: string;
   mobileNumber?: string;
   chronicDiseases: string[];
+  age?: number;
+  gender?: string;
+  weight?: number;
+  height?: number;
+  alcoholFreq?: string;
+  tobaccoFreq?: string;
+  physicalActivityLevel?: string;
+  motivationToChange?: boolean;
+  birthDate?: string;
+  education?: string;
+  householdSize?: string;
+  healthUnit?: string;
+  otherConditions?: string;
+  medications?: any[];
+  allergies?: string[];
+  recentHealthConcerns?: string;
 };
 
 interface HealthContextType {
   userProfile: UserProfile | null;
-  setUserProfile: (profile: UserProfile) => void;
+  setUserProfile: (profile: UserProfile | null) => void;
   role: string | null;
   assignedCode: string | null;
   isLoading: boolean;
   logout: () => void;
+  logs: any[]; // Adicionado para compatibilidade com dashboard
+  meds: any[]; // Adicionado para compatibilidade com dashboard
 }
 
 const HealthContext = createContext<HealthContextType | undefined>(undefined);
@@ -31,7 +49,11 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const stored = localStorage.getItem('chronic_user');
     if (stored) {
-      setUserProfileState(JSON.parse(stored));
+      try {
+        setUserProfileState(JSON.parse(stored));
+      } catch (e) {
+        localStorage.removeItem('chronic_user');
+      }
     }
     setIsLoading(false);
   }, []);
@@ -39,19 +61,26 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     localStorage.removeItem('chronic_user');
     setUserProfileState(null);
+    // Forçar recarregamento para limpar estados residuais
     window.location.href = '/login';
   };
 
   const value = {
     userProfile,
-    setUserProfile: (p: UserProfile) => {
+    setUserProfile: (p: UserProfile | null) => {
       setUserProfileState(p);
-      localStorage.setItem('chronic_user', JSON.stringify(p));
+      if (p) {
+        localStorage.setItem('chronic_user', JSON.stringify(p));
+      } else {
+        localStorage.removeItem('chronic_user');
+      }
     },
     role: userProfile?.role || null,
     assignedCode: userProfile?.assignedCode || null,
     isLoading,
-    logout
+    logout,
+    logs: [], // Inicializado vazio, seria carregado do Firestore
+    meds: []  // Inicializado vazio
   };
 
   return (
@@ -64,7 +93,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
 export function useHealth() {
   const context = useContext(HealthContext);
   if (context === undefined) {
-    throw new Error('useHealth must be used within a HealthProvider');
+    throw new Error('useHealth deve ser usado dentro de um HealthProvider');
   }
   return context;
 }

@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,7 +10,7 @@ import { AppLogo } from '@/components/app-logo';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, LogIn } from 'lucide-react';
 import { authenticateUser } from '@/lib/user-actions';
 import { useHealth } from '@/components/health-context';
 
@@ -20,7 +20,16 @@ export default function LoginPage() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const { setUserProfile } = useHealth();
+  const { userProfile, setUserProfile, isLoading: isAuthLoading } = useHealth();
+
+  // Redirecionar se já estiver logado
+  useEffect(() => {
+    if (!isAuthLoading && userProfile) {
+      if (userProfile.role === 'admin') router.push('/admin');
+      else if (userProfile.role === 'researcher') router.push('/researcher');
+      else router.push('/dashboard');
+    }
+  }, [userProfile, isAuthLoading, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,38 +37,35 @@ export default function LoginPage() {
     setIsLoggingIn(true);
 
     try {
-      // 1. Validar credenciais no servidor (ficheiros JSON)
       const user = await authenticateUser(identifier, password);
       
-      // 2. Atualizar o contexto global da aplicação (ISTO CORRIGE O ERRO)
-      // O setUserProfile já trata de guardar no localStorage e atualizar o estado React
+      // Atualizar contexto
       setUserProfile(user as any);
 
       toast({ 
-        title: "Bem-vindo", 
-        description: `Sessão iniciada como ${user.name} (${user.assignedCode})` 
+        title: "Sessão Iniciada", 
+        description: `Bem-vindo, ${user.name}. A carregar o seu painel...` 
       });
 
-      // 3. Redirecionar com base no papel
-      if (user.role === 'admin') {
-        router.push('/admin');
-      } else if (user.role === 'researcher') {
-        router.push('/researcher');
-      } else {
-        router.push('/dashboard');
-      }
-
+      // O useEffect acima tratará do redirecionamento assim que o estado mudar
     } catch (error: any) {
       console.error("Login Error:", error);
       toast({
         variant: "destructive",
         title: "Erro no Acesso",
-        description: error.message || "Dados de acesso inválidos. Verifique o código e a palavra-passe.",
+        description: error.message || "Credenciais inválidas.",
       });
-    } finally {
       setIsLoggingIn(false);
     }
   };
+
+  if (isAuthLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-64px)] bg-background p-4">
@@ -71,20 +77,19 @@ export default function LoginPage() {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold">Entrar no ChronicAI</CardTitle>
-          <p className="text-muted-foreground text-sm">Inicie sessão com os seus dados de participante.</p>
+          <p className="text-muted-foreground text-sm">Utilize o seu código (ex: p01) e a palavra-passe.</p>
         </CardHeader>
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="identifier">Identificador (Código, Email ou Telemóvel)</Label>
+              <Label htmlFor="identifier">Identificador</Label>
               <Input 
                 id="identifier" 
-                placeholder="Ex: p01, r01 ou admin2526" 
+                placeholder="Código, Email ou Telemóvel" 
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 required
                 className="h-12 text-lg"
-                autoComplete="username"
               />
             </div>
             <div className="space-y-2">
@@ -96,16 +101,15 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="h-12 text-lg"
-                autoComplete="current-password"
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" disabled={isLoggingIn} className="w-full h-14 text-xl rounded-full bg-primary hover:bg-primary/90 shadow-md">
-              {isLoggingIn ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Entrar na Conta"}
+            <Button type="submit" disabled={isLoggingIn} className="w-full h-14 text-xl rounded-full bg-primary hover:bg-primary/90">
+              {isLoggingIn ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <><LogIn className="mr-2 h-5 w-5" /> Entrar na Conta</>}
             </Button>
             <p className="text-sm text-center text-muted-foreground">
-              Ainda não tem conta? <Link href="/register" className="text-secondary font-bold hover:underline">Registe-se aqui</Link>
+              Acesso reservado a participantes do estudo.
             </p>
           </CardFooter>
         </form>

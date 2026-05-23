@@ -5,23 +5,34 @@ import fs from 'fs/promises';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
+const DATA_DIR = path.join(process.cwd(), 'src/lib/data');
+
 const PATHS = {
-  admin: path.join(process.cwd(), 'src/app/lib/admins.json'),
-  researcher: path.join(process.cwd(), 'src/app/lib/researchers.json'),
-  patient: path.join(process.cwd(), 'src/app/lib/patients.json'),
+  admin: path.join(DATA_DIR, 'admins.json'),
+  researcher: path.join(DATA_DIR, 'researchers.json'),
+  patient: path.join(DATA_DIR, 'patients.json'),
 };
 
+async function ensureDir() {
+  try {
+    await fs.access(DATA_DIR);
+  } catch {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+  }
+}
+
 async function readJson(filePath: string) {
+  await ensureDir();
   try {
     const data = await fs.readFile(filePath, 'utf8');
     return JSON.parse(data);
   } catch (error) {
-    console.error(`Error reading ${filePath}:`, error);
     return [];
   }
 }
 
 async function writeJson(filePath: string, data: any[]) {
+  await ensureDir();
   await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
 }
 
@@ -35,15 +46,17 @@ export async function getUsers() {
 }
 
 export async function authenticateUser(identifier: string, pass: string) {
+  const cleanId = identifier.trim();
+  const cleanPass = pass.trim();
+  
   const users = await getUsers();
   const user = users.find((u: any) => 
-    (u.email === identifier || u.assignedCode === identifier || u.mobileNumber === identifier) && 
-    u.password === pass
+    (u.email === cleanId || u.assignedCode === cleanId || u.mobileNumber === cleanId) && 
+    u.password === cleanPass
   );
   
-  if (!user) throw new Error("Credenciais inválidas.");
+  if (!user) throw new Error("Credenciais inválidas. Verifique o código e a password.");
   
-  // Retorna todos os campos exceto a password para o contexto do cliente
   const { password, ...safeUser } = user;
   return safeUser;
 }
@@ -53,7 +66,8 @@ export async function createUser(userData: any) {
   const users = await readJson(PATHS[role]);
   
   const prefix = role === 'patient' ? 'p' : role === 'researcher' ? 'r' : 'adm';
-  const code = `${prefix}${(users.length + 1).toString().padStart(2, '0')}`;
+  const nextNum = users.length + 1;
+  const code = `${prefix}${nextNum.toString().padStart(2, '0')}`;
 
   const newUser = {
     ...userData,
@@ -77,7 +91,7 @@ export async function updateUser(userId: string, updates: any) {
   const users = await readJson(PATHS[role]);
   const index = users.findIndex((u: any) => u.id === userId);
 
-  if (index === -1) throw new Error("Erro na integridade dos ficheiros.");
+  if (index === -1) throw new Error("Erro na integridade dos dados.");
 
   users[index] = { ...users[index], ...updates };
   await writeJson(PATHS[role], users);

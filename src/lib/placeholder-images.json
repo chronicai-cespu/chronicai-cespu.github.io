@@ -7,18 +7,6 @@
       "imageHint": "senior healthcare"
     },
     {
-      "id": "elderly-wellness",
-      "description": "Estilo de vida saudável para seniores",
-      "imageUrl": "https://picsum.photos/seed/senior-fit-wellness/800/600",
-      "imageHint": "active senior"
-    },
-    {
-      "id": "avatar-default",
-      "description": "Um avatar de perfil amigável",
-      "imageUrl": "https://picsum.photos/seed/user-avatar-33/150/150",
-      "imageHint": "person portrait"
-    },
-    {
       "id": "logo-1-ditech",
       "description": "Logo DiTech Health",
       "imageUrl": "https://drive.google.com/uc?export=view&id=1TVNdd48Jg0HlQbA78FN2cbcXGLoVTIhM",

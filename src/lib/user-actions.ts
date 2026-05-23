@@ -1,3 +1,4 @@
+
 'use server';
 
 import fs from 'fs/promises';
@@ -10,26 +11,17 @@ const PATHS = {
   patient: path.join(process.cwd(), 'src/app/lib/patients.json'),
 };
 
-async function ensureDirectoryExists(filePath: string) {
-  const dirname = path.dirname(filePath);
-  try {
-    await fs.access(dirname);
-  } catch {
-    await fs.mkdir(dirname, { recursive: true });
-  }
-}
-
 async function readJson(filePath: string) {
   try {
     const data = await fs.readFile(filePath, 'utf8');
     return JSON.parse(data);
   } catch (error) {
+    console.error(`Error reading ${filePath}:`, error);
     return [];
   }
 }
 
 async function writeJson(filePath: string, data: any[]) {
-  await ensureDirectoryExists(filePath);
   await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
 }
 
@@ -50,7 +42,10 @@ export async function authenticateUser(identifier: string, pass: string) {
   );
   
   if (!user) throw new Error("Credenciais inválidas.");
-  return { id: user.id, role: user.role, name: user.name, assignedCode: user.assignedCode };
+  
+  // Retorna todos os campos exceto a password para o contexto do cliente
+  const { password, ...safeUser } = user;
+  return safeUser;
 }
 
 export async function createUser(userData: any) {
@@ -64,7 +59,8 @@ export async function createUser(userData: any) {
     ...userData,
     id: uuidv4(),
     assignedCode: code,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    chronicDiseases: userData.role === 'patient' ? [] : undefined
   };
 
   users.push(newUser);

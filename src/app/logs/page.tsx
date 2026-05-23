@@ -3,9 +3,6 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useHealth } from '@/components/health-context';
-import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy, limit, serverTimestamp } from 'firebase/firestore';
-import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,17 +11,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { HeartPulse, Activity, Scale, ClipboardList, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
+import { HeartPulse, Activity, Scale, ClipboardList, CheckCircle2, AlertTriangle, Loader2, RefreshCw } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { getUsers } from '@/lib/user-actions';
+import { getHealthRecords, addHealthRecord } from '@/lib/health-actions';
 
 function LogsPageContent() {
-  const { user } = useUser();
   const { role, userProfile, isLoading: isContextLoading } = useHealth();
-  const db = useFirestore();
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const patientIdFromUrl = searchParams.get('patientId');
@@ -36,32 +33,45 @@ function LogsPageContent() {
   const [activityDuration, setActivityDuration] = useState('');
   const [weight, setWeight] = useState<string>('');
   const [notes, setNotes] = useState('');
+  
+  const [allPatients, setAllPatients] = useState<any[]>([]);
+  const [displayLogs, setDisplayLogs] = useState<any[]>([]);
+  const [isLogsLoading, setIsLogsLoading] = useState(false);
 
-  // Se for admin ou investigador, carregar lista de pacientes para seleção
   const canManagePatients = role === 'admin' || role === 'researcher';
-  const patientsQuery = useMemoFirebase(() => (db && canManagePatients) ? query(collection(db, 'patient_profiles')) : null, [db, canManagePatients]);
-  const { data: allPatients } = useCollection(patientsQuery);
 
-  // Definir ID alvo para o registo e histórico
+  useEffect(() => {
+    if (canManagePatients) {
+      getUsers().then(users => {
+        setAllPatients(users.filter(u => u.role === 'patient'));
+      });
+    }
+  }, [canManagePatients]);
+
   useEffect(() => {
     if (canManagePatients && patientIdFromUrl) {
       setTargetPatientId(patientIdFromUrl);
-    } else if (!canManagePatients && user) {
-      setTargetPatientId(user.uid);
+    } else if (!canManagePatients && userProfile) {
+      setTargetPatientId(userProfile.id);
     }
-  }, [canManagePatients, user, patientIdFromUrl]);
+  }, [canManagePatients, userProfile, patientIdFromUrl]);
 
-  // Carregar logs do paciente selecionado (ou do próprio utilizador)
-  const logsQuery = useMemoFirebase(() => {
-    if (!db || !targetPatientId) return null;
-    return query(
-      collection(db, 'patient_profiles', targetPatientId, 'clinical_records'),
-      orderBy('recordedAt', 'desc'),
-      limit(10)
-    );
-  }, [db, targetPatientId]);
-  
-  const { data: displayLogs, isLoading: isLogsLoading } = useCollection(logsQuery);
+  const loadLogs = async () => {
+    if (!targetPatientId) return;
+    setIsLogsLoading(true);
+    try {
+      const records = await getHealthRecords(targetPatientId);
+      setDisplayLogs(records);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLogsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadLogs();
+  }, [targetPatientId]);
 
   if (isContextLoading || !userProfile) {
     return (
@@ -72,22 +82,7 @@ function LogsPageContent() {
     );
   }
 
-  const systolicRange = Array.from({ length: 151 }, (_, i) => i + 70);
-  const diastolicRange = Array.from({ length: 91 }, (_, i) => i + 40);
-  const weightRange = Array.from({ length: 161 }, (_, i) => i + 40);
-  const durationOptions = [5, 10, 15, 20, 30, 45, 60, 90, 120, 180];
-
-  const getBpStatus = (sys: number, dia: number) => {
-    if (!sys || !dia) return null;
-    if (sys >= 140 || dia >= 90) return { label: 'Alta (Hipertensão)', color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-destructive' };
-    if (sys >= 120 || dia >= 80) return { label: 'Elevada (Pré-hipertensão)', color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200' };
-    if (sys < 90 || dia < 60) return { label: 'Baixa (Hipotensão)', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' };
-    return { label: 'Normal', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' };
-  };
-
-  const bpStatus = getBpStatus(parseInt(systolic), parseInt(diastolic));
-
-  const handleLog = (type: 'bp' | 'activity' | 'weight') => {
+  const handleLog = async (type: 'bp' | 'activity' | 'weight') => {
     if (!targetPatientId) {
       toast({ title: "Erro", description: "Por favor, selecione um paciente primeiro.", variant: "destructive" });
       return;
@@ -116,14 +111,12 @@ function LogsPageContent() {
       value = `${weight} kg`;
     }
 
-    if (db) {
-      const colRef = collection(db, 'patient_profiles', targetPatientId, 'clinical_records');
-      addDocumentNonBlocking(colRef, {
+    try {
+      await addHealthRecord({
         patientProfileId: targetPatientId,
         recordType: type,
         value,
-        notes: notes || '',
-        recordedAt: serverTimestamp()
+        notes: notes || ''
       });
 
       toast({
@@ -135,8 +128,25 @@ function LogsPageContent() {
       if (type === 'activity') { setActivityType(''); setActivityDuration(''); }
       if (type === 'weight') setWeight('');
       setNotes('');
+      loadLogs();
+    } catch (e) {
+      toast({ title: "Erro", description: "Falha ao gravar os dados.", variant: "destructive" });
     }
   };
+
+  const getBpStatus = (sys: number, dia: number) => {
+    if (!sys || !dia) return null;
+    if (sys >= 140 || dia >= 90) return { label: 'Alta (Hipertensão)', color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-destructive' };
+    if (sys >= 120 || dia >= 80) return { label: 'Elevada (Pré-hipertensão)', color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200' };
+    if (sys < 90 || dia < 60) return { label: 'Baixa (Hipotensão)', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' };
+    return { label: 'Normal', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' };
+  };
+
+  const bpStatus = getBpStatus(parseInt(systolic), parseInt(diastolic));
+  const systolicRange = Array.from({ length: 151 }, (_, i) => i + 70);
+  const diastolicRange = Array.from({ length: 91 }, (_, i) => i + 40);
+  const weightRange = Array.from({ length: 161 }, (_, i) => i + 40);
+  const durationOptions = [5, 10, 15, 20, 30, 45, 60, 90, 120, 180];
 
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-8 space-y-8">
@@ -159,8 +169,8 @@ function LogsPageContent() {
                 <SelectValue placeholder="Escolha um paciente..." />
               </SelectTrigger>
               <SelectContent>
-                {allPatients?.map(p => (
-                  <SelectItem key={p.userId} value={p.userId}>
+                {allPatients.map(p => (
+                  <SelectItem key={p.id} value={p.id}>
                     {p.assignedCode} - {p.name}
                   </SelectItem>
                 ))}
@@ -279,12 +289,10 @@ function LogsPageContent() {
           <Card className="shadow-md border-none h-full bg-secondary/5">
             <CardHeader className="border-b bg-white rounded-t-lg">
               <CardTitle className="text-xl flex items-center justify-between">
-                <span>Histórico de Medições</span>
-                {targetPatientId && canManagePatients && (
-                  <Badge variant="outline" className="text-[10px] font-mono">
-                    {allPatients?.find(p => p.userId === targetPatientId)?.assignedCode}
-                  </Badge>
-                )}
+                <span>Histórico (JSON)</span>
+                <Button variant="ghost" size="icon" onClick={loadLogs} className="h-8 w-8">
+                  <RefreshCw className={cn("h-4 w-4", isLogsLoading && "animate-spin")} />
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
@@ -293,7 +301,7 @@ function LogsPageContent() {
                   <div className="flex justify-center py-10">
                     <Loader2 className="animate-spin h-6 w-6 text-muted-foreground" />
                   </div>
-                ) : displayLogs && displayLogs.length > 0 ? (
+                ) : displayLogs.length > 0 ? (
                   displayLogs.map((log) => (
                     <div key={log.id} className="flex items-start gap-4 p-4 bg-white rounded-xl shadow-sm border border-secondary/10">
                       <div className={cn(
@@ -308,12 +316,12 @@ function LogsPageContent() {
                         <div className="flex justify-between items-start">
                           <p className="font-bold text-lg">{log.value}</p>
                           <span className="text-xs text-muted-foreground">
-                            {log.recordedAt?.toDate ? format(log.recordedAt.toDate(), 'HH:mm') : '...'}
+                            {log.recordedAt ? format(parseISO(log.recordedAt), 'HH:mm') : '...'}
                           </span>
                         </div>
                         {log.notes && <p className="text-sm text-muted-foreground italic mt-1">"{log.notes}"</p>}
                         <p className="text-[10px] text-muted-foreground mt-1">
-                          {log.recordedAt?.toDate ? format(log.recordedAt.toDate(), "d 'de' MMM", { locale: pt }) : ''}
+                          {log.recordedAt ? format(parseISO(log.recordedAt), "d 'de' MMM", { locale: pt }) : ''}
                         </p>
                       </div>
                     </div>
@@ -321,7 +329,7 @@ function LogsPageContent() {
                 ) : (
                   <div className="text-center py-10">
                     <p className="text-muted-foreground italic text-sm">
-                      {targetPatientId ? "Nenhum registo encontrado para este paciente." : "Selecione um paciente para ver o histórico."}
+                      Nenhum registo encontrado.
                     </p>
                   </div>
                 )}
@@ -362,12 +370,7 @@ function LogFields({ notes, setNotes, onLog, isManagement }: { notes: string, se
 
 export default function LogsPage() {
   return (
-    <Suspense fallback={
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <Loader2 className="w-10 h-10 animate-spin text-primary" />
-        <p className="text-muted-foreground italic">A carregar...</p>
-      </div>
-    }>
+    <Suspense fallback={<div className="flex justify-center p-20"><Loader2 className="animate-spin" /></div>}>
       <LogsPageContent />
     </Suspense>
   );

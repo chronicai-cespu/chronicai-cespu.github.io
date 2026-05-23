@@ -12,8 +12,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, LogIn } from 'lucide-react';
 import { authenticateUser } from '@/lib/user-actions';
 import { useHealth } from '@/components/health-context';
-import { useAuth, initiateAnonymousSignIn, useFirestore } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
@@ -22,8 +20,6 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { userProfile, setUserProfile, isLoading: isAuthLoading } = useHealth();
-  const auth = useAuth();
-  const db = useFirestore();
 
   useEffect(() => {
     if (!isAuthLoading && userProfile) {
@@ -38,53 +34,14 @@ export default function LoginPage() {
     setIsLoggingIn(true);
 
     try {
-      // 1. Validar no JSON (Server Action)
       const user = await authenticateUser(identifier, password);
-      
-      // 2. Iniciar sessão no Firebase e sincronizar permissões
-      if (auth && db) {
-        try {
-          const userCred = await initiateAnonymousSignIn(auth);
-          const fbUid = userCred.user.uid;
-
-          // Sincronizar o utilizador JSON com o Firestore para garantir permissões (roles)
-          await setDoc(doc(db, 'users', fbUid), {
-            id: fbUid,
-            name: user.name,
-            email: user.email || '',
-            role: user.role,
-            assignedCode: user.assignedCode,
-            createdAt: new Date().toISOString()
-          });
-
-          // Atribuir o marcador de papel para as Security Rules
-          if (user.role === 'admin') {
-            await setDoc(doc(db, 'roles_admin', fbUid), { active: true });
-          } else if (user.role === 'researcher') {
-            await setDoc(doc(db, 'roles_researcher', fbUid), { active: true });
-          } else {
-            // Criar perfil clínico básico se for paciente
-            await setDoc(doc(db, 'patient_profiles', fbUid), {
-              userId: fbUid,
-              name: user.name,
-              assignedCode: user.assignedCode,
-              role: 'patient'
-            }, { merge: true });
-          }
-        } catch (firebaseErr) {
-          console.error("Falha na sincronização Firebase:", firebaseErr);
-        }
-      }
-
-      // 3. Atualizar o estado global
       setUserProfile(user as any);
-
+      
       toast({ 
         title: "Sessão Iniciada", 
-        description: `Bem-vindo, ${user.name}.` 
+        description: `Bem-vindo, ${user.name}. Acesso via JSON.` 
       });
 
-      // 4. Redirecionamento
       const target = user.role === 'admin' ? '/admin' : user.role === 'researcher' ? '/researcher' : '/dashboard';
       router.replace(target);
       
@@ -92,7 +49,7 @@ export default function LoginPage() {
       toast({
         variant: "destructive",
         title: "Erro no Acesso",
-        description: error.message || "Credenciais inválidas.",
+        description: error.message || "Credenciais JSON inválidas.",
       });
       setIsLoggingIn(false);
     }
@@ -115,21 +72,20 @@ export default function LoginPage() {
               <AppLogo className="w-10 h-10" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Entrar no ChronicAI</CardTitle>
-          <p className="text-muted-foreground text-sm">Utilize o seu código (ex: p01) e a palavra-passe.</p>
+          <CardTitle className="text-2xl font-bold">ChronicAI Login (JSON)</CardTitle>
+          <p className="text-muted-foreground text-sm">A base de dados é agora inteiramente em ficheiros JSON.</p>
         </CardHeader>
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="identifier">Identificador</Label>
+              <Label htmlFor="identifier">Código ou Email</Label>
               <Input 
                 id="identifier" 
-                placeholder="Código, Email ou Telemóvel" 
+                placeholder="Ex: p01, r01, admin2526" 
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 required
                 className="h-12 text-lg"
-                disabled={isLoggingIn}
               />
             </div>
             <div className="space-y-2">
@@ -141,17 +97,13 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="h-12 text-lg"
-                disabled={isLoggingIn}
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" disabled={isLoggingIn} className="w-full h-14 text-xl rounded-full bg-primary hover:bg-primary/90">
-              {isLoggingIn ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <><LogIn className="mr-2 h-5 w-5" /> Entrar na Conta</>}
+            <Button type="submit" disabled={isLoggingIn} className="w-full h-14 text-xl rounded-full bg-primary">
+              {isLoggingIn ? <Loader2 className="animate-spin" /> : <><LogIn className="mr-2 h-5 w-5" /> Entrar</>}
             </Button>
-            <p className="text-sm text-center text-muted-foreground">
-              Acesso reservado a participantes do estudo.
-            </p>
           </CardFooter>
         </form>
       </Card>

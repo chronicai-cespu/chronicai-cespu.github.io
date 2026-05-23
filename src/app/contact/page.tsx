@@ -2,9 +2,6 @@
 "use client"
 
 import { useState } from 'react';
-import { useFirestore } from '@/firebase';
-import { collection, serverTimestamp } from 'firebase/firestore';
-import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +11,7 @@ import { AppLogo } from '@/components/app-logo';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, Phone, User, MessageSquare, Send, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { saveContactMessage } from '@/lib/contact-actions';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -24,25 +22,16 @@ export default function ContactPage() {
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const db = useFirestore();
   const { toast } = useToast();
 
-  const validateEmail = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
-
-  const validatePhone = (phone: string) => {
-    // Validação simples para números com pelo menos 9 dígitos
-    return /^\d{9,}$/.test(phone.replace(/\s/g, ''));
-  };
+  const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validatePhone = (phone: string) => /^\d{9,}$/.test(phone.replace(/\s/g, ''));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
 
     const { name, email, phone, subject, message } = formData;
-
-    // Validação: Pelo menos um método de contacto válido deve ser fornecido
     const isEmailValid = email.trim() !== '' && validateEmail(email);
     const isPhoneValid = phone.trim() !== '' && validatePhone(phone);
 
@@ -50,7 +39,7 @@ export default function ContactPage() {
       toast({
         variant: "destructive",
         title: "Dados de Contacto Necessários",
-        description: "Por favor, introduza um E-mail ou um Telefone válido para que possamos responder.",
+        description: "Por favor, introduza um E-mail ou um Telefone válido.",
       });
       return;
     }
@@ -58,35 +47,25 @@ export default function ContactPage() {
     setIsSubmitting(true);
 
     try {
-      if (!db) throw new Error("Erro de ligação à base de dados.");
-
-      const contactRef = collection(db, 'contact_messages');
-      addDocumentNonBlocking(contactRef, {
+      await saveContactMessage({
         name,
         email: isEmailValid ? email : null,
         phone: isPhoneValid ? phone : null,
         subject,
-        message,
-        createdAt: serverTimestamp()
+        message
       });
 
       toast({
         title: "Mensagem Enviada",
-        description: "Agradecemos o seu contacto. Responderemos o mais breve possível.",
+        description: "Agradecemos o seu contacto. Responderemos brevemente.",
       });
 
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        message: ''
-      });
+      setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Erro no Envio",
-        description: "Não foi possível enviar a mensagem. Tente novamente mais tarde.",
+        description: "Não foi possível guardar a mensagem no JSON.",
       });
     } finally {
       setIsSubmitting(false);
@@ -107,9 +86,9 @@ export default function ContactPage() {
                 <AppLogo className="w-10 h-10" />
               </div>
             </div>
-            <CardTitle className="text-3xl font-bold font-headline text-primary">Formulário de Contacto</CardTitle>
+            <CardTitle className="text-3xl font-bold font-headline text-primary">Formulário de Contacto (JSON)</CardTitle>
             <CardDescription className="text-lg">
-              Utilize o formulário abaixo para nos enviar as suas dúvidas, sugestões ou feedback.
+              As suas mensagens são guardadas localmente.
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
@@ -119,26 +98,13 @@ export default function ContactPage() {
                   <Label htmlFor="name" className="flex items-center gap-2">
                     <User className="w-4 h-4 text-primary" /> Nome Completo
                   </Label>
-                  <Input 
-                    id="name" 
-                    required 
-                    className="h-12"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  />
+                  <Input id="name" required className="h-12" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email" className="flex items-center gap-2">
                     <Mail className="w-4 h-4 text-primary" /> E-mail
                   </Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    className="h-12"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    placeholder="exemplo@email.com"
-                  />
+                  <Input id="email" type="email" className="h-12" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
                 </div>
               </div>
 
@@ -147,61 +113,28 @@ export default function ContactPage() {
                   <Label htmlFor="phone" className="flex items-center gap-2">
                     <Phone className="w-4 h-4 text-primary" /> Telefone
                   </Label>
-                  <Input 
-                    id="phone" 
-                    className="h-12"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    placeholder="9XXXXXXXX"
-                  />
+                  <Input id="phone" className="h-12" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="subject" className="flex items-center gap-2">
                     <MessageSquare className="w-4 h-4 text-primary" /> Assunto
                   </Label>
-                  <Input 
-                    id="subject" 
-                    required 
-                    className="h-12"
-                    value={formData.subject}
-                    onChange={(e) => setFormData({...formData, subject: e.target.value})}
-                  />
+                  <Input id="subject" required className="h-12" value={formData.subject} onChange={(e) => setFormData({...formData, subject: e.target.value})} />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="message">Mensagem</Label>
-                <Textarea 
-                  id="message" 
-                  required 
-                  className="min-h-[150px] text-base"
-                  value={formData.message}
-                  onChange={(e) => setFormData({...formData, message: e.target.value})}
-                />
+                <Textarea id="message" required className="min-h-[150px] text-base" value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})} />
               </div>
             </CardContent>
             <CardFooter className="bg-muted/30 px-8 py-6 flex justify-end">
-              <Button 
-                type="submit" 
-                disabled={isSubmitting} 
-                className="bg-primary hover:bg-primary/90 rounded-full px-10 h-14 text-xl shadow-lg transition-all hover:scale-105"
-              >
-                {isSubmitting ? "A enviar..." : (
-                  <>
-                    <Send className="mr-2 h-6 w-6" /> Enviar Mensagem
-                  </>
-                )}
+              <Button type="submit" disabled={isSubmitting} className="bg-primary hover:bg-primary/90 rounded-full px-10 h-14 text-xl shadow-lg">
+                {isSubmitting ? "A enviar..." : <><Send className="mr-2 h-6 w-6" /> Enviar Mensagem</>}
               </Button>
             </CardFooter>
           </form>
         </Card>
-
-        <div className="text-center text-muted-foreground text-sm pt-4">
-          <p>Também pode contactar-nos diretamente através do e-mail:</p>
-          <a href="mailto:chronicai.cespu@gmail.com" className="text-primary font-bold hover:underline">
-            chronicai.cespu@gmail.com
-          </a>
-        </div>
       </div>
     </div>
   );

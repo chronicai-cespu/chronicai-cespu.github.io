@@ -15,24 +15,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { getUsers, updateUser, deleteUser } from '@/lib/user-actions';
 import { useHealth } from '@/components/health-context';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@/firebase';
 
 export default function AdminPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingUser, setEditingUser] = useState<any>(null);
   const { role, isLoading: isAuthLoading } = useHealth();
+  const { isUserLoading, user } = useUser();
   const { toast } = useToast();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isAuthLoading) {
-      if (role !== 'admin') {
+    if (!isAuthLoading && !isUserLoading) {
+      if (role !== 'admin' || !user) {
         router.push('/login');
       } else {
         loadUsers();
       }
     }
-  }, [role, isAuthLoading, router]);
+  }, [role, isAuthLoading, isUserLoading, user, router]);
 
   const loadUsers = async () => {
     setIsLoading(true);
@@ -71,11 +73,11 @@ export default function AdminPage() {
     }
   };
 
-  if (isAuthLoading || role !== 'admin') {
+  if (isAuthLoading || isUserLoading || role !== 'admin') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
-        <p className="text-muted-foreground italic">A verificar permissões...</p>
+        <p className="text-muted-foreground italic">A verificar permissões de administrador...</p>
       </div>
     );
   }
@@ -85,7 +87,7 @@ export default function AdminPage() {
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2"><ShieldAlert className="text-primary" /> Gestão de Utilizadores</h1>
-          <p className="text-muted-foreground">Administração central de contas e permissões (Base de Dados JSON).</p>
+          <p className="text-muted-foreground">Administração central de contas e permissões.</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <Button variant="outline" onClick={loadUsers} className="flex-1 sm:flex-none"><RefreshCw className="mr-2 h-4 w-4" /> Atualizar</Button>
@@ -102,7 +104,6 @@ export default function AdminPage() {
                   <TableHead className="w-[100px]">Código</TableHead>
                   <TableHead>Nome</TableHead>
                   <TableHead className="hidden md:table-cell">Email</TableHead>
-                  <TableHead className="hidden lg:table-cell">Password</TableHead>
                   <TableHead>Papel</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -110,18 +111,17 @@ export default function AdminPage() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">A carregar dados...</TableCell>
+                    <TableCell colSpan={5} className="h-24 text-center">A carregar dados...</TableCell>
                   </TableRow>
                 ) : users.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">Nenhum utilizador encontrado.</TableCell>
+                    <TableCell colSpan={5} className="h-24 text-center">Nenhum utilizador encontrado.</TableCell>
                   </TableRow>
                 ) : users.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-bold font-mono">{user.assignedCode}</TableCell>
                     <TableCell>{user.name}</TableCell>
                     <TableCell className="hidden md:table-cell text-muted-foreground">{user.email}</TableCell>
-                    <TableCell className="hidden lg:table-cell font-mono text-xs text-muted-foreground/60">{user.password}</TableCell>
                     <TableCell>
                       <Badge variant={user.role === 'admin' ? 'destructive' : user.role === 'researcher' ? 'secondary' : 'outline'}>
                         {user.role}
@@ -152,10 +152,6 @@ export default function AdminPage() {
             <div className="grid gap-2">
               <label className="text-sm font-bold">E-mail de Acesso</label>
               <Input type="email" value={editingUser?.email || ''} onChange={e => setEditingUser({...editingUser, email: e.target.value})} />
-            </div>
-            <div className="grid gap-2">
-              <label className="text-sm font-bold">Palavra-passe</label>
-              <Input value={editingUser?.password || ''} onChange={e => setEditingUser({...editingUser, password: e.target.value})} />
             </div>
             <div className="grid gap-2">
               <label className="text-sm font-bold">Papel no Sistema</label>

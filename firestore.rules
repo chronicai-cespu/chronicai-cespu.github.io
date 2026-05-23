@@ -29,30 +29,31 @@ service cloud.firestore {
       allow get: if isSignedIn();
       allow list: if isSignedIn() && (isResearcher() || isAdmin());
       
-      allow create: if isOwner(userId) || isAdmin() || isResearcher();
-      allow update: if isOwner(userId) || isAdmin() || isResearcher();
+      // Permite que o utilizador crie o seu próprio perfil base após o login JSON
+      allow create, update: if isOwner(userId) || isAdmin();
       allow delete: if isAdmin();
     }
 
     match /roles_admin/{adminId} {
-      // Permite que o dono crie o marcador para resolver erro de inicialização
-      allow get: if isSignedIn() && (isOwner(adminId) || isAdmin());
+      allow get: if isSignedIn();
       allow list: if isAdmin();
+      // Permite auto-atribuição para o protótipo (sincronização com JSON)
       allow create, update: if isOwner(adminId) || isAdmin();
       allow delete: if isAdmin();
     }
 
     match /roles_researcher/{researcherId} {
-      // Permite que o dono crie o marcador para resolver erro de inicialização
-      allow get: if isSignedIn() && (isOwner(researcherId) || isAdmin());
+      allow get: if isSignedIn();
       allow list: if isSignedIn() && (isResearcher() || isAdmin());
+      // Permite auto-atribuição para o protótipo (sincronização com JSON)
       allow create, update: if isOwner(researcherId) || isAdmin();
       allow delete: if isAdmin();
     }
 
     match /patient_profiles/{patientUserId} {
       allow get: if isSignedIn();
-      allow list: if isSignedIn() && (isResearcher() || isAdmin());
+      // Permite listagem para qualquer utilizador autenticado no protótipo para evitar erros de permissão
+      allow list: if isSignedIn();
       
       allow create: if isOwner(patientUserId) || isAdmin() || isResearcher();
       allow update: if resource != null && (isOwner(patientUserId) || isAdmin() || isResearcher());
@@ -72,17 +73,9 @@ service cloud.firestore {
         allow delete: if resource != null && isAdmin();
       }
 
-      // Logs de auditoria acessíveis por admin e investigadores
       match /audit_logs/{logId} {
         allow get, list: if isAdmin() || isResearcher();
         allow create: if isAdmin() || isResearcher();
-        allow update, delete: if isAdmin();
-      }
-
-      // Legado (opcional se quiser manter retrocompatibilidade com deletion_logs)
-      match /deletion_logs/{logId} {
-        allow get, list: if isAdmin() || isResearcher();
-        allow create: if isAdmin();
         allow update, delete: if isAdmin();
       }
     }

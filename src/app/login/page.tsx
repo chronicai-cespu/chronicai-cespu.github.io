@@ -12,7 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, LogIn } from 'lucide-react';
 import { authenticateUser } from '@/lib/user-actions';
 import { useHealth } from '@/components/health-context';
-import { useAuth, initiateAnonymousSignIn } from '@/firebase';
+import { useAuth, initiateAnonymousSignIn, useFirestore } from '@/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
@@ -22,6 +23,7 @@ export default function LoginPage() {
   const { toast } = useToast();
   const { userProfile, setUserProfile, isLoading: isAuthLoading } = useHealth();
   const auth = useAuth();
+  const db = useFirestore();
 
   useEffect(() => {
     if (!isAuthLoading && userProfile) {
@@ -39,12 +41,38 @@ export default function LoginPage() {
       // 1. Validar no JSON (Server Action)
       const user = await authenticateUser(identifier, password);
       
-      // 2. Iniciar sessão no Firebase (Anónima) para permitir acesso ao Firestore
-      if (auth) {
+      // 2. Iniciar sessão no Firebase e sincronizar permissões
+      if (auth && db) {
         try {
-          await initiateAnonymousSignIn(auth);
+          const userCred = await initiateAnonymousSignIn(auth);
+          const fbUid = userCred.user.uid;
+
+          // Sincronizar o utilizador JSON com o Firestore para garantir permissões (roles)
+          await setDoc(doc(db, 'users', fbUid), {
+            id: fbUid,
+            name: user.name,
+            email: user.email || '',
+            role: user.role,
+            assignedCode: user.assignedCode,
+            createdAt: new Date().toISOString()
+          });
+
+          // Atribuir o marcador de papel para as Security Rules
+          if (user.role === 'admin') {
+            await setDoc(doc(db, 'roles_admin', fbUid), { active: true });
+          } else if (user.role === 'researcher') {
+            await setDoc(doc(db, 'roles_researcher', fbUid), { active: true });
+          } else {
+            // Criar perfil clínico básico se for paciente
+            await setDoc(doc(db, 'patient_profiles', fbUid), {
+              userId: fbUid,
+              name: user.name,
+              assignedCode: user.assignedCode,
+              role: 'patient'
+            }, { merge: true });
+          }
         } catch (firebaseErr) {
-          console.warn("Falha na sessão Firebase, mas login JSON prossegue.", firebaseErr);
+          console.error("Falha na sincronização Firebase:", firebaseErr);
         }
       }
 
@@ -56,7 +84,7 @@ export default function LoginPage() {
         description: `Bem-vindo, ${user.name}.` 
       });
 
-      // 4. Redirecionamento imediato
+      // 4. Redirecionamento
       const target = user.role === 'admin' ? '/admin' : user.role === 'researcher' ? '/researcher' : '/dashboard';
       router.replace(target);
       

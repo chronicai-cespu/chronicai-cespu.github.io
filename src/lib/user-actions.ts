@@ -13,6 +13,40 @@ const PATHS = {
   patient: path.join(DATA_DIR, 'patients.json'),
 };
 
+const INITIAL_DATA = {
+  admin: [{
+    "id": "admin-id-01",
+    "name": "Administrador ChronicAI",
+    "email": "chronicai.cespu@gmail.com",
+    "password": "ditechAI2526",
+    "role": "admin",
+    "assignedCode": "admin2526",
+    "mobileNumber": "910000000",
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  }],
+  researcher: [{
+    "id": "researcher-id-01",
+    "name": "Investigador DiTech",
+    "email": "investigador@ditech.pt",
+    "password": "investigador25",
+    "role": "researcher",
+    "assignedCode": "r01",
+    "mobileNumber": "920000000",
+    "createdAt": "2025-01-10T10:00:00.000Z"
+  }],
+  patient: [{
+    "id": "patient-id-01",
+    "name": "Maria Silva",
+    "email": "maria.silva@email.com",
+    "password": "maria123",
+    "role": "patient",
+    "assignedCode": "p01",
+    "mobileNumber": "930000000",
+    "chronicDiseases": ["Hipertensão"],
+    "createdAt": "2025-01-15T09:00:00.000Z"
+  }]
+};
+
 async function ensureDir() {
   try {
     await fs.access(DATA_DIR);
@@ -21,14 +55,16 @@ async function ensureDir() {
   }
 }
 
-async function readJson(filePath: string) {
+async function readJson(filePath: string, type: keyof typeof INITIAL_DATA) {
   await ensureDir();
   try {
-    const data = await fs.readFile(filePath, 'utf8');
-    if (!data || data.trim() === '') return [];
-    return JSON.parse(data);
+    const content = await fs.readFile(filePath, 'utf8');
+    if (!content || content.trim() === '') return INITIAL_DATA[type];
+    return JSON.parse(content);
   } catch (error) {
-    return [];
+    // Se o ficheiro não existir, cria com dados iniciais
+    await writeJson(filePath, INITIAL_DATA[type]);
+    return INITIAL_DATA[type];
   }
 }
 
@@ -39,9 +75,9 @@ async function writeJson(filePath: string, data: any[]) {
 
 export async function getUsers() {
   const [admins, researchers, patients] = await Promise.all([
-    readJson(PATHS.admin),
-    readJson(PATHS.researcher),
-    readJson(PATHS.patient)
+    readJson(PATHS.admin, 'admin'),
+    readJson(PATHS.researcher, 'researcher'),
+    readJson(PATHS.patient, 'patient')
   ]);
   return [...admins, ...researchers, ...patients];
 }
@@ -68,7 +104,7 @@ export async function authenticateUser(identifier: string, pass: string) {
 
 export async function createUser(userData: any) {
   const role: keyof typeof PATHS = userData.role;
-  const users = await readJson(PATHS[role]);
+  const users = await readJson(PATHS[role], role as any);
   
   const prefix = role === 'patient' ? 'p' : role === 'researcher' ? 'r' : 'adm';
   const nextNum = users.length + 1;
@@ -93,7 +129,7 @@ export async function updateUser(userId: string, updates: any) {
   if (!originalUser) throw new Error("Utilizador não encontrado.");
 
   const role: keyof typeof PATHS = originalUser.role;
-  const users = await readJson(PATHS[role]);
+  const users = await readJson(PATHS[role], role as any);
   const index = users.findIndex((u: any) => u.id === userId);
 
   if (index === -1) throw new Error("Erro na integridade dos dados.");
@@ -109,7 +145,7 @@ export async function deleteUser(userId: string) {
   if (!user) return;
 
   const role: keyof typeof PATHS = user.role;
-  const users = await readJson(PATHS[role]);
+  const users = await readJson(PATHS[role], role as any);
   const filtered = users.filter((u: any) => u.id !== userId);
   
   await writeJson(PATHS[role], filtered);

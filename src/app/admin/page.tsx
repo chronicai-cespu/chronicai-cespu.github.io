@@ -15,26 +15,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { getUsers, updateUser, deleteUser } from '@/lib/user-actions';
 import { useHealth } from '@/components/health-context';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
 
 export default function AdminPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingUser, setEditingUser] = useState<any>(null);
-  const { role, isLoading: isAuthLoading } = useHealth();
-  const { isUserLoading, user } = useUser();
+  const { role, userProfile, isLoading: isAuthLoading } = useHealth();
   const { toast } = useToast();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isAuthLoading && !isUserLoading) {
-      if (role !== 'admin' || !user) {
+    if (!isAuthLoading) {
+      if (role !== 'admin' || !userProfile) {
         router.push('/login');
       } else {
         loadUsers();
       }
     }
-  }, [role, isAuthLoading, isUserLoading, user, router]);
+  }, [role, userProfile, isAuthLoading, router]);
 
   const loadUsers = async () => {
     setIsLoading(true);
@@ -43,21 +41,25 @@ export default function AdminPage() {
       setUsers(data);
     } catch (e) {
       console.error(e);
-      toast({ variant: "destructive", title: "Erro", description: "Não foi possível carregar os utilizadores." });
+      toast({ variant: "destructive", title: "Erro", description: "Não foi possível carregar os utilizadores do ficheiro JSON." });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDelete = async (id: string, code: string) => {
-    if (code.includes('admin')) {
-      toast({ variant: "destructive", title: "Ação Bloqueada", description: "Não é possível remover contas de administrador pela interface." });
+    if (code === 'admin2526') {
+      toast({ variant: "destructive", title: "Ação Bloqueada", description: "Não é possível remover a conta de administrador principal." });
       return;
     }
     if (window.confirm(`Apagar definitivamente ${code}?`)) {
-      await deleteUser(id);
-      toast({ title: "Removido", description: "Utilizador apagado do sistema." });
-      loadUsers();
+      try {
+        await deleteUser(id);
+        toast({ title: "Removido", description: "Utilizador apagado do ficheiro JSON." });
+        loadUsers();
+      } catch (e) {
+        toast({ variant: "destructive", title: "Erro", description: "Falha ao apagar o utilizador." });
+      }
     }
   };
 
@@ -65,7 +67,7 @@ export default function AdminPage() {
     if (!editingUser) return;
     try {
       await updateUser(editingUser.id, editingUser);
-      toast({ title: "Atualizado", description: "Dados guardados com sucesso." });
+      toast({ title: "Atualizado", description: "Dados guardados com sucesso no JSON." });
       setEditingUser(null);
       loadUsers();
     } catch (e: any) {
@@ -73,11 +75,11 @@ export default function AdminPage() {
     }
   };
 
-  if (isAuthLoading || isUserLoading || role !== 'admin') {
+  if (isAuthLoading || role !== 'admin') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
-        <p className="text-muted-foreground italic">A verificar permissões de administrador...</p>
+        <p className="text-muted-foreground italic">A verificar permissões administrativas...</p>
       </div>
     );
   }
@@ -86,8 +88,8 @@ export default function AdminPage() {
     <div className="max-w-7xl mx-auto p-4 sm:p-8 space-y-8">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2"><ShieldAlert className="text-primary" /> Gestão de Utilizadores</h1>
-          <p className="text-muted-foreground">Administração central de contas e permissões.</p>
+          <h1 className="text-3xl font-bold flex items-center gap-2"><ShieldAlert className="text-primary" /> Gestão de Utilizadores (JSON)</h1>
+          <p className="text-muted-foreground">Administração central de contas guardadas em ficheiros locais.</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <Button variant="outline" onClick={loadUsers} className="flex-1 sm:flex-none"><RefreshCw className="mr-2 h-4 w-4" /> Atualizar</Button>
@@ -101,7 +103,7 @@ export default function AdminPage() {
             <Table>
               <TableHeader className="bg-muted/50">
                 <TableRow>
-                  <TableHead className="w-[100px]">Código</TableHead>
+                  <TableHead className="w-[120px]">Código</TableHead>
                   <TableHead>Nome</TableHead>
                   <TableHead className="hidden md:table-cell">Email</TableHead>
                   <TableHead>Papel</TableHead>
@@ -111,11 +113,11 @@ export default function AdminPage() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">A carregar dados...</TableCell>
+                    <TableCell colSpan={5} className="h-24 text-center">A ler ficheiros JSON...</TableCell>
                   </TableRow>
                 ) : users.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">Nenhum utilizador encontrado.</TableCell>
+                    <TableCell colSpan={5} className="h-24 text-center">Nenhum utilizador encontrado nos dados.</TableCell>
                   </TableRow>
                 ) : users.map((user) => (
                   <TableRow key={user.id}>
@@ -129,7 +131,15 @@ export default function AdminPage() {
                     </TableCell>
                     <TableCell className="text-right space-x-1">
                       <Button size="icon" variant="ghost" onClick={() => setEditingUser(user)}><Edit className="h-4 w-4" /></Button>
-                      <Button size="icon" variant="ghost" className="text-destructive" onClick={() => handleDelete(user.id, user.assignedCode)}><Trash2 className="h-4 w-4" /></Button>
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="text-destructive" 
+                        onClick={() => handleDelete(user.id, user.assignedCode)}
+                        disabled={user.assignedCode === 'admin2526'}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -155,7 +165,7 @@ export default function AdminPage() {
             </div>
             <div className="grid gap-2">
               <label className="text-sm font-bold">Papel no Sistema</label>
-              <Select value={editingUser?.role} onValueChange={v => setEditingUser({...editingUser, role: v})}>
+              <Select value={editingUser?.role} onValueChange={v => setEditingUser({...editingUser, role: v})} disabled={editingUser?.assignedCode === 'admin2526'}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -168,7 +178,7 @@ export default function AdminPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleUpdate} className="w-full sm:w-auto"><Save className="mr-2 h-4 w-4" /> Guardar Alterações</Button>
+            <Button onClick={handleUpdate} className="w-full sm:w-auto"><Save className="mr-2 h-4 w-4" /> Guardar no JSON</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

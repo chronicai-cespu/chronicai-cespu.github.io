@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, LogIn } from 'lucide-react';
 import { authenticateUser } from '@/lib/user-actions';
 import { useHealth } from '@/components/health-context';
+import { useAuth, initiateAnonymousSignIn } from '@/firebase';
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
@@ -20,8 +21,8 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { userProfile, setUserProfile, isLoading: isAuthLoading } = useHealth();
+  const auth = useAuth();
 
-  // Redirecionamento automático se já estiver logado
   useEffect(() => {
     if (!isAuthLoading && userProfile) {
       const target = userProfile.role === 'admin' ? '/admin' : userProfile.role === 'researcher' ? '/researcher' : '/dashboard';
@@ -35,9 +36,19 @@ export default function LoginPage() {
     setIsLoggingIn(true);
 
     try {
+      // 1. Validar no JSON (Server Action)
       const user = await authenticateUser(identifier, password);
       
-      // 1. Atualizar o localStorage e o estado imediatamente
+      // 2. Iniciar sessão no Firebase (Anónima) para permitir acesso ao Firestore
+      if (auth) {
+        try {
+          await initiateAnonymousSignIn(auth);
+        } catch (firebaseErr) {
+          console.warn("Falha na sessão Firebase, mas login JSON prossegue.", firebaseErr);
+        }
+      }
+
+      // 3. Atualizar o estado global
       setUserProfile(user as any);
 
       toast({ 
@@ -45,7 +56,7 @@ export default function LoginPage() {
         description: `Bem-vindo, ${user.name}.` 
       });
 
-      // 2. Redirecionamento imediato forçado
+      // 4. Redirecionamento imediato
       const target = user.role === 'admin' ? '/admin' : user.role === 'researcher' ? '/researcher' : '/dashboard';
       router.replace(target);
       

@@ -167,7 +167,7 @@ function LogsPageContent() {
 
   const handleDelete = async (log: any) => {
     if (!isAdmin) return;
-    if (!confirm("Tem a certeza que deseja eliminar este registo? Esta ação será registada no log de auditoria.")) return;
+    if (!window.confirm("Tem a certeza que deseja eliminar este registo? Esta ação será registada no log de auditoria.")) return;
 
     try {
       await deleteHealthRecord(log.id);
@@ -185,8 +185,8 @@ function LogsPageContent() {
 
       toast({ title: "Eliminado", description: "O registo foi removido e a ação auditada." });
       loadLogs();
-    } catch (e) {
-      toast({ variant: "destructive", title: "Erro", description: "Não foi possível eliminar o registo." });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Erro", description: e.message || "Não foi possível eliminar o registo." });
     }
   };
 
@@ -409,16 +409,16 @@ function LogsPageContent() {
                           </span>
                         </div>
                         {log.notes && <p className="text-sm text-muted-foreground italic mt-1">"{log.notes}"</p>}
-                        <div className="flex justify-between items-center mt-1">
+                        <div className="flex justify-between items-center mt-2">
                            <p className="text-[10px] text-muted-foreground">
                             {log.recordedAt ? format(parseISO(log.recordedAt), "d 'de' MMM", { locale: pt }) : ''}
                           </p>
                           {isAdmin && (
-                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-primary" onClick={() => setEditingLog(log)}>
+                            <div className="flex gap-1">
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:bg-primary/10" onClick={() => setEditingLog(log)}>
                                 <Edit2 className="h-3.5 w-3.5" />
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(log)}>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => handleDelete(log)}>
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                             </div>

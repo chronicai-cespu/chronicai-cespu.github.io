@@ -42,5 +42,16 @@
     "details": "Tipo: ACTIVITY, Valor: passeio (60 min), Estado: 😊 Feliz, Notas: satisfeita",
     "id": "196b9bd0-28a5-4c7e-a942-8428c625cf11",
     "timestamp": "2026-06-02T14:11:08.321Z"
+  },
+  {
+    "userId": "admin-id-01",
+    "userName": "Administrador ChronicAI",
+    "userRole": "admin",
+    "actionType": "EDIÇÃO_REGISTO_SAÚDE",
+    "targetId": "patient-id-01",
+    "targetName": "Maria A. Silva",
+    "details": "Edição Admin - Original: [52 kg, Mood: pensativo], Novo: [55, Mood: pensativo], Notas: ",
+    "id": "1fa6cdf7-2e09-48cc-9ab9-76a9931a6b0e",
+    "timestamp": "2026-06-02T14:15:05.677Z"
   }
 ]

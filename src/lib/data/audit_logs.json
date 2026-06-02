@@ -20,5 +20,16 @@
     "details": "Tipo: activity, Valor: corrida (5 min), Notas: N/A",
     "id": "7e141521-dd40-4029-9957-00ab98b88e74",
     "timestamp": "2026-06-02T14:03:24.662Z"
+  },
+  {
+    "userId": "b7a448b3-ee43-4e3c-885f-a188ef20b2e5",
+    "userName": "Liliana",
+    "userRole": "researcher",
+    "actionType": "CRIAÇÃO_REGISTO_SAÚDE",
+    "targetId": "patient-id-01",
+    "targetName": "Maria A. Silva",
+    "details": "Tipo: WEIGHT, Valor: 50 kg, Estado: 😢 Triste, Notas: N/A",
+    "id": "009be641-823b-4c77-8838-751c32144472",
+    "timestamp": "2026-06-02T14:06:38.533Z"
   }
 ]

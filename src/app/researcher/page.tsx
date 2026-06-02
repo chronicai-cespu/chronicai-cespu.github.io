@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { FlaskConical, Edit, Save, AlertCircle, Loader2 } from 'lucide-react';
+import { FlaskConical, Edit, Save, AlertCircle, Loader2, History } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -15,6 +15,7 @@ import { getUsers, updateUser } from '@/lib/user-actions';
 import { logAuditAction } from '@/lib/audit-actions';
 import { useHealth } from '@/components/health-context';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function ResearcherPage() {
   const [patients, setPatients] = useState<any[]>([]);
@@ -90,6 +91,11 @@ export default function ResearcherPage() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2"><FlaskConical className="text-primary" /> Lista de Pacientes (JSON)</h1>
           <p className="text-muted-foreground">Gestão e acompanhamento de participantes no estudo clínico.</p>
+        </div>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button asChild variant="outline" className="flex-1 sm:flex-none">
+            <Link href="/admin/audit-logs"><History className="mr-2 h-4 w-4" /> Histórico de Interações</Link>
+          </Button>
         </div>
       </header>
       

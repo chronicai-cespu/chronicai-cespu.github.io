@@ -15,6 +15,7 @@ import { User, ShieldCheck, Pill, Stethoscope, Save, FileText, Activity, Loader2
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { logAuditAction } from '@/lib/audit-actions';
 
 export default function ProfilePage() {
   const { userProfile, setUserProfile, role, assignedCode, isLoading } = useHealth();
@@ -33,9 +34,21 @@ export default function ProfilePage() {
     }
   }, [userProfile, role, isLoading, router]);
 
-  const handleSaveProfile = () => {
-    if (editProfile) {
+  const handleSaveProfile = async () => {
+    if (editProfile && userProfile) {
       setUserProfile(editProfile);
+      
+      // Registo de auditoria para auto-atualização do perfil
+      await logAuditAction({
+        userId: userProfile.id,
+        userName: userProfile.name,
+        userRole: userProfile.role,
+        actionType: 'ATUALIZAÇÃO_PERFIL_SAÚDE',
+        targetId: userProfile.id,
+        targetName: userProfile.name,
+        details: 'O paciente atualizou o seu questionário de saúde e biometria.'
+      });
+
       toast({ title: "Perfil Atualizado", description: "As suas informações foram guardadas com segurança." });
     }
   };

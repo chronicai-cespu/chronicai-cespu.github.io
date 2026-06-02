@@ -25,5 +25,23 @@
     "mood": "cansado",
     "id": "fcdbf8ee-829a-4f5d-b105-56f57c133a24",
     "recordedAt": "2026-06-02T14:03:23.390Z"
+  },
+  {
+    "patientProfileId": "patient-id-01",
+    "recordType": "weight",
+    "value": "52 kg",
+    "notes": "",
+    "mood": "pensativo",
+    "id": "bf7c101e-f77c-48cc-994e-a75fe4050703",
+    "recordedAt": "2026-06-02T14:06:05.920Z"
+  },
+  {
+    "patientProfileId": "patient-id-01",
+    "recordType": "weight",
+    "value": "50 kg",
+    "notes": "",
+    "mood": "triste",
+    "id": "2ae8a5a3-1597-4119-9a41-7b3f2dbb6de2",
+    "recordedAt": "2026-06-02T14:06:38.271Z"
   }
 ]

@@ -130,22 +130,20 @@ function LogsPageContent() {
         mood: selectedMood
       });
 
-      // Registo de auditoria se for um investigador/admin a fazer a ação
-      if (canManagePatients) {
-        const targetPatient = allPatients.find(p => p.id === targetPatientId);
-        const moodObj = MOODS.find(m => m.id === selectedMood);
-        const moodString = moodObj ? `${moodObj.emoji} ${moodObj.label}` : 'N/A';
-        
-        await logAuditAction({
-          userId: userProfile.id,
-          userName: userProfile.name,
-          userRole: userProfile.role,
-          actionType: 'CRIAÇÃO_REGISTO_SAÚDE',
-          targetId: targetPatientId,
-          targetName: targetPatient?.name || 'Paciente',
-          details: `Tipo: ${type.toUpperCase()}, Valor: ${value}, Estado: ${moodString}, Notas: ${notes || 'N/A'}`
-        });
-      }
+      // Registo de auditoria (para investigadores/admins OU auto-registo do paciente)
+      const targetPatient = allPatients.find(p => p.id === targetPatientId);
+      const moodObj = MOODS.find(m => m.id === selectedMood);
+      const moodString = moodObj ? `${moodObj.emoji} ${moodObj.label}` : 'N/A';
+      
+      await logAuditAction({
+        userId: userProfile.id,
+        userName: userProfile.name,
+        userRole: userProfile.role,
+        actionType: canManagePatients ? 'CRIAÇÃO_REGISTO_SAÚDE' : 'AUTO_REGISTO_SAÚDE',
+        targetId: targetPatientId,
+        targetName: targetPatient?.name || userProfile.name,
+        details: `Tipo: ${type.toUpperCase()}, Valor: ${value}, Estado: ${moodString}, Notas: ${notes || 'N/A'}`
+      });
 
       toast({
         title: "Sucesso",

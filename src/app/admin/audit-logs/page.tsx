@@ -22,15 +22,17 @@ export default function AuditLogsPage() {
   const { toast } = useToast();
   const router = useRouter();
 
+  const isAuthorized = role === 'admin' || role === 'researcher';
+
   useEffect(() => {
     if (!isAuthLoading) {
-      if (role !== 'admin') {
+      if (!isAuthorized) {
         router.push('/login');
       } else {
         loadLogs();
       }
     }
-  }, [role, isAuthLoading, router]);
+  }, [role, isAuthLoading, router, isAuthorized]);
 
   const loadLogs = async () => {
     setIsLoading(true);
@@ -44,7 +46,7 @@ export default function AuditLogsPage() {
     }
   };
 
-  if (isAuthLoading || role !== 'admin') {
+  if (isAuthLoading || !isAuthorized) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
@@ -53,15 +55,17 @@ export default function AuditLogsPage() {
     );
   }
 
+  const backLink = role === 'admin' ? '/admin' : '/researcher';
+
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-8 space-y-8">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <Link href="/admin" className="text-sm font-bold text-primary hover:underline flex items-center gap-1 mb-2">
+          <Link href={backLink} className="text-sm font-bold text-primary hover:underline flex items-center gap-1 mb-2">
             <ArrowLeft className="w-4 h-4" /> Voltar à Gestão
           </Link>
           <h1 className="text-3xl font-bold flex items-center gap-2"><History className="text-primary" /> Histórico de Auditoria</h1>
-          <p className="text-muted-foreground">Monitorização de todas as interações efetuadas por investigadores e admins.</p>
+          <p className="text-muted-foreground">Monitorização de todas as interações efetuadas por pacientes, investigadores e admins.</p>
         </div>
         <Button variant="outline" onClick={loadLogs} className="w-full sm:w-auto">
           <RefreshCw className={logs.length > 0 ? "mr-2 h-4 w-4" : "h-4 w-4"} /> {logs.length > 0 ? "Atualizar Histórico" : ""}
@@ -102,7 +106,7 @@ export default function AuditLogsPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={log.actionType === 'EDIÇÃO_PERFIL_PACIENTE' ? 'secondary' : 'default'} className="text-[10px]">
+                      <Badge variant={log.actionType.includes('AUTO') ? 'outline' : log.actionType.includes('EDIÇÃO') ? 'secondary' : 'default'} className="text-[10px]">
                         {log.actionType.replace(/_/g, ' ')}
                       </Badge>
                     </TableCell>

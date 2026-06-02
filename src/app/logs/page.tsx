@@ -133,6 +133,9 @@ function LogsPageContent() {
       // Registo de auditoria se for um investigador/admin a fazer a ação
       if (canManagePatients) {
         const targetPatient = allPatients.find(p => p.id === targetPatientId);
+        const moodObj = MOODS.find(m => m.id === selectedMood);
+        const moodString = moodObj ? `${moodObj.emoji} ${moodObj.label}` : 'N/A';
+        
         await logAuditAction({
           userId: userProfile.id,
           userName: userProfile.name,
@@ -140,7 +143,7 @@ function LogsPageContent() {
           actionType: 'CRIAÇÃO_REGISTO_SAÚDE',
           targetId: targetPatientId,
           targetName: targetPatient?.name || 'Paciente',
-          details: `Tipo: ${type}, Valor: ${value}, Notas: ${notes || 'N/A'}`
+          details: `Tipo: ${type.toUpperCase()}, Valor: ${value}, Estado: ${moodString}, Notas: ${notes || 'N/A'}`
         });
       }
 

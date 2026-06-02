@@ -1,2 +1,24 @@
-
-[]
+[
+  {
+    "userId": "researcher-id-01",
+    "userName": "Investigador DiTech",
+    "userRole": "researcher",
+    "actionType": "EDIÇÃO_PERFIL_PACIENTE",
+    "targetId": "patient-id-01",
+    "targetName": "Maria A. Silva",
+    "details": "Justificação: Nome incompleto",
+    "id": "4d6cf301-ceec-4cbe-9d3c-78f2a22e1675",
+    "timestamp": "2026-06-02T14:01:51.776Z"
+  },
+  {
+    "userId": "b7a448b3-ee43-4e3c-885f-a188ef20b2e5",
+    "userName": "Liliana",
+    "userRole": "researcher",
+    "actionType": "CRIAÇÃO_REGISTO_SAÚDE",
+    "targetId": "patient-id-02",
+    "targetName": "João Pereira",
+    "details": "Tipo: activity, Valor: corrida (5 min), Notas: N/A",
+    "id": "7e141521-dd40-4029-9957-00ab98b88e74",
+    "timestamp": "2026-06-02T14:03:24.662Z"
+  }
+]

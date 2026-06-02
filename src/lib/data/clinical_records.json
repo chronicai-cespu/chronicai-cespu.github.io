@@ -16,5 +16,14 @@
     "mood": "pensativo",
     "id": "f00f3c62-9aa3-4f27-b280-d4e423129b32",
     "recordedAt": "2026-06-02T13:44:08.931Z"
+  },
+  {
+    "patientProfileId": "patient-id-02",
+    "recordType": "activity",
+    "value": "corrida (5 min)",
+    "notes": "",
+    "mood": "cansado",
+    "id": "fcdbf8ee-829a-4f5d-b105-56f57c133a24",
+    "recordedAt": "2026-06-02T14:03:23.390Z"
   }
 ]

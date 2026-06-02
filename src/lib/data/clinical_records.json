@@ -43,5 +43,14 @@
     "mood": "triste",
     "id": "2ae8a5a3-1597-4119-9a41-7b3f2dbb6de2",
     "recordedAt": "2026-06-02T14:06:38.271Z"
+  },
+  {
+    "patientProfileId": "patient-id-01",
+    "recordType": "activity",
+    "value": "passeio (60 min)",
+    "notes": "satisfeita",
+    "mood": "feliz",
+    "id": "52cca9b4-c7be-43f3-b6a8-bd5fdf69ab66",
+    "recordedAt": "2026-06-02T14:11:07.999Z"
   }
 ]

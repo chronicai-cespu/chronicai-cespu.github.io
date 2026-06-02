@@ -11,14 +11,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { HeartPulse, Activity, Scale, ClipboardList, CheckCircle2, AlertTriangle, Loader2, RefreshCw } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { HeartPulse, Activity, Scale, ClipboardList, CheckCircle2, AlertTriangle, Loader2, RefreshCw, Trash2, Edit2, Save } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { getUsers } from '@/lib/user-actions';
-import { getHealthRecords, addHealthRecord } from '@/lib/health-actions';
+import { getHealthRecords, addHealthRecord, deleteHealthRecord, updateHealthRecord } from '@/lib/health-actions';
 import { logAuditAction } from '@/lib/audit-actions';
 
 const MOODS = [
@@ -48,7 +49,11 @@ function LogsPageContent() {
   const [displayLogs, setDisplayLogs] = useState<any[]>([]);
   const [isLogsLoading, setIsLogsLoading] = useState(false);
 
+  // Estados para edição
+  const [editingLog, setEditingLog] = useState<any>(null);
+
   const canManagePatients = role === 'admin' || role === 'researcher';
+  const isAdmin = role === 'admin';
 
   useEffect(() => {
     if (canManagePatients) {
@@ -130,7 +135,6 @@ function LogsPageContent() {
         mood: selectedMood
       });
 
-      // Registo de auditoria (para investigadores/admins OU auto-registo do paciente)
       const targetPatient = allPatients.find(p => p.id === targetPatientId);
       const moodObj = MOODS.find(m => m.id === selectedMood);
       const moodString = moodObj ? `${moodObj.emoji} ${moodObj.label}` : 'N/A';
@@ -158,6 +162,57 @@ function LogsPageContent() {
       loadLogs();
     } catch (e) {
       toast({ title: "Erro", description: "Falha ao gravar os dados.", variant: "destructive" });
+    }
+  };
+
+  const handleDelete = async (log: any) => {
+    if (!isAdmin) return;
+    if (!confirm("Tem a certeza que deseja eliminar este registo? Esta ação será registada no log de auditoria.")) return;
+
+    try {
+      await deleteHealthRecord(log.id);
+      
+      const targetPatient = allPatients.find(p => p.id === targetPatientId);
+      await logAuditAction({
+        userId: userProfile.id,
+        userName: userProfile.name,
+        userRole: userProfile.role,
+        actionType: 'ELIMINAÇÃO_REGISTO_SAÚDE',
+        targetId: targetPatientId,
+        targetName: targetPatient?.name || 'Paciente',
+        details: `Registo eliminado - Tipo: ${log.recordType.toUpperCase()}, Valor: ${log.value}, Data Original: ${log.recordedAt}`
+      });
+
+      toast({ title: "Eliminado", description: "O registo foi removido e a ação auditada." });
+      loadLogs();
+    } catch (e) {
+      toast({ variant: "destructive", title: "Erro", description: "Não foi possível eliminar o registo." });
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!isAdmin || !editingLog) return;
+
+    try {
+      const original = displayLogs.find(l => l.id === editingLog.id);
+      await updateHealthRecord(editingLog.id, editingLog);
+      
+      const targetPatient = allPatients.find(p => p.id === targetPatientId);
+      await logAuditAction({
+        userId: userProfile.id,
+        userName: userProfile.name,
+        userRole: userProfile.role,
+        actionType: 'EDIÇÃO_REGISTO_SAÚDE',
+        targetId: targetPatientId,
+        targetName: targetPatient?.name || 'Paciente',
+        details: `Edição Admin - Original: [${original.value}, Mood: ${original.mood}], Novo: [${editingLog.value}, Mood: ${editingLog.mood}], Notas: ${editingLog.notes}`
+      });
+
+      toast({ title: "Atualizado", description: "O registo foi alterado com sucesso." });
+      setEditingLog(null);
+      loadLogs();
+    } catch (e) {
+      toast({ variant: "destructive", title: "Erro", description: "Não foi possível atualizar o registo." });
     }
   };
 
@@ -330,7 +385,7 @@ function LogsPageContent() {
                   </div>
                 ) : displayLogs.length > 0 ? (
                   displayLogs.map((log) => (
-                    <div key={log.id} className="flex items-start gap-4 p-4 bg-white rounded-xl shadow-sm border border-secondary/10">
+                    <div key={log.id} className="group flex items-start gap-4 p-4 bg-white rounded-xl shadow-sm border border-secondary/10 relative">
                       <div className={cn(
                         "p-2 rounded-lg",
                         log.recordType === 'bp' ? "bg-red-50 text-red-500" : 
@@ -354,9 +409,21 @@ function LogsPageContent() {
                           </span>
                         </div>
                         {log.notes && <p className="text-sm text-muted-foreground italic mt-1">"{log.notes}"</p>}
-                        <p className="text-[10px] text-muted-foreground mt-1">
-                          {log.recordedAt ? format(parseISO(log.recordedAt), "d 'de' MMM", { locale: pt }) : ''}
-                        </p>
+                        <div className="flex justify-between items-center mt-1">
+                           <p className="text-[10px] text-muted-foreground">
+                            {log.recordedAt ? format(parseISO(log.recordedAt), "d 'de' MMM", { locale: pt }) : ''}
+                          </p>
+                          {isAdmin && (
+                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-primary" onClick={() => setEditingLog(log)}>
+                                <Edit2 className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(log)}>
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))
@@ -372,6 +439,45 @@ function LogsPageContent() {
           </Card>
         </div>
       </div>
+
+      {/* Diálogo de Edição para Admin */}
+      <Dialog open={!!editingLog} onOpenChange={(open) => !open && setEditingLog(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Editar Registo Clínico</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label>Valor da Medição</Label>
+              <Input value={editingLog?.value || ''} onChange={e => setEditingLog({...editingLog, value: e.target.value})} />
+              <p className="text-[10px] text-muted-foreground italic">Ex: 120/80 mmHg, 30 min, 75 kg</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Estado de Espírito</Label>
+              <Select value={editingLog?.mood || ""} onValueChange={v => setEditingLog({...editingLog, mood: v})}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {MOODS.map(m => (
+                    <SelectItem key={m.id} value={m.id}>{m.emoji} {m.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Notas</Label>
+              <Textarea value={editingLog?.notes || ''} onChange={e => setEditingLog({...editingLog, notes: e.target.value})} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingLog(null)}>Cancelar</Button>
+            <Button onClick={handleUpdate} className="bg-primary shadow-md">
+              <Save className="mr-2 h-4 w-4" /> Guardar Alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

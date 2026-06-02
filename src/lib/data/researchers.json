@@ -1,7 +1,7 @@
 [
   {
     "id": "researcher-id-01",
-    "name": "Investigador DiTech",
+    "name": "Anna",
     "email": "investigador@ditech.pt",
     "password": "investigador25",
     "role": "researcher",

@@ -51,3 +51,31 @@ export async function addHealthRecord(record: any) {
     throw new Error("Não foi possível guardar o registo clínico.");
   }
 }
+
+export async function deleteHealthRecord(recordId: string) {
+  await ensureFile();
+  try {
+    const data = await fs.readFile(DATA_FILE, 'utf8');
+    const allRecords = JSON.parse(data);
+    const filtered = allRecords.filter((r: any) => r.id !== recordId);
+    await fs.writeFile(DATA_FILE, JSON.stringify(filtered, null, 2), 'utf8');
+  } catch (error) {
+    throw new Error("Não foi possível eliminar o registo.");
+  }
+}
+
+export async function updateHealthRecord(recordId: string, updates: any) {
+  await ensureFile();
+  try {
+    const data = await fs.readFile(DATA_FILE, 'utf8');
+    const allRecords = JSON.parse(data);
+    const index = allRecords.findIndex((r: any) => r.id === recordId);
+    if (index === -1) throw new Error("Registo não encontrado.");
+
+    allRecords[index] = { ...allRecords[index], ...updates };
+    await fs.writeFile(DATA_FILE, JSON.stringify(allRecords, null, 2), 'utf8');
+    return allRecords[index];
+  } catch (error) {
+    throw new Error("Não foi possível atualizar o registo.");
+  }
+}

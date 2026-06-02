@@ -31,5 +31,16 @@
     "details": "Tipo: WEIGHT, Valor: 50 kg, Estado: 😢 Triste, Notas: N/A",
     "id": "009be641-823b-4c77-8838-751c32144472",
     "timestamp": "2026-06-02T14:06:38.533Z"
+  },
+  {
+    "userId": "patient-id-01",
+    "userName": "Maria A. Silva",
+    "userRole": "patient",
+    "actionType": "AUTO_REGISTO_SAÚDE",
+    "targetId": "patient-id-01",
+    "targetName": "Maria A. Silva",
+    "details": "Tipo: ACTIVITY, Valor: passeio (60 min), Estado: 😊 Feliz, Notas: satisfeita",
+    "id": "196b9bd0-28a5-4c7e-a942-8428c625cf11",
+    "timestamp": "2026-06-02T14:11:08.321Z"
   }
 ]

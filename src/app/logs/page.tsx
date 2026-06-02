@@ -31,22 +31,32 @@ const MOODS = [
 ];
 
 function getBPStatus(systolic: number, diastolic: number) {
-  if (!systolic || !diastolic) return null;
+  if (isNaN(systolic) || isNaN(diastolic)) return null;
   
   // Crise Hipertensiva (Emergência)
-  if (systolic >= 180 || diastolic >= 120) return { label: "Crise Hipertensiva", color: "bg-red-700 animate-pulse", text: "text-red-900 font-bold" };
+  if (systolic >= 180 || diastolic >= 120) {
+    return { label: "Crise Hipertensiva", color: "bg-red-700 animate-pulse", text: "text-red-900 font-bold" };
+  }
   
   // Hipertensão Grau 2
-  if (systolic >= 140 || diastolic >= 90) return { label: "Hipertensão Grau 2", color: "bg-red-500", text: "text-red-700" };
+  if (systolic >= 140 || diastolic >= 90) {
+    return { label: "Hipertensão Grau 2", color: "bg-red-500", text: "text-red-700" };
+  }
   
   // Hipertensão Grau 1
-  if (systolic >= 130 || diastolic >= 80) return { label: "Hipertensão Grau 1", color: "bg-orange-500", text: "text-orange-700" };
+  if (systolic >= 130 || diastolic >= 80) {
+    return { label: "Hipertensão Grau 1", color: "bg-orange-500", text: "text-orange-700" };
+  }
   
   // Elevada
-  if (systolic >= 120 && diastolic < 80) return { label: "Elevada", color: "bg-yellow-500", text: "text-yellow-700" };
-  
-  // Hipotensão (Tensão Baixa)
-  if (systolic < 90 || diastolic < 60) return { label: "Hipotensão", color: "bg-blue-600", text: "text-blue-800" };
+  if (systolic >= 120 && diastolic < 80) {
+    return { label: "Elevada", color: "bg-yellow-500", text: "text-yellow-700" };
+  }
+
+  // Hipotensão (Tensão Baixa) - Sistólica < 90 OU Diastólica < 60
+  if (systolic < 90 || diastolic < 60) {
+    return { label: "Hipotensão", color: "bg-blue-600", text: "text-blue-800" };
+  }
   
   // Normal
   return { label: "Normal", color: "bg-green-500", text: "text-green-700" };
@@ -90,7 +100,7 @@ function LogsPageContent() {
       setDisplayLogs(records || []);
     } catch (e) {
       console.error(e);
-      toast({ title: "Erro", description: "Falha ao carregar o histórico.", variant: "destructive" });
+      toast({ title: "Erro", description: "Falha ao carregar o histórico clínico.", variant: "destructive" });
     } finally {
       setIsLogsLoading(false);
     }
@@ -214,8 +224,9 @@ function LogsPageContent() {
           details: `Registo eliminado - Tipo: ${logType.toUpperCase()}, Valor: ${logValue}, Data Original: ${logDate}`
         });
 
-        toast({ title: "Eliminado", description: "O registo foi removido com sucesso." });
+        // Atualizar UI local imediatamente
         setDisplayLogs(prev => prev.filter(l => l.id !== logId));
+        toast({ title: "Eliminado", description: "O registo foi removido com sucesso." });
       } else {
         toast({ variant: "destructive", title: "Erro ao Apagar", description: result.error });
       }
@@ -223,6 +234,7 @@ function LogsPageContent() {
       toast({ variant: "destructive", title: "Erro", description: e.message || "Não foi possível ligar ao servidor." });
     } finally {
       setIsActionPending(false);
+      // Recarregar apenas para garantir sincronização final
       loadLogs();
     }
   };
@@ -341,7 +353,7 @@ function LogsPageContent() {
                       <div className={cn("w-3 h-3 rounded-full shrink-0", bpStatus.color)}></div>
                       <div className="flex-1">
                         <p className={cn("text-sm font-bold", bpStatus.text)}>Avaliação: {bpStatus.label}</p>
-                        <p className="text-[10px] opacity-80">Valores baseados em critérios clínicos gerais.</p>
+                        <p className="text-[10px] opacity-80">Valores de referência clínicos.</p>
                       </div>
                       <Info className="w-4 h-4 text-muted-foreground" />
                     </div>
@@ -446,6 +458,7 @@ function LogsPageContent() {
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
+                                title="Editar"
                                 className="h-8 w-8 text-primary hover:bg-primary/10" 
                                 onClick={() => setEditingLog(log)}
                                 disabled={isActionPending}
@@ -455,6 +468,7 @@ function LogsPageContent() {
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
+                                title="Eliminar"
                                 className="h-8 w-8 text-destructive hover:bg-destructive/10" 
                                 onClick={() => handleDelete(log.id, log.recordType, log.value, log.recordedAt)}
                                 disabled={isActionPending}
@@ -470,7 +484,7 @@ function LogsPageContent() {
                 ) : (
                   <div className="text-center py-10">
                     <p className="text-muted-foreground italic text-sm">
-                      Nenhum registo disponível.
+                      Nenhum registo disponível no ficheiro JSON.
                     </p>
                   </div>
                 )}

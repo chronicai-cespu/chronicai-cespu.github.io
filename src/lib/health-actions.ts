@@ -10,10 +10,15 @@ const DATA_FILE = path.join(process.cwd(), 'src/lib/data/clinical_records.json')
 
 async function ensureFile() {
   try {
-    await fs.access(DATA_FILE);
-  } catch {
-    await fs.mkdir(path.dirname(DATA_FILE), { recursive: true });
-    await fs.writeFile(DATA_FILE, '[]', 'utf8');
+    const dir = path.dirname(DATA_FILE);
+    await fs.mkdir(dir, { recursive: true });
+    try {
+      await fs.access(DATA_FILE);
+    } catch {
+      await fs.writeFile(DATA_FILE, '[]', 'utf8');
+    }
+  } catch (error) {
+    console.error('Erro ao assegurar ficheiro:', error);
   }
 }
 
@@ -72,10 +77,12 @@ export async function deleteHealthRecord(recordId: string) {
     }
 
     const initialLength = allRecords.length;
-    const filtered = allRecords.filter((r: any) => r.id !== recordId);
+    // Garantir que a comparação é feita entre strings
+    const filtered = allRecords.filter((r: any) => String(r.id) !== String(recordId));
     
     if (filtered.length === initialLength) {
-      return { success: false, error: "Registo não encontrado no ficheiro JSON." };
+      console.warn(`Tentativa de eliminar registo inexistente: ${recordId}`);
+      return { success: false, error: "Registo não encontrado no ficheiro." };
     }
 
     await fs.writeFile(DATA_FILE, JSON.stringify(filtered, null, 2), 'utf8');
@@ -84,8 +91,8 @@ export async function deleteHealthRecord(recordId: string) {
     revalidatePath('/dashboard');
     return { success: true };
   } catch (error: any) {
-    console.error('Erro ao eliminar:', error);
-    return { success: false, error: error.message || "Falha na escrita do ficheiro." };
+    console.error('Erro crítico ao eliminar registo:', error);
+    return { success: false, error: error.message || "Falha técnica na escrita do ficheiro." };
   }
 }
 
@@ -94,9 +101,9 @@ export async function updateHealthRecord(recordId: string, updates: any) {
   try {
     const data = await fs.readFile(DATA_FILE, 'utf8');
     const allRecords = JSON.parse(data);
-    const index = allRecords.findIndex((r: any) => r.id === recordId);
+    const index = allRecords.findIndex((r: any) => String(r.id) === String(recordId));
     
-    if (index === -1) throw new Error("Registo não encontrado.");
+    if (index === -1) throw new Error("Registo não encontrado para atualização.");
 
     allRecords[index] = { ...allRecords[index], ...updates };
     await fs.writeFile(DATA_FILE, JSON.stringify(allRecords, null, 2), 'utf8');
@@ -105,6 +112,6 @@ export async function updateHealthRecord(recordId: string, updates: any) {
     revalidatePath('/dashboard');
     return allRecords[index];
   } catch (error) {
-    throw new Error("Não foi possível atualizar o registo.");
+    throw new Error("Não foi possível atualizar o registo clínico.");
   }
 }

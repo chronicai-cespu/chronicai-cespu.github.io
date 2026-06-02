@@ -31,12 +31,24 @@ const MOODS = [
 
 function getBPStatus(systolic: number, diastolic: number) {
   if (!systolic || !diastolic) return null;
-  if (systolic < 120 && diastolic < 80) return { label: "Normal", color: "bg-green-500", text: "text-green-700" };
+  
+  // Crise Hipertensiva (Emergência)
   if (systolic >= 180 || diastolic >= 120) return { label: "Crise Hipertensiva", color: "bg-red-700 animate-pulse", text: "text-red-900 font-bold" };
+  
+  // Hipertensão Grau 2
   if (systolic >= 140 || diastolic >= 90) return { label: "Hipertensão Grau 2", color: "bg-red-500", text: "text-red-700" };
+  
+  // Hipertensão Grau 1
   if (systolic >= 130 || diastolic >= 80) return { label: "Hipertensão Grau 1", color: "bg-orange-500", text: "text-orange-700" };
+  
+  // Elevada
   if (systolic >= 120 && diastolic < 80) return { label: "Elevada", color: "bg-yellow-500", text: "text-yellow-700" };
-  return { label: "Vigiar", color: "bg-blue-500", text: "text-blue-700" };
+  
+  // Hipotensão (Tensão Baixa)
+  if (systolic < 90 || diastolic < 60) return { label: "Hipotensão", color: "bg-blue-600", text: "text-blue-800" };
+  
+  // Normal
+  return { label: "Normal", color: "bg-green-500", text: "text-green-700" };
 }
 
 function LogsPageContent() {
@@ -188,28 +200,29 @@ function LogsPageContent() {
 
     setIsActionPending(true);
     try {
-      await deleteHealthRecord(logId);
-      
-      const targetPatient = allPatients.find(p => p.id === targetPatientId);
-      await logAuditAction({
-        userId: userProfile.id,
-        userName: userProfile.name,
-        userRole: userProfile.role,
-        actionType: 'ELIMINAÇÃO_REGISTO_SAÚDE',
-        targetId: targetPatientId,
-        targetName: targetPatient?.name || 'Paciente',
-        details: `Registo eliminado - Tipo: ${logType.toUpperCase()}, Valor: ${logValue}, Data Original: ${logDate}`
-      });
+      const result = await deleteHealthRecord(logId);
+      if (result.success) {
+        const targetPatient = allPatients.find(p => p.id === targetPatientId);
+        await logAuditAction({
+          userId: userProfile.id,
+          userName: userProfile.name,
+          userRole: userProfile.role,
+          actionType: 'ELIMINAÇÃO_REGISTO_SAÚDE',
+          targetId: targetPatientId,
+          targetName: targetPatient?.name || 'Paciente',
+          details: `Registo eliminado - Tipo: ${logType.toUpperCase()}, Valor: ${logValue}, Data Original: ${logDate}`
+        });
 
-      toast({ title: "Eliminado", description: "O registo foi removido com sucesso." });
-      
-      // Atualiza o estado local imediatamente para feedback visual rápido
-      setDisplayLogs(prev => prev.filter(l => l.id !== logId));
+        toast({ title: "Eliminado", description: "O registo foi removido com sucesso." });
+        // Atualiza a lista localmente
+        setDisplayLogs(prev => prev.filter(l => l.id !== logId));
+      }
     } catch (e: any) {
       toast({ variant: "destructive", title: "Erro", description: e.message || "Não foi possível eliminar o registo." });
-      await loadLogs(); // Recarrega se falhar para sincronizar
     } finally {
       setIsActionPending(false);
+      // Força recarregamento para garantir consistência
+      loadLogs();
     }
   };
 

@@ -33,32 +33,26 @@ const MOODS = [
 function getBPStatus(systolic: number, diastolic: number) {
   if (isNaN(systolic) || isNaN(diastolic)) return null;
   
-  // Crise Hipertensiva (Emergência)
   if (systolic >= 180 || diastolic >= 120) {
     return { label: "Crise Hipertensiva", color: "bg-red-700 animate-pulse", text: "text-red-900 font-bold" };
   }
   
-  // Hipertensão Grau 2
   if (systolic >= 140 || diastolic >= 90) {
     return { label: "Hipertensão Grau 2", color: "bg-red-500", text: "text-red-700" };
   }
   
-  // Hipertensão Grau 1
   if (systolic >= 130 || diastolic >= 80) {
     return { label: "Hipertensão Grau 1", color: "bg-orange-500", text: "text-orange-700" };
   }
   
-  // Elevada
   if (systolic >= 120 && diastolic < 80) {
     return { label: "Elevada", color: "bg-yellow-500", text: "text-yellow-700" };
   }
 
-  // Hipotensão (Tensão Baixa) - Sistólica < 90 OU Diastólica < 60
   if (systolic < 90 || diastolic < 60) {
     return { label: "Hipotensão", color: "bg-blue-600", text: "text-blue-800" };
   }
   
-  // Normal
   return { label: "Normal", color: "bg-green-500", text: "text-green-700" };
 }
 
@@ -165,7 +159,7 @@ function LogsPageContent() {
 
     setIsActionPending(true);
     try {
-      await addHealthRecord({
+      const result = await addHealthRecord({
         patientProfileId: targetPatientId,
         recordType: type,
         value,
@@ -224,18 +218,17 @@ function LogsPageContent() {
           details: `Registo eliminado - Tipo: ${logType.toUpperCase()}, Valor: ${logValue}, Data Original: ${logDate}`
         });
 
-        // Atualizar UI local imediatamente
+        // Atualização OTIMISTA da UI (remove imediatamente da lista local)
         setDisplayLogs(prev => prev.filter(l => l.id !== logId));
-        toast({ title: "Eliminado", description: "O registo foi removido com sucesso." });
+        toast({ title: "Eliminado", description: "O registo foi removido do histórico JSON." });
       } else {
-        toast({ variant: "destructive", title: "Erro ao Apagar", description: result.error });
+        toast({ variant: "destructive", title: "Erro", description: result.error || "Registo não encontrado." });
       }
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Erro", description: e.message || "Não foi possível ligar ao servidor." });
+      toast({ variant: "destructive", title: "Erro", description: "Ocorreu um erro ao processar a eliminação." });
     } finally {
       setIsActionPending(false);
-      // Recarregar apenas para garantir sincronização final
-      loadLogs();
+      // Não recarregamos imediatamente para evitar race conditions com o FS
     }
   };
 

@@ -77,12 +77,12 @@ export async function deleteHealthRecord(recordId: string) {
     }
 
     const initialLength = allRecords.length;
-    // Garantir que a comparação é feita entre strings
-    const filtered = allRecords.filter((r: any) => String(r.id) !== String(recordId));
+    // Comparação robusta de IDs (trim e case-insensitive para segurança extra)
+    const targetId = String(recordId).trim().toLowerCase();
+    const filtered = allRecords.filter((r: any) => String(r.id).trim().toLowerCase() !== targetId);
     
     if (filtered.length === initialLength) {
-      console.warn(`Tentativa de eliminar registo inexistente: ${recordId}`);
-      return { success: false, error: "Registo não encontrado no ficheiro." };
+      return { success: false, error: "Registo não encontrado no ficheiro JSON." };
     }
 
     await fs.writeFile(DATA_FILE, JSON.stringify(filtered, null, 2), 'utf8');
@@ -92,7 +92,7 @@ export async function deleteHealthRecord(recordId: string) {
     return { success: true };
   } catch (error: any) {
     console.error('Erro crítico ao eliminar registo:', error);
-    return { success: false, error: error.message || "Falha técnica na escrita do ficheiro." };
+    return { success: false, error: "Falha técnica ao escrever no ficheiro." };
   }
 }
 
@@ -101,7 +101,8 @@ export async function updateHealthRecord(recordId: string, updates: any) {
   try {
     const data = await fs.readFile(DATA_FILE, 'utf8');
     const allRecords = JSON.parse(data);
-    const index = allRecords.findIndex((r: any) => String(r.id) === String(recordId));
+    const targetId = String(recordId).trim().toLowerCase();
+    const index = allRecords.findIndex((r: any) => String(r.id).trim().toLowerCase() === targetId);
     
     if (index === -1) throw new Error("Registo não encontrado para atualização.");
 

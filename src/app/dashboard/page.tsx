@@ -62,10 +62,10 @@ export default function Dashboard() {
         console.error("Failed to fetch dashboard data", error);
       }
     }
-    if (userProfile && role === 'patient') {
+    if (userProfile && role === 'patient' && isMounted) {
       fetchData();
     }
-  }, [userProfile, role]);
+  }, [userProfile, role, isMounted]);
 
   const activityData = useMemo(() => {
     if (!isMounted) return [];
@@ -131,7 +131,9 @@ export default function Dashboard() {
                 {recentLogs.map((log: any) => (
                   <div key={log.id} className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
                     <span className="font-bold">{log.value}</span>
-                    <span className="text-xs text-muted-foreground">{format(parseISO(log.recordedAt), 'd MMM')}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {format(parseISO(log.recordedAt), 'd MMM', { locale: pt })}
+                    </span>
                   </div>
                 ))}
               </div>

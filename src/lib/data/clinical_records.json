@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "patientProfileId": "patient-id-01",
+    "recordType": "bp",
+    "value": "99/63 mmHg",
+    "notes": "",
+    "mood": "cansado",
+    "id": "ce395ef5-e88e-4770-add8-eac4f3346f29",
+    "recordedAt": "2026-06-02T13:42:55.989Z"
+  },
+  {
+    "patientProfileId": "patient-id-01",
+    "recordType": "bp",
+    "value": "98/65 mmHg",
+    "notes": "",
+    "mood": "pensativo",
+    "id": "f00f3c62-9aa3-4f27-b280-d4e423129b32",
+    "recordedAt": "2026-06-02T13:44:08.931Z"
+  }
+]

@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShieldAlert, Trash2, Edit, UserPlus, Save, RefreshCw, Loader2 } from 'lucide-react';
+import { ShieldAlert, Trash2, Edit, UserPlus, Save, RefreshCw, Loader2, History } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
@@ -91,8 +91,11 @@ export default function AdminPage() {
           <h1 className="text-3xl font-bold flex items-center gap-2"><ShieldAlert className="text-primary" /> Gestão de Utilizadores (JSON)</h1>
           <p className="text-muted-foreground">Administração central de contas guardadas em ficheiros locais.</p>
         </div>
-        <div className="flex gap-2 w-full sm:w-auto">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <Button variant="outline" onClick={loadUsers} className="flex-1 sm:flex-none"><RefreshCw className="mr-2 h-4 w-4" /> Atualizar</Button>
+          <Button asChild variant="secondary" className="flex-1 sm:flex-none">
+            <Link href="/admin/audit-logs"><History className="mr-2 h-4 w-4" /> Auditoria</Link>
+          </Button>
           <Button asChild className="rounded-full flex-1 sm:flex-none"><Link href="/register"><UserPlus className="mr-2 h-4 w-4" /> Novo Utilizador</Link></Button>
         </div>
       </header>

@@ -19,6 +19,7 @@ import { pt } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { getUsers } from '@/lib/user-actions';
 import { getHealthRecords, addHealthRecord } from '@/lib/health-actions';
+import { logAuditAction } from '@/lib/audit-actions';
 
 const MOODS = [
   { id: 'feliz', emoji: '😊', label: 'Feliz' },
@@ -129,9 +130,23 @@ function LogsPageContent() {
         mood: selectedMood
       });
 
+      // Registo de auditoria se for um investigador/admin a fazer a ação
+      if (canManagePatients) {
+        const targetPatient = allPatients.find(p => p.id === targetPatientId);
+        await logAuditAction({
+          userId: userProfile.id,
+          userName: userProfile.name,
+          userRole: userProfile.role,
+          actionType: 'CRIAÇÃO_REGISTO_SAÚDE',
+          targetId: targetPatientId,
+          targetName: targetPatient?.name || 'Paciente',
+          details: `Tipo: ${type}, Valor: ${value}, Notas: ${notes || 'N/A'}`
+        });
+      }
+
       toast({
         title: "Sucesso",
-        description: canManagePatients ? "Registo clínico inserido com sucesso." : "O seu registo foi guardado com sucesso!",
+        description: canManagePatients ? "Registo clínico inserido e auditado com sucesso." : "O seu registo foi guardado com sucesso!",
       });
 
       if (type === 'bp') { setSystolic(''); setDiastolic(''); }

@@ -1,4 +1,3 @@
-
 [
   {
     "id": "patient-id-01",
@@ -8,7 +7,9 @@
     "role": "patient",
     "assignedCode": "p01",
     "mobileNumber": "930000000",
-    "chronicDiseases": ["Hipertensão"],
+    "chronicDiseases": [
+      "Hipertensão"
+    ],
     "createdAt": "2025-01-15T09:00:00.000Z"
   },
   {
@@ -19,7 +20,21 @@
     "role": "patient",
     "assignedCode": "p02",
     "mobileNumber": "960000000",
-    "chronicDiseases": ["Diabetes", "Colesterol"],
+    "chronicDiseases": [
+      "Diabetes",
+      "Colesterol"
+    ],
     "createdAt": "2025-01-16T14:30:00.000Z"
+  },
+  {
+    "name": "Isabel M. Nunes",
+    "email": "isabel.nunes@email.com",
+    "password": "isabel1234",
+    "mobileNumber": "nome incompleto",
+    "role": "patient",
+    "id": "8502a588-8369-449b-bda9-e8a1c5034ec4",
+    "assignedCode": "p03",
+    "createdAt": "2026-06-02T13:51:49.668Z",
+    "chronicDiseases": []
   }
 ]

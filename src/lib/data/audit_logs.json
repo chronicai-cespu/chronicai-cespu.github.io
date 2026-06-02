@@ -64,5 +64,16 @@
     "details": "Tipo: BP, Valor: 72/41 mmHg, Estado: 😢 Triste, Notas: N/A",
     "id": "4bd1fede-9340-4ba2-b0cc-8ec2d6f5eb91",
     "timestamp": "2026-06-02T14:20:25.053Z"
+  },
+  {
+    "userId": "researcher-id-01",
+    "userName": "Anna",
+    "userRole": "researcher",
+    "actionType": "CRIAÇÃO_REGISTO_SAÚDE",
+    "targetId": "patient-id-01",
+    "targetName": "Maria A. Silva",
+    "details": "Tipo: BP, Valor: 127/76 mmHg, Estado: N/A, Notas: N/A",
+    "id": "338620d3-3152-4444-9274-b97d17abadfa",
+    "timestamp": "2026-06-02T14:48:49.945Z"
   }
 ]

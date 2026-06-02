@@ -1,3 +1,4 @@
+
 'use server';
 
 import fs from 'fs/promises';
@@ -70,10 +71,11 @@ export async function deleteHealthRecord(recordId: string) {
       allRecords = [];
     }
 
+    const initialLength = allRecords.length;
     const filtered = allRecords.filter((r: any) => r.id !== recordId);
     
-    if (allRecords.length === filtered.length) {
-      throw new Error("Registo não encontrado nos dados locais.");
+    if (filtered.length === initialLength) {
+      return { success: false, error: "Registo não encontrado no ficheiro JSON." };
     }
 
     await fs.writeFile(DATA_FILE, JSON.stringify(filtered, null, 2), 'utf8');
@@ -83,7 +85,7 @@ export async function deleteHealthRecord(recordId: string) {
     return { success: true };
   } catch (error: any) {
     console.error('Erro ao eliminar:', error);
-    throw new Error(error.message || "Não foi possível eliminar o registo.");
+    return { success: false, error: error.message || "Falha na escrita do ficheiro." };
   }
 }
 

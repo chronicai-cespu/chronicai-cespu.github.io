@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, Suspense, useCallback, useMemo } from 'react';
@@ -214,14 +215,14 @@ function LogsPageContent() {
         });
 
         toast({ title: "Eliminado", description: "O registo foi removido com sucesso." });
-        // Atualiza a lista localmente
         setDisplayLogs(prev => prev.filter(l => l.id !== logId));
+      } else {
+        toast({ variant: "destructive", title: "Erro ao Apagar", description: result.error });
       }
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Erro", description: e.message || "Não foi possível eliminar o registo." });
+      toast({ variant: "destructive", title: "Erro", description: e.message || "Não foi possível ligar ao servidor." });
     } finally {
       setIsActionPending(false);
-      // Força recarregamento para garantir consistência
       loadLogs();
     }
   };

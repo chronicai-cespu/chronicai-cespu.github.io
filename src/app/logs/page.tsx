@@ -20,6 +20,14 @@ import { cn } from '@/lib/utils';
 import { getUsers } from '@/lib/user-actions';
 import { getHealthRecords, addHealthRecord } from '@/lib/health-actions';
 
+const MOODS = [
+  { id: 'feliz', emoji: '😊', label: 'Feliz' },
+  { id: 'triste', emoji: '😢', label: 'Triste' },
+  { id: 'cansado', emoji: '😫', label: 'Cansado' },
+  { id: 'doente', emoji: '🤒', label: 'Doente' },
+  { id: 'pensativo', emoji: '🤔', label: 'Pensativo' },
+];
+
 function LogsPageContent() {
   const { role, userProfile, isLoading: isContextLoading } = useHealth();
   const { toast } = useToast();
@@ -33,6 +41,7 @@ function LogsPageContent() {
   const [activityDuration, setActivityDuration] = useState('');
   const [weight, setWeight] = useState<string>('');
   const [notes, setNotes] = useState('');
+  const [selectedMood, setSelectedMood] = useState<string | null>(null);
   
   const [allPatients, setAllPatients] = useState<any[]>([]);
   const [displayLogs, setDisplayLogs] = useState<any[]>([]);
@@ -116,7 +125,8 @@ function LogsPageContent() {
         patientProfileId: targetPatientId,
         recordType: type,
         value,
-        notes: notes || ''
+        notes: notes || '',
+        mood: selectedMood
       });
 
       toast({
@@ -128,6 +138,7 @@ function LogsPageContent() {
       if (type === 'activity') { setActivityType(''); setActivityDuration(''); }
       if (type === 'weight') setWeight('');
       setNotes('');
+      setSelectedMood(null);
       loadLogs();
     } catch (e) {
       toast({ title: "Erro", description: "Falha ao gravar os dados.", variant: "destructive" });
@@ -237,7 +248,7 @@ function LogsPageContent() {
                     </div>
                   )}
 
-                  <LogFields notes={notes} setNotes={setNotes} onLog={() => handleLog('bp')} isManagement={canManagePatients} />
+                  <LogFields notes={notes} setNotes={setNotes} selectedMood={selectedMood} setSelectedMood={setSelectedMood} onLog={() => handleLog('bp')} isManagement={canManagePatients} />
                 </TabsContent>
 
                 <TabsContent value="activity" className="space-y-6 mt-0">
@@ -263,7 +274,7 @@ function LogsPageContent() {
                       </Select>
                     </div>
                   </div>
-                  <LogFields notes={notes} setNotes={setNotes} onLog={() => handleLog('activity')} isManagement={canManagePatients} />
+                  <LogFields notes={notes} setNotes={setNotes} selectedMood={selectedMood} setSelectedMood={setSelectedMood} onLog={() => handleLog('activity')} isManagement={canManagePatients} />
                 </TabsContent>
 
                 <TabsContent value="weight" className="space-y-6 mt-0">
@@ -278,7 +289,7 @@ function LogsPageContent() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <LogFields notes={notes} setNotes={setNotes} onLog={() => handleLog('weight')} isManagement={canManagePatients} />
+                  <LogFields notes={notes} setNotes={setNotes} selectedMood={selectedMood} setSelectedMood={setSelectedMood} onLog={() => handleLog('weight')} isManagement={canManagePatients} />
                 </TabsContent>
               </div>
             </Tabs>
@@ -314,7 +325,14 @@ function LogsPageContent() {
                       </div>
                       <div className="flex-1">
                         <div className="flex justify-between items-start">
-                          <p className="font-bold text-lg">{log.value}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-bold text-lg">{log.value}</p>
+                            {log.mood && (
+                              <span className="text-xl" title={MOODS.find(m => m.id === log.mood)?.label}>
+                                {MOODS.find(m => m.id === log.mood)?.emoji}
+                              </span>
+                            )}
+                          </div>
                           <span className="text-xs text-muted-foreground">
                             {log.recordedAt ? format(parseISO(log.recordedAt), 'HH:mm') : '...'}
                           </span>
@@ -342,9 +360,36 @@ function LogsPageContent() {
   );
 }
 
-function LogFields({ notes, setNotes, onLog, isManagement }: { notes: string, setNotes: (v: string) => void, onLog: () => void, isManagement?: boolean }) {
+function LogFields({ notes, setNotes, selectedMood, setSelectedMood, onLog, isManagement }: { notes: string, setNotes: (v: string) => void, selectedMood: string | null, setSelectedMood: (v: string | null) => void, onLog: () => void, isManagement?: boolean }) {
   return (
-    <div className="space-y-4 pt-4 border-t">
+    <div className="space-y-6 pt-4 border-t">
+      <div className="space-y-4">
+        <Label className="text-base font-bold text-primary block text-center">Como se sente agora?</Label>
+        <div className="flex justify-between gap-2">
+          {MOODS.map((mood) => (
+            <button
+              key={mood.id}
+              type="button"
+              onClick={() => setSelectedMood(mood.id)}
+              className={cn(
+                "flex flex-col items-center gap-1 p-3 rounded-2xl transition-all border-2",
+                selectedMood === mood.id 
+                  ? "bg-primary/10 border-primary scale-110 shadow-md" 
+                  : "bg-muted/30 border-transparent hover:bg-muted/50"
+              )}
+            >
+              <span className="text-3xl md:text-4xl">{mood.emoji}</span>
+              <span className={cn(
+                "text-[10px] md:text-xs font-bold uppercase",
+                selectedMood === mood.id ? "text-primary" : "text-muted-foreground"
+              )}>
+                {mood.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="notes">Notas ou Observações Clínicas</Label>
         <Textarea 

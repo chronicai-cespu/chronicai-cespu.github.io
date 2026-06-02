@@ -1,4 +1,3 @@
-
 'use server';
 
 import fs from 'fs/promises';
@@ -65,13 +64,15 @@ export async function deleteHealthRecord(recordId: string) {
   await ensureFile();
   try {
     const data = await fs.readFile(DATA_FILE, 'utf8');
-    const allRecords = JSON.parse(data);
+    let allRecords = JSON.parse(data);
     
-    // Filtra garantindo que comparamos strings limpas
-    const initialCount = allRecords.length;
-    const filtered = allRecords.filter((r: any) => r.id.toString() !== recordId.toString());
+    if (!Array.isArray(allRecords)) {
+      allRecords = [];
+    }
+
+    const filtered = allRecords.filter((r: any) => r.id !== recordId);
     
-    if (initialCount === filtered.length) {
+    if (allRecords.length === filtered.length) {
       throw new Error("Registo não encontrado nos dados locais.");
     }
 
@@ -91,7 +92,7 @@ export async function updateHealthRecord(recordId: string, updates: any) {
   try {
     const data = await fs.readFile(DATA_FILE, 'utf8');
     const allRecords = JSON.parse(data);
-    const index = allRecords.findIndex((r: any) => r.id.toString() === recordId.toString());
+    const index = allRecords.findIndex((r: any) => r.id === recordId);
     
     if (index === -1) throw new Error("Registo não encontrado.");
 

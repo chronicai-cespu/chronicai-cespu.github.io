@@ -1,7 +1,6 @@
-
 "use client"
 
-import { useState, useEffect, Suspense, useCallback } from 'react';
+import { useState, useEffect, Suspense, useCallback, useMemo } from 'react';
 import { useHealth } from '@/components/health-context';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { HeartPulse, Activity, Scale, ClipboardList, CheckCircle2, AlertTriangle, Loader2, RefreshCw, Trash2, Edit2, Save } from 'lucide-react';
+import { HeartPulse, Activity, Scale, ClipboardList, CheckCircle2, AlertTriangle, Loader2, RefreshCw, Trash2, Edit2, Save, Info } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
@@ -29,6 +28,16 @@ const MOODS = [
   { id: 'doente', emoji: '🤒', label: 'Doente' },
   { id: 'pensativo', emoji: '🤔', label: 'Pensativo' },
 ];
+
+function getBPStatus(systolic: number, diastolic: number) {
+  if (!systolic || !diastolic) return null;
+  if (systolic < 120 && diastolic < 80) return { label: "Normal", color: "bg-green-500", text: "text-green-700" };
+  if (systolic >= 180 || diastolic >= 120) return { label: "Crise Hipertensiva", color: "bg-red-700 animate-pulse", text: "text-red-900 font-bold" };
+  if (systolic >= 140 || diastolic >= 90) return { label: "Hipertensão Grau 2", color: "bg-red-500", text: "text-red-700" };
+  if (systolic >= 130 || diastolic >= 80) return { label: "Hipertensão Grau 1", color: "bg-orange-500", text: "text-orange-700" };
+  if (systolic >= 120 && diastolic < 80) return { label: "Elevada", color: "bg-yellow-500", text: "text-yellow-700" };
+  return { label: "Vigiar", color: "bg-blue-500", text: "text-blue-700" };
+}
 
 function LogsPageContent() {
   const { role, userProfile, isLoading: isContextLoading } = useHealth();
@@ -50,11 +59,15 @@ function LogsPageContent() {
   const [isLogsLoading, setIsLogsLoading] = useState(false);
   const [isActionPending, setIsActionPending] = useState(false);
 
-  // Estados para edição
   const [editingLog, setEditingLog] = useState<any>(null);
 
   const canManagePatients = role === 'admin' || role === 'researcher';
   const isAdmin = role === 'admin';
+
+  const bpStatus = useMemo(() => {
+    if (!systolic || !diastolic) return null;
+    return getBPStatus(parseInt(systolic), parseInt(diastolic));
+  }, [systolic, diastolic]);
 
   const loadLogs = useCallback(async () => {
     if (!targetPatientId) return;
@@ -87,8 +100,10 @@ function LogsPageContent() {
   }, [canManagePatients, userProfile, patientIdFromUrl]);
 
   useEffect(() => {
-    loadLogs();
-  }, [loadLogs]);
+    if (targetPatientId) {
+      loadLogs();
+    }
+  }, [targetPatientId, loadLogs]);
 
   if (isContextLoading || !userProfile) {
     return (
@@ -151,7 +166,7 @@ function LogsPageContent() {
 
       toast({
         title: "Sucesso",
-        description: canManagePatients ? "Registo clínico inserido e auditado com sucesso." : "O seu registo foi guardado com sucesso!",
+        description: "O registo foi guardado com sucesso!",
       });
 
       if (type === 'bp') { setSystolic(''); setDiastolic(''); }
@@ -167,13 +182,13 @@ function LogsPageContent() {
     }
   };
 
-  const handleDelete = async (log: any) => {
+  const handleDelete = async (logId: string, logType: string, logValue: string, logDate: string) => {
     if (!isAdmin || isActionPending) return;
     if (!window.confirm("Tem a certeza que deseja eliminar este registo? Esta ação será registada no log de auditoria.")) return;
 
     setIsActionPending(true);
     try {
-      await deleteHealthRecord(log.id);
+      await deleteHealthRecord(logId);
       
       const targetPatient = allPatients.find(p => p.id === targetPatientId);
       await logAuditAction({
@@ -183,13 +198,16 @@ function LogsPageContent() {
         actionType: 'ELIMINAÇÃO_REGISTO_SAÚDE',
         targetId: targetPatientId,
         targetName: targetPatient?.name || 'Paciente',
-        details: `Registo eliminado - Tipo: ${log.recordType.toUpperCase()}, Valor: ${log.value}, Data Original: ${log.recordedAt}`
+        details: `Registo eliminado - Tipo: ${logType.toUpperCase()}, Valor: ${logValue}, Data Original: ${logDate}`
       });
 
-      toast({ title: "Eliminado", description: "O registo foi removido do JSON e a ação auditada." });
-      await loadLogs();
+      toast({ title: "Eliminado", description: "O registo foi removido com sucesso." });
+      
+      // Atualiza o estado local imediatamente para feedback visual rápido
+      setDisplayLogs(prev => prev.filter(l => l.id !== logId));
     } catch (e: any) {
       toast({ variant: "destructive", title: "Erro", description: e.message || "Não foi possível eliminar o registo." });
+      await loadLogs(); // Recarrega se falhar para sincronizar
     } finally {
       setIsActionPending(false);
     }
@@ -235,19 +253,19 @@ function LogsPageContent() {
         <div>
           <h1 className="text-3xl font-bold font-headline text-secondary flex items-center gap-3">
             <ClipboardList className="h-8 w-8 text-primary" /> 
-            {canManagePatients ? 'Inserção de Registos Clínicos' : 'Registo de Saúde Diário'}
+            {canManagePatients ? 'Gestão de Registos Clínicos' : 'Registo de Saúde Diário'}
           </h1>
           <p className="text-muted-foreground text-lg">
-            {canManagePatients ? 'Adicione medições para um paciente participante.' : 'Mantenha o seu histórico atualizado. É simples e rápido.'}
+            {canManagePatients ? 'Monitorização e registo para pacientes do estudo.' : 'Mantenha o seu histórico atualizado para um melhor acompanhamento.'}
           </p>
         </div>
         
         {canManagePatients && (
           <div className="w-full md:w-80 space-y-2">
-            <Label className="text-xs font-bold uppercase text-primary">Selecionar Paciente</Label>
+            <Label className="text-xs font-bold uppercase text-primary">Paciente em Foco</Label>
             <Select value={targetPatientId} onValueChange={setTargetPatientId}>
               <SelectTrigger className="h-12 border-primary bg-primary/5">
-                <SelectValue placeholder="Escolha um paciente..." />
+                <SelectValue placeholder="Selecione um paciente..." />
               </SelectTrigger>
               <SelectContent>
                 {allPatients.map(p => (
@@ -303,22 +321,34 @@ function LogsPageContent() {
                       </Select>
                     </div>
                   </div>
+
+                  {bpStatus && (
+                    <div className={cn("p-4 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2", bpStatus.color.replace('bg-', 'bg-').concat('/10'))}>
+                      <div className={cn("w-3 h-3 rounded-full shrink-0", bpStatus.color)}></div>
+                      <div className="flex-1">
+                        <p className={cn("text-sm font-bold", bpStatus.text)}>Avaliação: {bpStatus.label}</p>
+                        <p className="text-[10px] opacity-80">Valores baseados em critérios clínicos gerais.</p>
+                      </div>
+                      <Info className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  )}
+
                   <LogFields notes={notes} setNotes={setNotes} selectedMood={selectedMood} setSelectedMood={setSelectedMood} onLog={() => handleLog('bp')} isManagement={canManagePatients} disabled={isActionPending} />
                 </TabsContent>
 
                 <TabsContent value="activity" className="space-y-6 mt-0">
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label className="text-sm font-bold">Tipo de Atividade</Label>
+                      <Label className="text-sm font-bold">O que fez hoje?</Label>
                       <Input 
-                        placeholder="ex: Caminhada, Hidroginástica..." 
+                        placeholder="Ex: Passeio no parque, Ginástica..." 
                         className="h-14 text-lg"
                         value={activityType}
                         onChange={(e) => setActivityType(e.target.value)}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm font-bold">Duração (Minutos)</Label>
+                      <Label className="text-sm font-bold">Durante quanto tempo? (Minutos)</Label>
                       <Select value={activityDuration} onValueChange={setActivityDuration}>
                         <SelectTrigger className="h-14 text-lg">
                           <SelectValue placeholder="Selecione o tempo..." />
@@ -334,7 +364,7 @@ function LogsPageContent() {
 
                 <TabsContent value="weight" className="space-y-6 mt-0">
                   <div className="space-y-2">
-                    <Label className="text-sm font-bold">Peso Atual (kg)</Label>
+                    <Label className="text-sm font-bold">Qual é o seu peso atual? (kg)</Label>
                     <Select value={weight} onValueChange={setWeight}>
                       <SelectTrigger className="h-14 text-xl">
                         <SelectValue placeholder="Selecione o peso..." />
@@ -355,7 +385,7 @@ function LogsPageContent() {
           <Card className="shadow-md border-none h-full bg-secondary/5">
             <CardHeader className="border-b bg-white rounded-t-lg">
               <CardTitle className="text-xl flex items-center justify-between">
-                <span>Histórico (JSON)</span>
+                <span>Histórico Recente</span>
                 <Button variant="ghost" size="icon" onClick={loadLogs} className="h-8 w-8">
                   <RefreshCw className={cn("h-4 w-4", isLogsLoading && "animate-spin")} />
                 </Button>
@@ -392,7 +422,7 @@ function LogsPageContent() {
                             {log.recordedAt ? format(parseISO(log.recordedAt), 'HH:mm') : '...'}
                           </span>
                         </div>
-                        {log.notes && <p className="text-sm text-muted-foreground italic mt-1">"{log.notes}"</p>}
+                        {log.notes && <p className="text-sm text-muted-foreground italic mt-1 leading-tight">"{log.notes}"</p>}
                         <div className="flex justify-between items-center mt-2">
                            <p className="text-[10px] text-muted-foreground">
                             {log.recordedAt ? format(parseISO(log.recordedAt), "d 'de' MMM", { locale: pt }) : ''}
@@ -402,20 +432,20 @@ function LogsPageContent() {
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="h-7 w-7 text-primary hover:bg-primary/10" 
+                                className="h-8 w-8 text-primary hover:bg-primary/10" 
                                 onClick={() => setEditingLog(log)}
                                 disabled={isActionPending}
                               >
-                                <Edit2 className="h-3.5 w-3.5" />
+                                <Edit2 className="h-4 w-4" />
                               </Button>
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="h-7 w-7 text-destructive hover:bg-destructive/10" 
-                                onClick={() => handleDelete(log)}
+                                className="h-8 w-8 text-destructive hover:bg-destructive/10" 
+                                onClick={() => handleDelete(log.id, log.recordType, log.value, log.recordedAt)}
                                 disabled={isActionPending}
                               >
-                                <Trash2 className="h-3.5 w-3.5" />
+                                <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
                           )}
@@ -426,7 +456,7 @@ function LogsPageContent() {
                 ) : (
                   <div className="text-center py-10">
                     <p className="text-muted-foreground italic text-sm">
-                      Nenhum registo encontrado para este paciente.
+                      Nenhum registo disponível.
                     </p>
                   </div>
                 )}
@@ -436,21 +466,19 @@ function LogsPageContent() {
         </div>
       </div>
 
-      {/* Diálogo de Edição para Admin */}
       <Dialog open={!!editingLog} onOpenChange={(open) => !open && !isActionPending && setEditingLog(null)}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Editar Registo Clínico</DialogTitle>
+            <DialogTitle>Editar Medição Clínica</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label>Valor da Medição</Label>
+              <Label>Valor do Registo</Label>
               <Input 
                 value={editingLog?.value || ''} 
                 onChange={e => setEditingLog({...editingLog, value: e.target.value})}
                 disabled={isActionPending}
               />
-              <p className="text-[10px] text-muted-foreground italic">Ex: 120/80 mmHg, 30 min, 75 kg</p>
             </div>
             <div className="space-y-2">
               <Label>Estado de Espírito</Label>
@@ -470,7 +498,7 @@ function LogsPageContent() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Notas</Label>
+              <Label>Observações</Label>
               <Textarea 
                 value={editingLog?.notes || ''} 
                 onChange={e => setEditingLog({...editingLog, notes: e.target.value})}
@@ -480,7 +508,7 @@ function LogsPageContent() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingLog(null)} disabled={isActionPending}>Cancelar</Button>
-            <Button onClick={handleUpdate} className="bg-primary shadow-md" disabled={isActionPending}>
+            <Button onClick={handleUpdate} className="bg-primary" disabled={isActionPending}>
               {isActionPending ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Save className="mr-2 h-4 w-4" />}
               Guardar Alterações
             </Button>
@@ -495,8 +523,8 @@ function LogFields({ notes, setNotes, selectedMood, setSelectedMood, onLog, isMa
   return (
     <div className="space-y-6 pt-4 border-t">
       <div className="space-y-4">
-        <Label className="text-base font-bold text-primary block text-center">Como se sente agora?</Label>
-        <div className="flex justify-between gap-2">
+        <Label className="text-base font-bold text-primary block text-center">Como se sente neste momento?</Label>
+        <div className="flex justify-between gap-1 sm:gap-2">
           {MOODS.map((mood) => (
             <button
               key={mood.id}
@@ -504,16 +532,16 @@ function LogFields({ notes, setNotes, selectedMood, setSelectedMood, onLog, isMa
               disabled={disabled}
               onClick={() => setSelectedMood(mood.id)}
               className={cn(
-                "flex flex-col items-center gap-1 p-3 rounded-2xl transition-all border-2",
+                "flex flex-col items-center gap-1 p-2 sm:p-3 rounded-2xl transition-all border-2",
                 selectedMood === mood.id 
-                  ? "bg-primary/10 border-primary scale-110 shadow-md" 
+                  ? "bg-primary/10 border-primary scale-105 shadow-md" 
                   : "bg-muted/30 border-transparent hover:bg-muted/50",
                 disabled && "opacity-50 cursor-not-allowed"
               )}
             >
-              <span className="text-3xl md:text-4xl">{mood.emoji}</span>
+              <span className="text-2xl sm:text-4xl">{mood.emoji}</span>
               <span className={cn(
-                "text-[10px] md:text-xs font-bold uppercase",
+                "text-[9px] sm:text-xs font-bold uppercase",
                 selectedMood === mood.id ? "text-primary" : "text-muted-foreground"
               )}>
                 {mood.label}
@@ -524,12 +552,12 @@ function LogFields({ notes, setNotes, selectedMood, setSelectedMood, onLog, isMa
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="notes">Notas ou Observações Clínicas</Label>
+        <Label htmlFor="notes">Notas e Observações (Opcional)</Label>
         <Textarea 
           id="notes" 
           disabled={disabled}
-          placeholder={isManagement ? "Adicione observações sobre a medição..." : "Como se sente no momento?"} 
-          className="min-h-[100px] text-lg bg-muted/20"
+          placeholder={isManagement ? "Indique observações relevantes..." : "Algo que queira registar sobre como se sente?"} 
+          className="min-h-[100px] text-lg bg-muted/10 border-muted"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
         />
@@ -538,12 +566,12 @@ function LogFields({ notes, setNotes, selectedMood, setSelectedMood, onLog, isMa
         onClick={onLog} 
         disabled={disabled}
         className={cn(
-          "w-full h-14 text-xl rounded-full shadow-lg",
+          "w-full h-16 text-xl rounded-full shadow-lg transition-transform active:scale-95",
           isManagement ? "bg-secondary hover:bg-secondary/90" : "bg-primary hover:bg-primary/90"
         )}
       >
         {disabled ? <Loader2 className="animate-spin mr-2 h-6 w-6" /> : <CheckCircle2 className="mr-2 h-6 w-6" />}
-        {isManagement ? "Confirmar Registo Clínico" : "Guardar no Histórico"}
+        {isManagement ? "Confirmar Medição Clínica" : "Guardar no meu Histórico"}
       </Button>
     </div>
   );

@@ -52,5 +52,14 @@
     "mood": "feliz",
     "id": "52cca9b4-c7be-43f3-b6a8-bd5fdf69ab66",
     "recordedAt": "2026-06-02T14:11:07.999Z"
+  },
+  {
+    "patientProfileId": "patient-id-01",
+    "recordType": "bp",
+    "value": "72/41 mmHg",
+    "notes": "",
+    "mood": "triste",
+    "id": "bcef3e27-7ec0-4ecf-bd25-b1cd3828654e",
+    "recordedAt": "2026-06-02T14:20:24.631Z"
   }
 ]

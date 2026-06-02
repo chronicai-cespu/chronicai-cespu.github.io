@@ -53,5 +53,16 @@
     "details": "Edição Admin - Original: [52 kg, Mood: pensativo], Novo: [55, Mood: pensativo], Notas: ",
     "id": "1fa6cdf7-2e09-48cc-9ab9-76a9931a6b0e",
     "timestamp": "2026-06-02T14:15:05.677Z"
+  },
+  {
+    "userId": "patient-id-01",
+    "userName": "Maria A. Silva",
+    "userRole": "patient",
+    "actionType": "AUTO_REGISTO_SAÚDE",
+    "targetId": "patient-id-01",
+    "targetName": "Maria A. Silva",
+    "details": "Tipo: BP, Valor: 72/41 mmHg, Estado: 😢 Triste, Notas: N/A",
+    "id": "4bd1fede-9340-4ba2-b0cc-8ec2d6f5eb91",
+    "timestamp": "2026-06-02T14:20:25.053Z"
   }
 ]

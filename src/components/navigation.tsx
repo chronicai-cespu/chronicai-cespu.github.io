@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Home, MessageCircle, User, ClipboardList, ShieldAlert, FlaskConical, LogOut } from 'lucide-react';
+import { Home, MessageCircle, User, ClipboardList, ShieldAlert, FlaskConical, LogOut, UserPlus, LogIn } from 'lucide-react';
 import { AppLogo } from '@/components/app-logo';
 import { useHealth } from '@/components/health-context';
 import { Button } from './ui/button';
@@ -18,21 +18,21 @@ export function Navigation() {
   const navItems = [
     { 
       href: '/admin', 
-      label: 'Administração JSON', 
+      label: 'Administração', 
       icon: ShieldAlert,
       activeColor: "border-red-500 text-red-500",
       show: role === 'admin'
     },
     { 
       href: '/researcher', 
-      label: 'Lista de Pacientes', 
+      label: 'Pacientes', 
       icon: FlaskConical,
       activeColor: "border-purple-500 text-purple-500",
       show: role === 'researcher' || role === 'admin'
     },
     { 
       href: '/dashboard', 
-      label: 'Os meus dados', 
+      label: 'Painel', 
       icon: Home,
       activeColor: "border-primary text-primary",
       show: role === 'patient'
@@ -46,7 +46,7 @@ export function Navigation() {
     },
     { 
       href: '/chat', 
-      label: 'Assistente de IA', 
+      label: 'IA Health', 
       icon: MessageCircle,
       activeColor: "border-primary text-primary font-bold",
       show: role === 'patient'
@@ -76,12 +76,12 @@ export function Navigation() {
 
             {role && welcomeName && (
               <div className="ml-6 px-4 py-1.5 bg-secondary/10 text-secondary rounded-full text-sm font-bold hidden md:flex items-center">
-                Bem-vindo, {welcomeName}
+                Olá, {welcomeName}
               </div>
             )}
           </div>
           
-          <div className="flex items-center space-x-2 md:space-x-8">
+          <div className="flex items-center space-x-2 md:space-x-6">
             {navItems.filter(i => i.show).map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -90,8 +90,8 @@ export function Navigation() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 h-full gap-2",
-                    isActive ? item.activeColor : "border-transparent text-muted-foreground"
+                    "inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 h-full gap-2 transition-colors",
+                    isActive ? item.activeColor : "border-transparent text-muted-foreground hover:text-foreground"
                   )}
                 >
                   <Icon className="w-5 h-5" />
@@ -101,9 +101,18 @@ export function Navigation() {
             })}
             
             {!role ? (
-              <Link href="/login" className="text-sm font-bold text-primary">Entrar</Link>
+              <div className="flex items-center gap-4">
+                <Link href="/login" className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+                  <LogIn className="w-4 h-4" /> Entrar
+                </Link>
+                <Button asChild variant="default" size="sm" className="rounded-full bg-primary shadow-md hidden sm:flex">
+                  <Link href="/register" className="flex items-center gap-1">
+                    <UserPlus className="w-4 h-4" /> Registar
+                  </Link>
+                </Button>
+              </div>
             ) : (
-              <Button variant="ghost" size="icon" onClick={logout} className="text-muted-foreground hover:text-destructive">
+              <Button variant="ghost" size="icon" onClick={logout} className="text-muted-foreground hover:text-destructive transition-colors">
                 <LogOut className="w-5 h-5" />
               </Button>
             )}

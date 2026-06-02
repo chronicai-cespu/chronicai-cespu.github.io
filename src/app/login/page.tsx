@@ -9,9 +9,10 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/componen
 import { AppLogo } from '@/components/app-logo';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, LogIn } from 'lucide-react';
+import { Loader2, LogIn, UserPlus } from 'lucide-react';
 import { authenticateUser } from '@/lib/user-actions';
 import { useHealth } from '@/components/health-context';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
@@ -39,7 +40,7 @@ export default function LoginPage() {
       
       toast({ 
         title: "Sessão Iniciada", 
-        description: `Bem-vindo, ${user.name}. Acesso via JSON.` 
+        description: `Bem-vindo, ${user.name}.` 
       });
 
       const target = user.role === 'admin' ? '/admin' : user.role === 'researcher' ? '/researcher' : '/dashboard';
@@ -49,7 +50,7 @@ export default function LoginPage() {
       toast({
         variant: "destructive",
         title: "Erro no Acesso",
-        description: error.message || "Credenciais JSON inválidas.",
+        description: error.message || "Credenciais inválidas.",
       });
       setIsLoggingIn(false);
     }
@@ -72,16 +73,16 @@ export default function LoginPage() {
               <AppLogo className="w-10 h-10" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">ChronicAI Login (JSON)</CardTitle>
-          <p className="text-muted-foreground text-sm">A base de dados é agora inteiramente em ficheiros JSON.</p>
+          <CardTitle className="text-2xl font-bold font-headline">Bem-vindo ao ChronicAI</CardTitle>
+          <p className="text-muted-foreground text-sm">Introduza as suas credenciais para aceder aos seus dados de saúde.</p>
         </CardHeader>
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="identifier">Código ou Email</Label>
+              <Label htmlFor="identifier">Código de Utilizador ou E-mail</Label>
               <Input 
                 id="identifier" 
-                placeholder="Ex: p01, r01, admin2526" 
+                placeholder="Ex: p01, r01, maria@email.com" 
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 required
@@ -101,9 +102,17 @@ export default function LoginPage() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" disabled={isLoggingIn} className="w-full h-14 text-xl rounded-full bg-primary">
+            <Button type="submit" disabled={isLoggingIn} className="w-full h-14 text-xl rounded-full bg-primary shadow-lg">
               {isLoggingIn ? <Loader2 className="animate-spin" /> : <><LogIn className="mr-2 h-5 w-5" /> Entrar</>}
             </Button>
+            <div className="text-center mt-2">
+              <p className="text-sm text-muted-foreground">
+                Não tem uma conta?{" "}
+                <Link href="/register" className="text-primary font-bold hover:underline inline-flex items-center gap-1">
+                  <UserPlus className="w-4 h-4" /> Registe-se aqui
+                </Link>
+              </p>
+            </div>
           </CardFooter>
         </form>
       </Card>

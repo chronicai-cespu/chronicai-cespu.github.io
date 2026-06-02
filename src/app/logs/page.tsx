@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useHealth } from '@/components/health-context';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -48,12 +48,27 @@ function LogsPageContent() {
   const [allPatients, setAllPatients] = useState<any[]>([]);
   const [displayLogs, setDisplayLogs] = useState<any[]>([]);
   const [isLogsLoading, setIsLogsLoading] = useState(false);
+  const [isActionPending, setIsActionPending] = useState(false);
 
   // Estados para edição
   const [editingLog, setEditingLog] = useState<any>(null);
 
   const canManagePatients = role === 'admin' || role === 'researcher';
   const isAdmin = role === 'admin';
+
+  const loadLogs = useCallback(async () => {
+    if (!targetPatientId) return;
+    setIsLogsLoading(true);
+    try {
+      const records = await getHealthRecords(targetPatientId);
+      setDisplayLogs(records || []);
+    } catch (e) {
+      console.error(e);
+      toast({ title: "Erro", description: "Falha ao carregar o histórico.", variant: "destructive" });
+    } finally {
+      setIsLogsLoading(false);
+    }
+  }, [targetPatientId, toast]);
 
   useEffect(() => {
     if (canManagePatients) {
@@ -71,22 +86,9 @@ function LogsPageContent() {
     }
   }, [canManagePatients, userProfile, patientIdFromUrl]);
 
-  const loadLogs = async () => {
-    if (!targetPatientId) return;
-    setIsLogsLoading(true);
-    try {
-      const records = await getHealthRecords(targetPatientId);
-      setDisplayLogs(records);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsLogsLoading(false);
-    }
-  };
-
   useEffect(() => {
     loadLogs();
-  }, [targetPatientId]);
+  }, [loadLogs]);
 
   if (isContextLoading || !userProfile) {
     return (
@@ -98,10 +100,7 @@ function LogsPageContent() {
   }
 
   const handleLog = async (type: 'bp' | 'activity' | 'weight') => {
-    if (!targetPatientId) {
-      toast({ title: "Erro", description: "Por favor, selecione um paciente primeiro.", variant: "destructive" });
-      return;
-    }
+    if (!targetPatientId || isActionPending) return;
 
     let value = '';
     if (type === 'bp') {
@@ -126,6 +125,7 @@ function LogsPageContent() {
       value = `${weight} kg`;
     }
 
+    setIsActionPending(true);
     try {
       await addHealthRecord({
         patientProfileId: targetPatientId,
@@ -159,16 +159,19 @@ function LogsPageContent() {
       if (type === 'weight') setWeight('');
       setNotes('');
       setSelectedMood(null);
-      loadLogs();
+      await loadLogs();
     } catch (e) {
       toast({ title: "Erro", description: "Falha ao gravar os dados.", variant: "destructive" });
+    } finally {
+      setIsActionPending(false);
     }
   };
 
   const handleDelete = async (log: any) => {
-    if (!isAdmin) return;
+    if (!isAdmin || isActionPending) return;
     if (!window.confirm("Tem a certeza que deseja eliminar este registo? Esta ação será registada no log de auditoria.")) return;
 
+    setIsActionPending(true);
     try {
       await deleteHealthRecord(log.id);
       
@@ -183,16 +186,19 @@ function LogsPageContent() {
         details: `Registo eliminado - Tipo: ${log.recordType.toUpperCase()}, Valor: ${log.value}, Data Original: ${log.recordedAt}`
       });
 
-      toast({ title: "Eliminado", description: "O registo foi removido e a ação auditada." });
-      loadLogs();
+      toast({ title: "Eliminado", description: "O registo foi removido do JSON e a ação auditada." });
+      await loadLogs();
     } catch (e: any) {
       toast({ variant: "destructive", title: "Erro", description: e.message || "Não foi possível eliminar o registo." });
+    } finally {
+      setIsActionPending(false);
     }
   };
 
   const handleUpdate = async () => {
-    if (!isAdmin || !editingLog) return;
+    if (!isAdmin || !editingLog || isActionPending) return;
 
+    setIsActionPending(true);
     try {
       const original = displayLogs.find(l => l.id === editingLog.id);
       await updateHealthRecord(editingLog.id, editingLog);
@@ -210,21 +216,14 @@ function LogsPageContent() {
 
       toast({ title: "Atualizado", description: "O registo foi alterado com sucesso." });
       setEditingLog(null);
-      loadLogs();
+      await loadLogs();
     } catch (e) {
       toast({ variant: "destructive", title: "Erro", description: "Não foi possível atualizar o registo." });
+    } finally {
+      setIsActionPending(false);
     }
   };
 
-  const getBpStatus = (sys: number, dia: number) => {
-    if (!sys || !dia) return null;
-    if (sys >= 140 || dia >= 90) return { label: 'Alta (Hipertensão)', color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-destructive' };
-    if (sys >= 120 || dia >= 80) return { label: 'Elevada (Pré-hipertensão)', color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200' };
-    if (sys < 90 || dia < 60) return { label: 'Baixa (Hipotensão)', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' };
-    return { label: 'Normal', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' };
-  };
-
-  const bpStatus = getBpStatus(parseInt(systolic), parseInt(diastolic));
   const systolicRange = Array.from({ length: 151 }, (_, i) => i + 70);
   const diastolicRange = Array.from({ length: 91 }, (_, i) => i + 40);
   const weightRange = Array.from({ length: 161 }, (_, i) => i + 40);
@@ -304,22 +303,7 @@ function LogsPageContent() {
                       </Select>
                     </div>
                   </div>
-
-                  {bpStatus && (
-                    <div className={cn("p-4 rounded-xl border flex items-center gap-3 animate-in fade-in duration-300", bpStatus.bg, bpStatus.border)}>
-                      {bpStatus.label.includes('Alta') || bpStatus.label.includes('Baixa') ? (
-                        <AlertTriangle className={cn("w-6 h-6", bpStatus.color)} />
-                      ) : (
-                        <CheckCircle2 className={cn("w-6 h-6", bpStatus.color)} />
-                      )}
-                      <div>
-                        <p className={cn("font-bold", bpStatus.color)}>{bpStatus.label}</p>
-                        <p className="text-xs text-muted-foreground">Estado baseado nos valores inseridos.</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <LogFields notes={notes} setNotes={setNotes} selectedMood={selectedMood} setSelectedMood={setSelectedMood} onLog={() => handleLog('bp')} isManagement={canManagePatients} />
+                  <LogFields notes={notes} setNotes={setNotes} selectedMood={selectedMood} setSelectedMood={setSelectedMood} onLog={() => handleLog('bp')} isManagement={canManagePatients} disabled={isActionPending} />
                 </TabsContent>
 
                 <TabsContent value="activity" className="space-y-6 mt-0">
@@ -345,7 +329,7 @@ function LogsPageContent() {
                       </Select>
                     </div>
                   </div>
-                  <LogFields notes={notes} setNotes={setNotes} selectedMood={selectedMood} setSelectedMood={setSelectedMood} onLog={() => handleLog('activity')} isManagement={canManagePatients} />
+                  <LogFields notes={notes} setNotes={setNotes} selectedMood={selectedMood} setSelectedMood={setSelectedMood} onLog={() => handleLog('activity')} isManagement={canManagePatients} disabled={isActionPending} />
                 </TabsContent>
 
                 <TabsContent value="weight" className="space-y-6 mt-0">
@@ -360,7 +344,7 @@ function LogsPageContent() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <LogFields notes={notes} setNotes={setNotes} selectedMood={selectedMood} setSelectedMood={setSelectedMood} onLog={() => handleLog('weight')} isManagement={canManagePatients} />
+                  <LogFields notes={notes} setNotes={setNotes} selectedMood={selectedMood} setSelectedMood={setSelectedMood} onLog={() => handleLog('weight')} isManagement={canManagePatients} disabled={isActionPending} />
                 </TabsContent>
               </div>
             </Tabs>
@@ -415,10 +399,22 @@ function LogsPageContent() {
                           </p>
                           {isAdmin && (
                             <div className="flex gap-1">
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:bg-primary/10" onClick={() => setEditingLog(log)}>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-7 w-7 text-primary hover:bg-primary/10" 
+                                onClick={() => setEditingLog(log)}
+                                disabled={isActionPending}
+                              >
                                 <Edit2 className="h-3.5 w-3.5" />
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => handleDelete(log)}>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-7 w-7 text-destructive hover:bg-destructive/10" 
+                                onClick={() => handleDelete(log)}
+                                disabled={isActionPending}
+                              >
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                             </div>
@@ -430,7 +426,7 @@ function LogsPageContent() {
                 ) : (
                   <div className="text-center py-10">
                     <p className="text-muted-foreground italic text-sm">
-                      Nenhum registo encontrado.
+                      Nenhum registo encontrado para este paciente.
                     </p>
                   </div>
                 )}
@@ -441,7 +437,7 @@ function LogsPageContent() {
       </div>
 
       {/* Diálogo de Edição para Admin */}
-      <Dialog open={!!editingLog} onOpenChange={(open) => !open && setEditingLog(null)}>
+      <Dialog open={!!editingLog} onOpenChange={(open) => !open && !isActionPending && setEditingLog(null)}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Editar Registo Clínico</DialogTitle>
@@ -449,12 +445,20 @@ function LogsPageContent() {
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label>Valor da Medição</Label>
-              <Input value={editingLog?.value || ''} onChange={e => setEditingLog({...editingLog, value: e.target.value})} />
+              <Input 
+                value={editingLog?.value || ''} 
+                onChange={e => setEditingLog({...editingLog, value: e.target.value})}
+                disabled={isActionPending}
+              />
               <p className="text-[10px] text-muted-foreground italic">Ex: 120/80 mmHg, 30 min, 75 kg</p>
             </div>
             <div className="space-y-2">
               <Label>Estado de Espírito</Label>
-              <Select value={editingLog?.mood || ""} onValueChange={v => setEditingLog({...editingLog, mood: v})}>
+              <Select 
+                value={editingLog?.mood || ""} 
+                onValueChange={v => setEditingLog({...editingLog, mood: v})}
+                disabled={isActionPending}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -467,13 +471,18 @@ function LogsPageContent() {
             </div>
             <div className="space-y-2">
               <Label>Notas</Label>
-              <Textarea value={editingLog?.notes || ''} onChange={e => setEditingLog({...editingLog, notes: e.target.value})} />
+              <Textarea 
+                value={editingLog?.notes || ''} 
+                onChange={e => setEditingLog({...editingLog, notes: e.target.value})}
+                disabled={isActionPending}
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingLog(null)}>Cancelar</Button>
-            <Button onClick={handleUpdate} className="bg-primary shadow-md">
-              <Save className="mr-2 h-4 w-4" /> Guardar Alterações
+            <Button variant="outline" onClick={() => setEditingLog(null)} disabled={isActionPending}>Cancelar</Button>
+            <Button onClick={handleUpdate} className="bg-primary shadow-md" disabled={isActionPending}>
+              {isActionPending ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Save className="mr-2 h-4 w-4" />}
+              Guardar Alterações
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -482,7 +491,7 @@ function LogsPageContent() {
   );
 }
 
-function LogFields({ notes, setNotes, selectedMood, setSelectedMood, onLog, isManagement }: { notes: string, setNotes: (v: string) => void, selectedMood: string | null, setSelectedMood: (v: string | null) => void, onLog: () => void, isManagement?: boolean }) {
+function LogFields({ notes, setNotes, selectedMood, setSelectedMood, onLog, isManagement, disabled }: { notes: string, setNotes: (v: string) => void, selectedMood: string | null, setSelectedMood: (v: string | null) => void, onLog: () => void, isManagement?: boolean, disabled?: boolean }) {
   return (
     <div className="space-y-6 pt-4 border-t">
       <div className="space-y-4">
@@ -492,12 +501,14 @@ function LogFields({ notes, setNotes, selectedMood, setSelectedMood, onLog, isMa
             <button
               key={mood.id}
               type="button"
+              disabled={disabled}
               onClick={() => setSelectedMood(mood.id)}
               className={cn(
                 "flex flex-col items-center gap-1 p-3 rounded-2xl transition-all border-2",
                 selectedMood === mood.id 
                   ? "bg-primary/10 border-primary scale-110 shadow-md" 
-                  : "bg-muted/30 border-transparent hover:bg-muted/50"
+                  : "bg-muted/30 border-transparent hover:bg-muted/50",
+                disabled && "opacity-50 cursor-not-allowed"
               )}
             >
               <span className="text-3xl md:text-4xl">{mood.emoji}</span>
@@ -516,6 +527,7 @@ function LogFields({ notes, setNotes, selectedMood, setSelectedMood, onLog, isMa
         <Label htmlFor="notes">Notas ou Observações Clínicas</Label>
         <Textarea 
           id="notes" 
+          disabled={disabled}
           placeholder={isManagement ? "Adicione observações sobre a medição..." : "Como se sente no momento?"} 
           className="min-h-[100px] text-lg bg-muted/20"
           value={notes}
@@ -524,12 +536,14 @@ function LogFields({ notes, setNotes, selectedMood, setSelectedMood, onLog, isMa
       </div>
       <Button 
         onClick={onLog} 
+        disabled={disabled}
         className={cn(
           "w-full h-14 text-xl rounded-full shadow-lg",
           isManagement ? "bg-secondary hover:bg-secondary/90" : "bg-primary hover:bg-primary/90"
         )}
       >
-        <CheckCircle2 className="mr-2 h-6 w-6" /> {isManagement ? "Confirmar Registo Clínico" : "Guardar no Histórico"}
+        {disabled ? <Loader2 className="animate-spin mr-2 h-6 w-6" /> : <CheckCircle2 className="mr-2 h-6 w-6" />}
+        {isManagement ? "Confirmar Registo Clínico" : "Guardar no Histórico"}
       </Button>
     </div>
   );

@@ -22,13 +22,18 @@ export async function getHealthRecords(patientId?: string) {
   try {
     const data = await fs.readFile(DATA_FILE, 'utf8');
     const allRecords = JSON.parse(data);
+    
+    let filtered = Array.isArray(allRecords) ? allRecords : [];
+    
     if (patientId) {
-      return allRecords
-        .filter((r: any) => r.patientProfileId === patientId)
-        .sort((a: any, b: any) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime());
+      filtered = filtered.filter((r: any) => r.patientProfileId === patientId);
     }
-    return allRecords;
+    
+    return filtered.sort((a: any, b: any) => 
+      new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime()
+    );
   } catch (error) {
+    console.error('Erro ao ler registos:', error);
     return [];
   }
 }
@@ -47,6 +52,7 @@ export async function addHealthRecord(record: any) {
 
     allRecords.push(newRecord);
     await fs.writeFile(DATA_FILE, JSON.stringify(allRecords, null, 2), 'utf8');
+    
     revalidatePath('/logs');
     revalidatePath('/dashboard');
     return newRecord;
@@ -60,17 +66,22 @@ export async function deleteHealthRecord(recordId: string) {
   try {
     const data = await fs.readFile(DATA_FILE, 'utf8');
     const allRecords = JSON.parse(data);
-    const filtered = allRecords.filter((r: any) => r.id !== recordId);
     
-    if (allRecords.length === filtered.length) {
-      throw new Error("Registo não encontrado no sistema.");
+    // Filtra garantindo que comparamos strings limpas
+    const initialCount = allRecords.length;
+    const filtered = allRecords.filter((r: any) => r.id.toString() !== recordId.toString());
+    
+    if (initialCount === filtered.length) {
+      throw new Error("Registo não encontrado nos dados locais.");
     }
 
     await fs.writeFile(DATA_FILE, JSON.stringify(filtered, null, 2), 'utf8');
+    
     revalidatePath('/logs');
     revalidatePath('/dashboard');
     return { success: true };
   } catch (error: any) {
+    console.error('Erro ao eliminar:', error);
     throw new Error(error.message || "Não foi possível eliminar o registo.");
   }
 }
@@ -80,11 +91,13 @@ export async function updateHealthRecord(recordId: string, updates: any) {
   try {
     const data = await fs.readFile(DATA_FILE, 'utf8');
     const allRecords = JSON.parse(data);
-    const index = allRecords.findIndex((r: any) => r.id === recordId);
+    const index = allRecords.findIndex((r: any) => r.id.toString() === recordId.toString());
+    
     if (index === -1) throw new Error("Registo não encontrado.");
 
     allRecords[index] = { ...allRecords[index], ...updates };
     await fs.writeFile(DATA_FILE, JSON.stringify(allRecords, null, 2), 'utf8');
+    
     revalidatePath('/logs');
     revalidatePath('/dashboard');
     return allRecords[index];

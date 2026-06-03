@@ -159,12 +159,27 @@ export default function ProfilePage() {
 
   const toggleDisease = (disease: string) => {
     if (!editProfile) return;
-    const current = editProfile.chronicDiseases || [];
-    if (current.includes(disease)) {
-      setEditProfile({ ...editProfile, chronicDiseases: current.filter(d => d !== disease) });
+    let current = editProfile.chronicDiseases || [];
+    
+    if (disease === 'Nenhuma') {
+      // Se selecionar 'Nenhuma', limpa todas as outras
+      if (current.includes('Nenhuma')) {
+        current = [];
+      } else {
+        current = ['Nenhuma'];
+      }
     } else {
-      setEditProfile({ ...editProfile, chronicDiseases: [...current, disease] });
+      // Se selecionar qualquer outra doença, remove 'Nenhuma'
+      if (current.includes(disease)) {
+        current = current.filter(d => d !== disease);
+      } else {
+        // Remove 'Nenhuma' se estiver presente
+        current = current.filter(d => d !== 'Nenhuma');
+        current.push(disease);
+      }
     }
+    
+    setEditProfile({ ...editProfile, chronicDiseases: current });
   };
 
   if (isLoading || !editProfile) {
@@ -411,14 +426,24 @@ export default function ProfilePage() {
               <Label className="font-bold">Patologias Existentes:</Label>
               <div className="flex flex-wrap gap-3">
                 {['Diabetes', 'Hipertensão', 'Colesterol', 'Outra', 'Nenhuma'].map(disease => (
-                  <Badge key={disease} variant={editProfile.chronicDiseases?.includes(disease) ? "default" : "outline"} className={cn("px-6 py-3 text-base cursor-pointer transition-all rounded-full border-2", editProfile.chronicDiseases?.includes(disease) ? "bg-primary text-white scale-105 shadow-md border-primary" : "hover:bg-primary/10")} onClick={() => toggleDisease(disease)}>
+                  <Badge 
+                    key={disease} 
+                    variant={editProfile.chronicDiseases?.includes(disease) ? "default" : "outline"} 
+                    className={cn(
+                      "px-6 py-3 text-base cursor-pointer transition-all rounded-full border-2", 
+                      editProfile.chronicDiseases?.includes(disease) 
+                        ? "bg-primary text-white scale-105 shadow-md border-primary" 
+                        : "hover:bg-primary/10"
+                    )} 
+                    onClick={() => toggleDisease(disease)}
+                  >
                     {disease}
                   </Badge>
                 ))}
               </div>
             </div>
 
-            {(editProfile.chronicDiseases?.includes('Outra') || editProfile.otherConditions) && (
+            {(editProfile.chronicDiseases?.includes('Outra') || editProfile.otherConditions) && !editProfile.chronicDiseases?.includes('Nenhuma') && (
               <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
                 <Label htmlFor="others" className="font-bold">Indique qual a outra doença/condição:</Label>
                 <Textarea id="others" placeholder="Escreva aqui o nome da condição específica..." className="min-h-[100px] bg-white text-base border-2" value={editProfile.otherConditions || ""} onChange={e => setEditProfile({...editProfile, otherConditions: e.target.value})} />

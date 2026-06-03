@@ -62,7 +62,6 @@ async function readJson(filePath: string, type: keyof typeof INITIAL_DATA) {
     if (!content || content.trim() === '') return INITIAL_DATA[type];
     return JSON.parse(content);
   } catch (error) {
-    // Se o ficheiro não existir, cria com dados iniciais
     await writeJson(filePath, INITIAL_DATA[type]);
     return INITIAL_DATA[type];
   }
@@ -106,16 +105,34 @@ export async function createUser(userData: any) {
   const role: keyof typeof PATHS = userData.role;
   const users = await readJson(PATHS[role], role as any);
   
+  // Lógica robusta para gerar o próximo código sequencial
   const prefix = role === 'patient' ? 'p' : role === 'researcher' ? 'r' : 'adm';
-  const nextNum = users.length + 1;
-  const code = `${prefix}${nextNum.toString().padStart(2, '0')}`;
+  
+  let nextNum = 1;
+  if (users.length > 0) {
+    // Extrai os números dos códigos existentes e encontra o maior
+    const numbers = users
+      .map((u: any) => {
+        const match = u.assignedCode.match(/\d+/);
+        return match ? parseInt(match[0]) : 0;
+      })
+      .filter((n: number) => !isNaN(n));
+    
+    if (numbers.length > 0) {
+      nextNum = Math.max(...numbers) + 1;
+    }
+  }
+
+  const code = role === 'admin' 
+    ? (userData.assignedCode || `adm${nextNum.toString().padStart(2, '0')}`)
+    : `${prefix}${nextNum.toString().padStart(2, '0')}`;
 
   const newUser = {
     ...userData,
     id: uuidv4(),
     assignedCode: code,
     createdAt: new Date().toISOString(),
-    chronicDiseases: userData.role === 'patient' ? [] : undefined
+    chronicDiseases: userData.role === 'patient' ? (userData.chronicDiseases || []) : undefined
   };
 
   users.push(newUser);
@@ -134,7 +151,10 @@ export async function updateUser(userId: string, updates: any) {
 
   if (index === -1) throw new Error("Erro na integridade dos dados.");
 
-  users[index] = { ...users[index], ...updates };
+  // Remove campos sensíveis que não devem ser editados via perfil simples
+  const { id, role: r, assignedCode, ...safeUpdates } = updates;
+
+  users[index] = { ...users[index], ...safeUpdates };
   await writeJson(PATHS[role], users);
   return users[index];
 }

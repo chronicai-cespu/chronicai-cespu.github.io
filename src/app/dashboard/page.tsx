@@ -41,13 +41,16 @@ export default function Dashboard() {
         router.replace('/admin');
       } else if (role === 'researcher') {
         router.replace('/researcher');
+      } else if (role === 'patient' && !userProfile?.birthDate) {
+        // Redirecionamento obrigatório se perfil incompleto
+        router.replace('/profile');
       }
     }
-  }, [role, isLoading, isMounted, router]);
+  }, [role, userProfile, isLoading, isMounted, router]);
 
   useEffect(() => {
     async function fetchData() {
-      if (!userProfile || role !== 'patient') return;
+      if (!userProfile || role !== 'patient' || !userProfile.birthDate) return;
       try {
         const [curiosity, logs] = await Promise.all([
           aiHealthAssistantAdvice({
@@ -62,7 +65,7 @@ export default function Dashboard() {
         console.error("Failed to fetch dashboard data", error);
       }
     }
-    if (userProfile && role === 'patient' && isMounted) {
+    if (userProfile && role === 'patient' && isMounted && userProfile.birthDate) {
       fetchData();
     }
   }, [userProfile, role, isMounted]);
@@ -78,11 +81,11 @@ export default function Dashboard() {
     });
   }, [isMounted]);
 
-  if (!isMounted || isLoading || !userProfile || role !== 'patient') {
+  if (!isMounted || isLoading || !userProfile || role !== 'patient' || !userProfile.birthDate) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
-        <p className="text-muted-foreground italic">A carregar dados JSON...</p>
+        <p className="text-muted-foreground italic">A carregar dados...</p>
       </div>
     );
   }

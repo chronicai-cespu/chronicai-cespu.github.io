@@ -24,6 +24,12 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!isAuthLoading && userProfile) {
+      // Redirecionamento inteligente: se paciente e sem data de nascimento, vai para perfil
+      if (userProfile.role === 'patient' && !userProfile.birthDate) {
+        router.replace('/profile');
+        return;
+      }
+
       const target = userProfile.role === 'admin' ? '/admin' : userProfile.role === 'researcher' ? '/researcher' : '/dashboard';
       router.replace(target);
     }
@@ -43,8 +49,13 @@ export default function LoginPage() {
         description: `Bem-vindo, ${user.name}.` 
       });
 
-      const target = user.role === 'admin' ? '/admin' : user.role === 'researcher' ? '/researcher' : '/dashboard';
-      router.replace(target);
+      // Se for paciente novo (sem birthDate), manda direto para perfil
+      if (user.role === 'patient' && !user.birthDate) {
+        router.replace('/profile');
+      } else {
+        const target = user.role === 'admin' ? '/admin' : user.role === 'researcher' ? '/researcher' : '/dashboard';
+        router.replace(target);
+      }
       
     } catch (error: any) {
       toast({

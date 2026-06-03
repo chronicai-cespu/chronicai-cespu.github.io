@@ -45,5 +45,16 @@
     "householdSize": "2 pessoas",
     "alcoholFreq": "Nunca",
     "tobaccoFreq": "Não fumador"
+  },
+  {
+    "name": "Manuel Chaves",
+    "email": "manuel.chaves@email.com",
+    "password": "manuel1234",
+    "mobileNumber": "",
+    "role": "patient",
+    "id": "884f355b-ed0e-42a5-ad01-df7c6fecafb2",
+    "assignedCode": "p04",
+    "createdAt": "2026-06-03T11:16:49.826Z",
+    "chronicDiseases": []
   }
 ]

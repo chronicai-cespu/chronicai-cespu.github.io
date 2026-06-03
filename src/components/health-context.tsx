@@ -24,6 +24,7 @@ export type UserProfile = {
   householdSize?: string;
   healthUnit?: string;
   otherConditions?: string;
+  medicationDescription?: string;
   medications?: any[];
   allergies?: string[];
   recentHealthConcerns?: string;

@@ -1,4 +1,4 @@
-# ChronicAI - O Seu Companheiro de Saúde
+,# ChronicAI - O Seu Companheiro de Saúde
 
 O **ChronicAI** é uma aplicação Next.js moderna concebida para ajudar a gerir condições de saúde crónicas (como Diabetes, Hipertensão e Colesterol) de forma autónoma e informada.
 

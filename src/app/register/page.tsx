@@ -73,7 +73,7 @@ export default function RegisterPage() {
             </p>
           </CardContent>
           <CardFooter className="pb-10 px-8">
-            <Button asChild className="w-full h-14 text-xl rounded-full bg-primary shadow-lg">
+            <Button asChild className="w-full h-14 text-xl rounded-full bg-primary shadow-lg transition-all active:scale-95 active:bg-primary/80">
               <Link href="/login">Ir para o Login</Link>
             </Button>
           </CardFooter>
@@ -179,11 +179,15 @@ export default function RegisterPage() {
             </div>
           </CardContent>
           <CardFooter className="bg-muted/30 p-8 flex flex-col gap-4">
-            <Button type="submit" disabled={isSubmitting} className="w-full h-14 text-xl rounded-full bg-primary hover:bg-primary/90 shadow-lg transition-transform active:scale-95">
+            <Button 
+              type="submit" 
+              disabled={isSubmitting} 
+              className="w-full h-14 text-xl rounded-full bg-primary hover:bg-primary/90 shadow-lg transition-all active:scale-95 active:bg-primary/80"
+            >
               {isSubmitting ? <Loader2 className="animate-spin" /> : <><UserPlus className="mr-2 h-6 w-6" /> Concluir Registo</>}
             </Button>
             <div className="text-center w-full">
-              <Link href="/login" className="text-sm font-bold text-muted-foreground hover:text-primary flex items-center justify-center gap-1">
+              <Link href="/login" className="text-sm font-bold text-muted-foreground hover:text-primary flex items-center justify-center gap-1 active:opacity-70 transition-opacity">
                 <ArrowLeft className="w-4 h-4" /> Já tenho uma conta. Voltar ao Login
               </Link>
             </div>

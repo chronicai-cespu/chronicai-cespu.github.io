@@ -90,7 +90,7 @@ export function Navigation() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 h-full gap-2 transition-colors",
+                    "inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 h-full gap-2 transition-all active:scale-95",
                     isActive ? item.activeColor : "border-transparent text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -102,17 +102,17 @@ export function Navigation() {
             
             {!role ? (
               <div className="flex items-center gap-4">
-                <Link href="/login" className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+                <Link href="/login" className="text-sm font-bold text-muted-foreground hover:text-primary transition-all active:scale-95 flex items-center gap-1">
                   <LogIn className="w-4 h-4" /> Entrar
                 </Link>
-                <Button asChild variant="default" size="sm" className="rounded-full bg-primary shadow-md hidden sm:flex">
+                <Button asChild variant="default" size="sm" className="rounded-full bg-primary shadow-md hidden sm:flex transition-all active:scale-95 active:bg-primary/80">
                   <Link href="/register" className="flex items-center gap-1">
                     <UserPlus className="w-4 h-4" /> Registar
                   </Link>
                 </Button>
               </div>
             ) : (
-              <Button variant="ghost" size="icon" onClick={logout} className="text-muted-foreground hover:text-destructive transition-colors">
+              <Button variant="ghost" size="icon" onClick={logout} className="text-muted-foreground hover:text-destructive transition-all active:scale-90">
                 <LogOut className="w-5 h-5" />
               </Button>
             )}

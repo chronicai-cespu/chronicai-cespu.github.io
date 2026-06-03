@@ -24,7 +24,6 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!isAuthLoading && userProfile) {
-      // Redirecionamento inteligente: se paciente e sem data de nascimento, vai para perfil
       if (userProfile.role === 'patient' && !userProfile.birthDate) {
         router.replace('/profile');
         return;
@@ -49,7 +48,6 @@ export default function LoginPage() {
         description: `Bem-vindo, ${user.name}.` 
       });
 
-      // Se for paciente novo (sem birthDate), manda direto para perfil
       if (user.role === 'patient' && !user.birthDate) {
         router.replace('/profile');
       } else {
@@ -113,13 +111,17 @@ export default function LoginPage() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" disabled={isLoggingIn} className="w-full h-14 text-xl rounded-full bg-primary shadow-lg">
+            <Button 
+              type="submit" 
+              disabled={isLoggingIn} 
+              className="w-full h-14 text-xl rounded-full bg-primary shadow-lg transition-all active:scale-95 active:bg-primary/80"
+            >
               {isLoggingIn ? <Loader2 className="animate-spin" /> : <><LogIn className="mr-2 h-5 w-5" /> Entrar</>}
             </Button>
             <div className="text-center mt-2">
               <p className="text-sm text-muted-foreground">
                 Não tem uma conta?{" "}
-                <Link href="/register" className="text-primary font-bold hover:underline inline-flex items-center gap-1">
+                <Link href="/register" className="text-primary font-bold hover:underline inline-flex items-center gap-1 active:opacity-70 transition-opacity">
                   <UserPlus className="w-4 h-4" /> Registe-se aqui
                 </Link>
               </p>

@@ -35,6 +35,15 @@
     "id": "patient-id-03",
     "assignedCode": "p03",
     "createdAt": "2026-06-02T13:51:49.668Z",
-    "chronicDiseases": []
+    "chronicDiseases": [
+      "Colesterol"
+    ],
+    "gender": "Feminino",
+    "age": 21,
+    "birthDate": "03/06/2026",
+    "education": "Ensino Superior (Licenciatura)",
+    "householdSize": "2 pessoas",
+    "alcoholFreq": "Nunca",
+    "tobaccoFreq": "Não fumador"
   }
 ]

@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { User, ShieldCheck, Pill, Stethoscope, Save, FileText, Activity, Loader2, FlaskConical, Mail, Phone, Hash } from 'lucide-react';
+import { User, ShieldCheck, Pill, Stethoscope, Save, FileText, Activity, Loader2, FlaskConical, Mail, Phone, Hash, Calendar } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -36,17 +36,106 @@ export default function ProfilePage() {
     }
   }, [userProfile, role, isLoading, router]);
 
+  // Função para calcular idade automaticamente
+  const calculateAge = (birthDateStr: string) => {
+    if (!birthDateStr) return null;
+    const parts = birthDateStr.split('/');
+    if (parts.length !== 3) return null;
+    
+    const day = parseInt(parts[0]);
+    const month = parseInt(parts[1]) - 1; // Meses em JS são 0-11
+    const year = parseInt(parts[2]);
+    
+    if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+    
+    const today = new Date();
+    const birthDate = new Date(year, month, day);
+    
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age;
+  };
+
+  const handleBirthDateChange = (value: string) => {
+    if (!editProfile) return;
+    
+    // Auto-formatar data (DD/MM/AAAA)
+    let formatted = value.replace(/\D/g, '').slice(0, 8);
+    if (formatted.length >= 2 && formatted.length < 4) {
+      formatted = `${formatted.slice(0, 2)}/${formatted.slice(2)}`;
+    } else if (formatted.length >= 4) {
+      formatted = `${formatted.slice(0, 2)}/${formatted.slice(2, 4)}/${formatted.slice(4)}`;
+    }
+    
+    const newAge = calculateAge(formatted);
+    setEditProfile({ 
+      ...editProfile, 
+      birthDate: formatted,
+      age: newAge !== null ? newAge : editProfile.age
+    });
+  };
+
+  const validateForm = () => {
+    if (!editProfile) return false;
+    
+    const requiredFields = [
+      { field: 'name', label: 'Nome Completo' },
+      { field: 'birthDate', label: 'Data de Nascimento' },
+      { field: 'gender', label: 'Género' },
+      { field: 'weight', label: 'Peso' },
+      { field: 'height', label: 'Altura' },
+      { field: 'alcoholFreq', label: 'Consumo de Álcool' },
+      { field: 'tobaccoFreq', label: 'Consumo de Tabaco' },
+      { field: 'physicalActivityLevel', label: 'Nível de Atividade Física' },
+    ];
+
+    for (const item of requiredFields) {
+      if (!editProfile[item.field as keyof UserProfile]) {
+        toast({ 
+          variant: "destructive", 
+          title: "Campo Obrigatório", 
+          description: `Por favor, preencha o campo: ${item.label}` 
+        });
+        return false;
+      }
+    }
+
+    if (!editProfile.chronicDiseases || editProfile.chronicDiseases.length === 0) {
+      toast({ 
+        variant: "destructive", 
+        title: "Condições Crónicas", 
+        description: "Por favor, selecione pelo menos uma condição (ou 'Nenhuma' se aplicável)." 
+      });
+      return false;
+    }
+
+    // Se "Outra" estiver selecionada, validar se escreveu qual
+    if (editProfile.chronicDiseases.includes('Outra') && !editProfile.otherConditions?.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Especificação Necessária",
+        description: "Por favor, indique qual é a outra doença no campo de texto."
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSaveProfile = async () => {
+    if (!validateForm()) return;
+
     if (editProfile && userProfile) {
       setIsSaving(true);
       try {
-        // Persistir no ficheiro JSON
         await updateUser(userProfile.id, editProfile);
-        
-        // Atualizar contexto local
         setUserProfile(editProfile);
         
-        // Registo de auditoria
         await logAuditAction({
           userId: userProfile.id,
           userName: userProfile.name,
@@ -54,15 +143,15 @@ export default function ProfilePage() {
           actionType: 'ATUALIZAÇÃO_PERFIL_SAÚDE',
           targetId: userProfile.id,
           targetName: userProfile.name,
-          details: 'O paciente atualizou o seu questionário de saúde e biometria no ficheiro JSON.'
+          details: 'O paciente completou/atualizou o seu questionário de saúde obrigatório.'
         });
 
-        toast({ title: "Perfil Atualizado", description: "As suas informações foram guardadas com sucesso no sistema local." });
+        toast({ title: "Perfil Atualizado", description: "As suas informações foram guardadas com sucesso." });
       } catch (error: any) {
         toast({ 
           variant: "destructive", 
           title: "Erro ao Guardar", 
-          description: "Não foi possível gravar os dados no ficheiro JSON." 
+          description: "Não foi possível gravar os dados." 
         });
       } finally {
         setIsSaving(false);
@@ -89,7 +178,6 @@ export default function ProfilePage() {
     );
   }
 
-  // Visualização de Perfil para Investigadores ou Admins
   if (role === 'researcher' || role === 'admin') {
     return (
       <div className="max-w-4xl mx-auto p-4 sm:p-8 space-y-8">
@@ -126,23 +214,12 @@ export default function ProfilePage() {
                 <p className="text-lg">{editProfile.mobileNumber || 'Não indicado'}</p>
               </div>
             </div>
-            
-            <div className="pt-6 border-t mt-6">
-              <Badge variant="outline" className={cn("text-xs py-1 px-4", role === 'admin' ? "border-destructive text-destructive" : "border-primary text-primary")}>
-                Papel de Utilizador: {role?.toUpperCase()}
-              </Badge>
-              <p className="text-sm text-muted-foreground mt-4 italic">
-                Para alterar os seus dados de contacto ou e-mail, por favor utilize o formulário de contacto ou contacte o suporte técnico.
-              </p>
-            </div>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  // Questionário de Saúde para Pacientes
-  const ages = Array.from({ length: 93 }, (_, i) => i + 18);
   const weights = Array.from({ length: 151 }, (_, i) => i + 40);
   const heights = Array.from({ length: 101 }, (_, i) => i + 130);
   
@@ -170,7 +247,7 @@ export default function ProfilePage() {
         <h1 className="text-3xl font-bold font-headline text-secondary flex items-center gap-3">
           <User className="h-8 w-8 text-primary" /> Questionário de Saúde
         </h1>
-        <p className="text-muted-foreground text-lg italic">"A sua saúde é o seu maior bem. Vamos cuidar dela juntos."</p>
+        <p className="text-muted-foreground text-lg italic">Complete os seus dados para receber o melhor acompanhamento.</p>
       </header>
 
       <div className="grid gap-8">
@@ -179,35 +256,35 @@ export default function ProfilePage() {
             <CardTitle className="text-xl flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" /> Identificação e Dados Pessoais
             </CardTitle>
-            <CardDescription>Informação básica para o seu registo de saúde.</CardDescription>
+            <CardDescription>Campos com * são de preenchimento obrigatório.</CardDescription>
           </CardHeader>
           <CardContent className="p-8 grid md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="name">Nome Completo</Label>
+              <Label htmlFor="name">Nome Completo *</Label>
               <Input id="name" value={editProfile.name} onChange={e => setEditProfile({ ...editProfile, name: e.target.value })} className="h-12" />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="birthDate">Data de Nascimento (DD/MM/AAAA)</Label>
-              <Input id="birthDate" value={editProfile.birthDate} onChange={e => setEditProfile({ ...editProfile, birthDate: e.target.value })} className="h-12" placeholder="DD/MM/AAAA" />
+              <Label htmlFor="birthDate">Data de Nascimento (DD/MM/AAAA) *</Label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+                <Input 
+                  id="birthDate" 
+                  value={editProfile.birthDate || ''} 
+                  onChange={e => handleBirthDateChange(e.target.value)} 
+                  className="h-12 pl-10" 
+                  placeholder="DD/MM/AAAA" 
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="age">Idade</Label>
-              <Select value={editProfile.age?.toString() || ""} onValueChange={v => setEditProfile({ ...editProfile, age: parseInt(v) })}>
-                <SelectTrigger className="h-12">
-                  <SelectValue placeholder="Escolha a idade..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {ages.map(age => (
-                    <SelectItem key={age} value={age.toString()}>{age} anos</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="age">Idade (Calculada automaticamente)</Label>
+              <Input id="age" value={editProfile.age ? `${editProfile.age} anos` : 'Indique a data de nascimento'} disabled className="h-12 bg-muted/50 font-bold" />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="gender">Género</Label>
+              <Label htmlFor="gender">Género *</Label>
               <Select value={editProfile.gender} onValueChange={v => setEditProfile({ ...editProfile, gender: v })}>
                 <SelectTrigger className="h-12">
                   <SelectValue placeholder="Selecione..." />
@@ -221,7 +298,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="education">Escolaridade</Label>
+              <Label htmlFor="education">Escolaridade (Opcional)</Label>
               <Select value={editProfile.education} onValueChange={v => setEditProfile({ ...editProfile, education: v })}>
                 <SelectTrigger className="h-12">
                   <SelectValue placeholder="Selecione o nível..." />
@@ -235,7 +312,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="household">Agregado Familiar</Label>
+              <Label htmlFor="household">Agregado Familiar (Opcional)</Label>
               <Select value={editProfile.householdSize} onValueChange={v => setEditProfile({ ...editProfile, householdSize: v })}>
                 <SelectTrigger className="h-12">
                   <SelectValue placeholder="Selecione o tamanho..." />
@@ -248,8 +325,8 @@ export default function ProfilePage() {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="healthunit">Unidade de Saúde / Local</Label>
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="healthunit">Unidade de Saúde / Local (Opcional)</Label>
               <Input id="healthunit" value={editProfile.healthUnit} onChange={e => setEditProfile({ ...editProfile, healthUnit: e.target.value })} className="h-12" />
             </div>
           </CardContent>
@@ -258,12 +335,12 @@ export default function ProfilePage() {
         <Card className="shadow-md border-none">
           <CardHeader className="bg-secondary/5 rounded-t-lg">
             <CardTitle className="text-xl flex items-center gap-2">
-              <Activity className="h-5 w-5 text-secondary" /> Biometria e Estilo de Vida
+              <Activity className="h-5 w-5 text-secondary" /> Biometria e Estilo de Vida *
             </CardTitle>
           </CardHeader>
           <CardContent className="p-8 grid md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="weight">Peso (kg)</Label>
+              <Label htmlFor="weight">Peso (kg) *</Label>
               <Select value={editProfile.weight?.toString() || ""} onValueChange={v => setEditProfile({ ...editProfile, weight: parseInt(v) })}>
                 <SelectTrigger className="h-12">
                   <SelectValue placeholder="Escolha o peso..." />
@@ -277,7 +354,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="height">Altura (cm)</Label>
+              <Label htmlFor="height">Altura (cm) *</Label>
               <Select value={editProfile.height?.toString() || ""} onValueChange={v => setEditProfile({ ...editProfile, height: parseInt(v) })}>
                 <SelectTrigger className="h-12">
                   <SelectValue placeholder="Escolha a altura..." />
@@ -291,7 +368,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="alcohol">Consumo de Álcool</Label>
+              <Label htmlFor="alcohol">Consumo de Álcool *</Label>
               <Select value={editProfile.alcoholFreq} onValueChange={v => setEditProfile({ ...editProfile, alcoholFreq: v })}>
                 <SelectTrigger className="h-12">
                   <SelectValue placeholder="Frequência..." />
@@ -304,7 +381,7 @@ export default function ProfilePage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="tobacco">Consumo de Tabaco</Label>
+              <Label htmlFor="tobacco">Consumo de Tabaco *</Label>
               <Select value={editProfile.tobaccoFreq} onValueChange={v => setEditProfile({ ...editProfile, tobaccoFreq: v })}>
                 <SelectTrigger className="h-12">
                   <SelectValue placeholder="Frequência..." />
@@ -317,7 +394,7 @@ export default function ProfilePage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="activity">Nível de Atividade Física (Autocuidado)</Label>
+              <Label htmlFor="activity">Nível de Atividade Física *</Label>
               <Select value={editProfile.physicalActivityLevel} onValueChange={v => setEditProfile({ ...editProfile, physicalActivityLevel: v })}>
                 <SelectTrigger className="h-12">
                   <SelectValue placeholder="Selecione..." />
@@ -337,7 +414,7 @@ export default function ProfilePage() {
                 onCheckedChange={(checked) => setEditProfile({ ...editProfile, motivationToChange: checked === true })}
               />
               <Label htmlFor="motivation" className="text-sm font-medium leading-none cursor-pointer">
-                Tem motivação para mudança de hábitos e estilo de vida?
+                Tem motivação para mudança de hábitos? *
               </Label>
             </div>
           </CardContent>
@@ -346,21 +423,21 @@ export default function ProfilePage() {
         <Card className="shadow-md border-none">
           <CardHeader className="bg-accent/5 rounded-t-lg">
             <CardTitle className="text-xl flex items-center gap-2">
-              <Stethoscope className="h-5 w-5 text-accent-foreground" /> Condições Crónicas e Farmacoterapêutica
+              <Stethoscope className="h-5 w-5 text-accent-foreground" /> Condições Crónicas e Farmacoterapêutica *
             </CardTitle>
-            <CardDescription>Selecione as suas condições para receber apoio personalizado.</CardDescription>
+            <CardDescription>Selecione as suas condições principais.</CardDescription>
           </CardHeader>
           <CardContent className="p-8 space-y-8">
             <div className="flex flex-wrap gap-3">
-              {['Diabetes', 'Hipertensão', 'Colesterol'].map(disease => (
+              {['Diabetes', 'Hipertensão', 'Colesterol', 'Outra', 'Nenhuma'].map(disease => (
                 <Badge 
                   key={disease} 
                   variant={editProfile.chronicDiseases?.includes(disease) ? "default" : "outline"}
                   className={cn(
-                    "px-6 py-3 text-base cursor-pointer transition-all rounded-full",
+                    "px-6 py-3 text-base cursor-pointer transition-all rounded-full border-2",
                     editProfile.chronicDiseases?.includes(disease) 
-                      ? "bg-primary text-white scale-105 shadow-md" 
-                      : "hover:bg-primary/10 border-2"
+                      ? "bg-primary text-white scale-105 shadow-md border-primary" 
+                      : "hover:bg-primary/10"
                   )}
                   onClick={() => toggleDisease(disease)}
                 >
@@ -369,16 +446,18 @@ export default function ProfilePage() {
               ))}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="others">Outras Doenças ou Observações Importantes</Label>
-              <Textarea 
-                id="others" 
-                placeholder="Descreva outras condições ou detalhes importantes que o assistente deva saber..." 
-                className="min-h-[120px] bg-white text-base"
-                value={editProfile.otherConditions || ""}
-                onChange={e => setEditProfile({...editProfile, otherConditions: e.target.value})}
-              />
-            </div>
+            {(editProfile.chronicDiseases?.includes('Outra') || editProfile.otherConditions) && (
+              <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                <Label htmlFor="others" className="font-bold">Indique qual a outra doença/condição:</Label>
+                <Textarea 
+                  id="others" 
+                  placeholder="Escreva aqui o nome da condição ou medicação específica..." 
+                  className="min-h-[120px] bg-white text-base border-2"
+                  value={editProfile.otherConditions || ""}
+                  onChange={e => setEditProfile({...editProfile, otherConditions: e.target.value})}
+                />
+              </div>
+            )}
           </CardContent>
           <CardFooter className="bg-muted/30 px-8 py-6 flex justify-end">
             <Button 

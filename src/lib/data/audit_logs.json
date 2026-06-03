@@ -86,5 +86,16 @@
     "details": "Edição Admin - Original: [127/76 mmHg, Mood: null], Novo: [, Mood: null], Notas: ",
     "id": "d8090048-9f52-40bc-a093-78b01ff292e3",
     "timestamp": "2026-06-02T15:30:52.386Z"
+  },
+  {
+    "userId": "patient-id-03",
+    "userName": "Isabel M. Nunes",
+    "userRole": "patient",
+    "actionType": "ATUALIZAÇÃO_PERFIL_SAÚDE",
+    "targetId": "patient-id-03",
+    "targetName": "Isabel M. Nunes",
+    "details": "O paciente atualizou o seu questionário de saúde e biometria no ficheiro JSON.",
+    "id": "db261f5d-9958-46aa-95bc-f1b108348e4c",
+    "timestamp": "2026-06-03T11:03:52.802Z"
   }
 ]

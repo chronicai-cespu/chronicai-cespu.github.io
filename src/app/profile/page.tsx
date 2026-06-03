@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { logAuditAction } from '@/lib/audit-actions';
+import { updateUser } from '@/lib/user-actions';
 
 export default function ProfilePage() {
   const { userProfile, setUserProfile, role, assignedCode, isLoading } = useHealth();
@@ -23,6 +24,7 @@ export default function ProfilePage() {
   const router = useRouter();
 
   const [editProfile, setEditProfile] = useState<UserProfile | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (!isLoading) {
@@ -36,20 +38,35 @@ export default function ProfilePage() {
 
   const handleSaveProfile = async () => {
     if (editProfile && userProfile) {
-      setUserProfile(editProfile);
-      
-      // Registo de auditoria para auto-atualização do perfil
-      await logAuditAction({
-        userId: userProfile.id,
-        userName: userProfile.name,
-        userRole: userProfile.role,
-        actionType: 'ATUALIZAÇÃO_PERFIL_SAÚDE',
-        targetId: userProfile.id,
-        targetName: userProfile.name,
-        details: 'O paciente atualizou o seu questionário de saúde e biometria.'
-      });
+      setIsSaving(true);
+      try {
+        // Persistir no ficheiro JSON
+        await updateUser(userProfile.id, editProfile);
+        
+        // Atualizar contexto local
+        setUserProfile(editProfile);
+        
+        // Registo de auditoria
+        await logAuditAction({
+          userId: userProfile.id,
+          userName: userProfile.name,
+          userRole: userProfile.role,
+          actionType: 'ATUALIZAÇÃO_PERFIL_SAÚDE',
+          targetId: userProfile.id,
+          targetName: userProfile.name,
+          details: 'O paciente atualizou o seu questionário de saúde e biometria no ficheiro JSON.'
+        });
 
-      toast({ title: "Perfil Atualizado", description: "As suas informações foram guardadas com segurança." });
+        toast({ title: "Perfil Atualizado", description: "As suas informações foram guardadas com sucesso no sistema local." });
+      } catch (error: any) {
+        toast({ 
+          variant: "destructive", 
+          title: "Erro ao Guardar", 
+          description: "Não foi possível gravar os dados no ficheiro JSON." 
+        });
+      } finally {
+        setIsSaving(false);
+      }
     }
   };
 
@@ -364,8 +381,13 @@ export default function ProfilePage() {
             </div>
           </CardContent>
           <CardFooter className="bg-muted/30 px-8 py-6 flex justify-end">
-            <Button onClick={handleSaveProfile} className="bg-primary hover:bg-primary/90 rounded-full px-10 h-14 text-xl shadow-lg transition-all hover:scale-105">
-              <Save className="mr-2 h-6 w-6" /> Guardar Perfil de Saúde
+            <Button 
+              onClick={handleSaveProfile} 
+              disabled={isSaving}
+              className="bg-primary hover:bg-primary/90 rounded-full px-10 h-14 text-xl shadow-lg transition-all hover:scale-105"
+            >
+              {isSaving ? <Loader2 className="animate-spin mr-2 h-6 w-6" /> : <Save className="mr-2 h-6 w-6" />}
+              Guardar Perfil de Saúde
             </Button>
           </CardFooter>
         </Card>

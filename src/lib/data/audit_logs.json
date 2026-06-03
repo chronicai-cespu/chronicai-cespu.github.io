@@ -75,5 +75,16 @@
     "details": "Tipo: BP, Valor: 127/76 mmHg, Estado: N/A, Notas: N/A",
     "id": "338620d3-3152-4444-9274-b97d17abadfa",
     "timestamp": "2026-06-02T14:48:49.945Z"
+  },
+  {
+    "userId": "admin-id-01",
+    "userName": "Administrador ChronicAI",
+    "userRole": "admin",
+    "actionType": "EDIÇÃO_REGISTO_SAÚDE",
+    "targetId": "patient-id-01",
+    "targetName": "Maria A. Silva",
+    "details": "Edição Admin - Original: [127/76 mmHg, Mood: null], Novo: [, Mood: null], Notas: ",
+    "id": "d8090048-9f52-40bc-a093-78b01ff292e3",
+    "timestamp": "2026-06-02T15:30:52.386Z"
   }
 ]

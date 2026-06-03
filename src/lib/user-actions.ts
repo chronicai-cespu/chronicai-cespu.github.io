@@ -5,6 +5,10 @@ import fs from 'fs/promises';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
+/**
+ * CENTRAL DATA MANAGEMENT - ChronicAI
+ * Todos os dados são persistidos na pasta src/lib/data/
+ */
 const DATA_DIR = path.join(process.cwd(), 'src/lib/data');
 
 const PATHS = {
@@ -24,27 +28,8 @@ const INITIAL_DATA = {
     "mobileNumber": "910000000",
     "createdAt": "2025-01-01T00:00:00.000Z"
   }],
-  researcher: [{
-    "id": "researcher-id-01",
-    "name": "Investigador DiTech",
-    "email": "investigador@ditech.pt",
-    "password": "investigador25",
-    "role": "researcher",
-    "assignedCode": "r01",
-    "mobileNumber": "920000000",
-    "createdAt": "2025-01-10T10:00:00.000Z"
-  }],
-  patient: [{
-    "id": "patient-id-01",
-    "name": "Maria Silva",
-    "email": "maria.silva@email.com",
-    "password": "maria123",
-    "role": "patient",
-    "assignedCode": "p01",
-    "mobileNumber": "930000000",
-    "chronicDiseases": ["Hipertensão"],
-    "createdAt": "2025-01-15T09:00:00.000Z"
-  }]
+  researcher: [],
+  patient: []
 };
 
 async function ensureDir() {
@@ -88,8 +73,7 @@ export async function authenticateUser(identifier: string, pass: string) {
   const users = await getUsers();
   const user = users.find((u: any) => 
     (u.email?.toLowerCase() === cleanId || 
-     u.assignedCode?.toLowerCase() === cleanId || 
-     u.mobileNumber === cleanId) && 
+     u.assignedCode?.toLowerCase() === cleanId) && 
     u.password === cleanPass
   );
   
@@ -105,12 +89,11 @@ export async function createUser(userData: any) {
   const role: keyof typeof PATHS = userData.role;
   const users = await readJson(PATHS[role], role as any);
   
-  // Lógica robusta para gerar o próximo código sequencial
+  // Geração sequencial de códigos (p01, r01, etc.)
   const prefix = role === 'patient' ? 'p' : role === 'researcher' ? 'r' : 'adm';
   
   let nextNum = 1;
   if (users.length > 0) {
-    // Extrai os números dos códigos existentes e encontra o maior
     const numbers = users
       .map((u: any) => {
         const match = u.assignedCode.match(/\d+/);
@@ -151,7 +134,6 @@ export async function updateUser(userId: string, updates: any) {
 
   if (index === -1) throw new Error("Erro na integridade dos dados.");
 
-  // Remove campos sensíveis que não devem ser editados via perfil simples
   const { id, role: r, assignedCode, ...safeUpdates } = updates;
 
   users[index] = { ...users[index], ...safeUpdates };

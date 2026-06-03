@@ -1,1 +1,2 @@
-[]
+
+{ "status": "redundant", "use": "src/lib/data/researchers.json" }

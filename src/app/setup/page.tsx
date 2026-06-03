@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Loader2, ShieldCheck, Database, CheckCircle2, FileJson } from 'lucide-react';
+import { Loader2, ShieldCheck, CheckCircle2, FileJson, AlertTriangle } from 'lucide-react';
 import { getUsers } from '@/lib/user-actions';
 
 export default function SetupPage() {
@@ -16,19 +16,19 @@ export default function SetupPage() {
     setStatus('');
 
     try {
-      // Verifica a integridade do sistema JSON local
+      // Verifica a integridade do sistema JSON local na pasta src/lib/data
       const users = await getUsers();
       const adminExists = users.some(u => u.assignedCode === 'admin2526');
       const patientCount = users.filter(u => u.role === 'patient').length;
       const researcherCount = users.filter(u => u.role === 'researcher').length;
       
       if (adminExists) {
-        setStatus(`Sistema OK. Encontrados: 1 Admin, ${researcherCount} Investigadores, ${patientCount} Pacientes nos ficheiros locais.`);
+        setStatus(`Sistema Local OK. Detetados: 1 Administrador, ${researcherCount} Investigadores e ${patientCount} Pacientes.`);
       } else {
-        setStatus('Aviso: O administrador padrão (admin2526) não foi detetado. Verifique src/lib/data/admins.json.');
+        setStatus('Aviso: Ficheiros JSON detetados mas o administrador padrão está em falta.');
       }
     } catch (error: any) {
-      setStatus('Erro ao aceder aos dados JSON: ' + error.message);
+      setStatus('Erro crítico: Ficheiros de dados não encontrados ou corrompidos.');
     } finally {
       setIsLoading(false);
     }
@@ -43,20 +43,22 @@ export default function SetupPage() {
               <FileJson className="w-12 h-12 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Diagnóstico de Dados (Local)</CardTitle>
+          <CardTitle className="text-2xl font-bold">Diagnóstico de Dados Locais</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <p className="text-center text-muted-foreground text-sm">
-            O ChronicAI opera de forma 100% local através de ficheiros JSON na pasta <code>src/lib/data/</code>.
+            O ChronicAI utiliza exclusivamente o sistema de ficheiros local em <code>src/lib/data/</code> para garantir a privacidade total dos dados.
           </p>
           
           <div className="bg-muted p-4 rounded-lg text-xs space-y-1">
             <p className="font-bold text-primary mb-2 flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3" /> Credenciais Administrativas:
+              <ShieldCheck className="w-3 h-3" /> Acesso Administrativo:
             </p>
-            <p><strong>ID:</strong> admin2526</p>
+            <p><strong>Código:</strong> admin2526</p>
             <p><strong>Email:</strong> chronicai.cespu@gmail.com</p>
-            <p><strong>Pass:</strong> ditechAI2526</p>
+            <p className="text-[10px] opacity-70 mt-2 italic flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" /> Sem dependências externas (Firestore/Firebase removidos).
+            </p>
           </div>
 
           <Button 
@@ -64,7 +66,7 @@ export default function SetupPage() {
             disabled={isLoading} 
             className="w-full h-14 text-lg rounded-full shadow-lg"
           >
-            {isLoading ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : "Validar Ficheiros de Dados"}
+            {isLoading ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : "Validar Integridade JSON"}
           </Button>
 
           {status && (

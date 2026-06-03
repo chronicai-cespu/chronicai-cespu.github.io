@@ -1,3 +1,2 @@
-{
-  "info": "Este ficheiro foi movido para src/lib/placeholder-images.json para evitar duplicados."
-}
+
+{ "status": "redundant", "use": "src/lib/placeholder-images.json" }

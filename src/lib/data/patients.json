@@ -55,6 +55,29 @@
     "id": "884f355b-ed0e-42a5-ad01-df7c6fecafb2",
     "assignedCode": "p04",
     "createdAt": "2026-06-03T11:16:49.826Z",
+    "chronicDiseases": [
+      "Hipertensão",
+      "Outra"
+    ],
+    "birthDate": "14/05/1963",
+    "age": 63,
+    "gender": "Masculino",
+    "weight": 77,
+    "height": 161,
+    "alcoholFreq": "Nunca",
+    "tobaccoFreq": "Fumador",
+    "physicalActivityLevel": "Nula",
+    "otherConditions": "Problemas de coluna"
+  },
+  {
+    "name": "Manuel Goucha",
+    "email": "manu@email.com",
+    "password": "manuel1234",
+    "mobileNumber": "",
+    "role": "patient",
+    "id": "1ccde8ff-f851-4191-bc32-7d16b2a91764",
+    "assignedCode": "p05",
+    "createdAt": "2026-06-03T14:51:01.500Z",
     "chronicDiseases": []
   }
 ]

@@ -97,5 +97,27 @@
     "details": "O paciente atualizou o seu questionário de saúde e biometria no ficheiro JSON.",
     "id": "db261f5d-9958-46aa-95bc-f1b108348e4c",
     "timestamp": "2026-06-03T11:03:52.802Z"
+  },
+  {
+    "userId": "884f355b-ed0e-42a5-ad01-df7c6fecafb2",
+    "userName": "Manuel Chaves",
+    "userRole": "patient",
+    "actionType": "ATUALIZAÇÃO_PERFIL_SAÚDE",
+    "targetId": "884f355b-ed0e-42a5-ad01-df7c6fecafb2",
+    "targetName": "Manuel Chaves",
+    "details": "O paciente completou/atualizou o seu questionário de saúde obrigatório.",
+    "id": "3de283ba-8b2f-4c84-8fb4-fd68adc14961",
+    "timestamp": "2026-06-03T14:53:39.538Z"
+  },
+  {
+    "userId": "admin-id-01",
+    "userName": "Administrador ChronicAI",
+    "userRole": "admin",
+    "actionType": "EDIÇÃO_REGISTO_SAÚDE",
+    "targetId": "patient-id-01",
+    "targetName": "Maria A. Silva",
+    "details": "Edição Admin - Original: [72/41 mmHg, Mood: triste], Novo: [72/41 mmHg, Mood: feliz], Notas: ",
+    "id": "fe43774f-4561-41d9-aa5a-90a3829fbaf8",
+    "timestamp": "2026-06-03T14:55:23.680Z"
   }
 ]

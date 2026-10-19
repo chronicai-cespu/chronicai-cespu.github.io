@@ -89,7 +89,7 @@ export default function ResearcherPage() {
     <div className="max-w-7xl mx-auto p-4 sm:p-8 space-y-8">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2"><FlaskConical className="text-primary" /> Lista de Pacientes (JSON)</h1>
+          <h1 className="text-3xl font-bold flex items-center gap-2"><FlaskConical className="text-primary" /> Lista de Pacientes</h1>
           <p className="text-muted-foreground">Gestão e acompanhamento de participantes no estudo clínico.</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
@@ -150,7 +150,7 @@ export default function ResearcherPage() {
             </div>
             <div className="grid gap-2">
               <Label>E-mail</Label>
-              <Input type="email" value={editingPatient?.email || ''} onChange={e => setEditingPatient({...editingPatient, email: e.target.value})} />
+              <Input type="email" value={editingPatient?.email || ''} disabled />
             </div>
             <div className="grid gap-2">
               <Label>Telemóvel</Label>

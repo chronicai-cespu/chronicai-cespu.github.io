@@ -220,7 +220,7 @@ function LogsPageContent() {
 
         // Atualização OTIMISTA da UI (remove imediatamente da lista local)
         setDisplayLogs(prev => prev.filter(l => l.id !== logId));
-        toast({ title: "Eliminado", description: "O registo foi removido do histórico JSON." });
+        toast({ title: "Eliminado", description: "O registo foi removido do histórico." });
       } else {
         toast({ variant: "destructive", title: "Erro", description: result.error || "Registo não encontrado." });
       }
@@ -477,7 +477,7 @@ function LogsPageContent() {
                 ) : (
                   <div className="text-center py-10">
                     <p className="text-muted-foreground italic text-sm">
-                      Nenhum registo disponível no ficheiro JSON.
+                      Nenhum registo disponível.
                     </p>
                   </div>
                 )}

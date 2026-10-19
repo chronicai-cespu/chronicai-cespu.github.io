@@ -1,35 +1,85 @@
-# ChronicAI - O Seu Companheiro de Saúde
+# ChronicAI - O Seu Companheiro de Saúde (versão gratuita)
 
-O **ChronicAI** é uma aplicação Next.js moderna concebida para ajudar a gerir condições de saúde crónicas (como Diabetes, Hipertensão e Colesterol) de forma autónoma e informada.
+O **ChronicAI** é uma aplicação web concebida para ajudar a gerir condições de saúde crónicas (como Diabetes, Hipertensão e Colesterol) de forma autónoma e informada.
 
 Este projeto faz parte da iniciativa:
 **"ChronicAI – Integrating Self-Care and Artificial Intelligence in Chronic Disease Management"**
 **ChronicAI-GI2-CESPU-2025**
 
+Esta versão corre **inteiramente no plano gratuito do Firebase (Spark), sem conta de faturação**.
+
+## Arquitetura
+
+| Componente | Serviço | Plano |
+|---|---|---|
+| Alojamento | Firebase Hosting (site estático gerado pelo Next.js em `out/`) | Spark (gratuito) |
+| Contas e palavras-passe | Firebase Authentication (e-mail/palavra-passe) | Spark (gratuito) |
+| Perfis, registos clínicos, auditoria, contactos | Cloud Firestore | Spark (gratuito) |
+| Assistente de IA | Firebase AI Logic → Gemini Developer API (`gemini-2.5-flash`) | Nível gratuito |
+| Publicação | GitHub Actions (a cada `push` no `main`) | Gratuito |
+
+Não existe servidor: a app é um conjunto de ficheiros estáticos que falam diretamente com o Firebase.
+A segurança dos dados é garantida pelas regras em `firestore.rules`.
+
+### Coleções do Firestore
+
+- `users/{uid}` — perfil do utilizador (papel, código pXX/rXX, dados de saúde). Sem palavras-passe.
+- `login_codes/{código}` — liga o código de acesso (ex.: `p01`) ao e-mail, para o login por código.
+- `counters/{p|r}` — contadores para gerar os códigos sequenciais.
+- `clinical_records/{id}` — registos clínicos (pressão arterial, peso, atividade).
+- `audit_logs/{id}` — log de auditoria imutável.
+- `contact_messages/{id}` — mensagens do formulário de contacto (só o administrador lê).
+
+### Papéis
+
+- **Paciente** — regista-se livremente.
+- **Investigador** — regista-se como pendente; o administrador aprova-o mudando o papel para *Investigador* em `/admin`.
+- **Administrador** — atribuído manualmente na consola (ver passo 5 abaixo).
+
+## Configuração (uma única vez)
+
+Tudo na [consola do Firebase](https://console.firebase.google.com/), projeto `studio-8989371642-d7cae`.
+
+1. **Firestore** → *Criar base de dados* → modo de produção → localização `eur3 (europe-west)`.
+2. **Authentication** → *Começar* → *Método de início de sessão* → ativar **E-mail/palavra-passe**.
+3. **AI Logic** → *Começar* → escolher **Gemini Developer API**. A chave é criada e gerida pelo Firebase (não fica no código).
+4. **Publicação automática:**
+   - *Definições do projeto* → *Contas de serviço* → **Gerar nova chave privada** (descarrega um ficheiro JSON).
+   - No GitHub: *Settings → Secrets and variables → Actions → New repository secret*, nome **`FIREBASE_SERVICE_ACCOUNT`**, valor = conteúdo completo do ficheiro JSON. Apague o ficheiro do computador a seguir.
+   - Em *Actions*, execute o workflow **Deploy para Firebase Hosting** (ou faça um `push` para o `main`). A app fica em https://studio-8989371642-d7cae.web.app e as regras do Firestore são publicadas ao mesmo tempo.
+5. **Primeiro administrador:** registe uma conta em `/register`. Depois, em *Firestore* → coleção `users`, abra o documento dessa conta e altere o campo `role` para `admin`.
+6. Confirme em `/setup` que o Firestore, a sessão e a IA respondem.
+
+### Opcional: App Check (recomendado)
+
+Impede que outros sites usem a quota gratuita da IA.
+
+1. Crie uma chave **reCAPTCHA v3** em https://www.google.com/recaptcha/admin com o domínio `studio-8989371642-d7cae.web.app`.
+2. Consola Firebase → **App Check** → registe a app web com essa chave (chave secreta).
+3. No GitHub: *Settings → Secrets and variables → Actions → Variables* → nova variável **`RECAPTCHA_SITE_KEY`** com a chave do site.
+4. Depois de confirmar que a app funciona, ative a *aplicação obrigatória (enforce)* do App Check para o AI Logic.
+
+## Desenvolvimento local
+
+```bash
+npm install
+npm run dev        # http://localhost:9002
+npm run build      # gera o site estático em out/
+```
+
+## Limites do plano gratuito
+
+- Firestore: 50 000 leituras e 20 000 escritas por dia, 1 GiB de dados.
+- Hosting: 10 GB de armazenamento, 360 MB de transferência por dia.
+- Gemini Developer API (nível gratuito): limites por minuto e por dia; os pedidos do nível gratuito podem ser usados pela Google para melhorar os produtos. Não envie dados identificáveis desnecessários nas perguntas à IA.
+
+Se um limite for atingido, o serviço pára até ao dia seguinte — nunca há cobrança, porque o projeto não tem faturação.
+
 ## Colaboração Institucional
-Este projeto resulta de uma colaboração estratégica entre:
 - **Digital Health & Technology (DiTech)**: Unidade de investigação integrada no **GI2- Gabinete para a Investigação & a Inovação** da **CESPU - Cooperativa de Ensino Superior Politécnico e Universitário**.
 - **Intelligent Systems Associate Laboratory (LASI)**: Do **Centro Algoritmi** da **Universidade do Minho**.
 
-## Segurança e Armazenamento de Dados
-
-A aplicação utiliza a infraestrutura **Firebase** para garantir a máxima segurança dos dados:
-
-- **Autenticação e Palavras-passe:** Geridas pelo **Firebase Authentication**. As palavras-passe são encriptadas e geridas pela Google, não sendo acessíveis em texto limpo nem guardadas na base de dados da aplicação.
-- **Perfis e Registos Clínicos:** Guardados no **Cloud Firestore**. Os dados são protegidos por **Security Rules** que garantem que apenas o próprio utilizador (ou investigadores autorizados com justificativa) podem aceder ou editar informações sensíveis.
-- **Auditoria:** Todas as alterações feitas por investigadores em perfis de pacientes são registadas num log de auditoria imutável.
-
-## Funcionalidades Principais
-
-- **Painel de Controlo (Dashboard):** Resumo visual dos sinais vitais e progresso de atividade física semanal com gráficos dinâmicos.
-- **Assistente de Saúde com IA:** Chatbot empático que fornece conselhos personalizados baseados no perfil clínico do utilizador e dados estatísticos.
-- **Registo Diário Simples:** Interface intuitiva com botões grandes e menus para registar pressão arterial (sistólica/diastólica), peso e atividade.
-- **Questionário de Perfil Abrangente:** Recolha detalhada de dados biométricos, hábitos de estilo de vida e medicação habitual.
-- **Segurança de Emergência:** A IA identifica sintomas de urgência e guia o utilizador para o 112 ou SNS 24.
-- **Sistema Multi-Papel:** Diferenciação entre Pacientes (pXX), Investigadores (rXX) e Administrador.
-
 ## Contacto
-Para questões relacionadas com o projeto ou suporte:
 **Email:** chronicai.cespu@gmail.com
 
 ## Aviso Médico

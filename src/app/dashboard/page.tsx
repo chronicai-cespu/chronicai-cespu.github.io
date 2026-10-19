@@ -95,7 +95,7 @@ export default function Dashboard() {
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold font-headline text-secondary">Olá, {userProfile.name}</h1>
-          <p className="text-muted-foreground text-lg">Resumo de saúde do ficheiro JSON.</p>
+          <p className="text-muted-foreground text-lg">O seu resumo de saúde.</p>
         </div>
         <div className="flex gap-2">
           <Button asChild variant="outline" className="rounded-full">
@@ -141,7 +141,7 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-6 text-muted-foreground italic">Sem registos recentes no JSON.</div>
+              <div className="text-center py-6 text-muted-foreground italic">Sem registos recentes.</div>
             )}
             <Button asChild className="w-full mt-4 rounded-full bg-accent text-accent-foreground">
               <Link href="/logs">Registar Medição</Link>

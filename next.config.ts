@@ -1,7 +1,12 @@
-
 import type {NextConfig} from 'next';
 
+/**
+ * Exportação estática: a app é gerada como ficheiros HTML/JS em `out/`
+ * e alojada no Firebase Hosting (plano Spark, gratuito). Não há servidor.
+ */
 const nextConfig: NextConfig = {
+  output: 'export',
+  trailingSlash: true,
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -9,26 +14,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'picsum.photos',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'drive.google.com',
-        port: '',
-        pathname: '/**',
-      },
-    ],
+    unoptimized: true,
   },
 };
 

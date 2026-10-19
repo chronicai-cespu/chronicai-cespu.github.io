@@ -1,98 +1,105 @@
-
 rules_version = '2';
+
+/**
+ * CHRONIC AI - REGRAS DE SEGURANÇA (Cloud Firestore)
+ *
+ * Papéis guardados em users/{uid}.role:
+ *   patient | pending_researcher | researcher | admin
+ * Um utilizador só pode registar-se como patient ou pending_researcher.
+ * Só um admin pode alterar papéis (ex.: aprovar investigadores).
+ */
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    /**
-     * CHRONIC AI SECURITY RULES
-     */
 
     function isSignedIn() {
       return request.auth != null;
     }
 
-    function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    function myRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
 
-    function isResearcher() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roles_researcher/$(request.auth.uid));
+    function hasProfile() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isAdmin() {
+      return hasProfile() && myRole() == 'admin';
+    }
+
+    function isStaff() {
+      return hasProfile() && myRole() in ['admin', 'researcher'];
     }
 
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // --- COLLECTION RULES ---
+    function unchanged(field) {
+      return request.resource.data.get(field, null) == resource.data.get(field, null);
+    }
 
+    // --- Perfis de utilizador ---
     match /users/{userId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn() && (isResearcher() || isAdmin());
-      
-      // Permite que o utilizador crie o seu próprio perfil base após o login JSON
-      allow create, update: if isOwner(userId) || isAdmin();
+      allow get: if isOwner(userId) || isStaff();
+      allow list: if isStaff();
+
+      allow create: if isOwner(userId)
+        && request.resource.data.role in ['patient', 'pending_researcher']
+        && request.resource.data.email == request.auth.token.email;
+
+      // O próprio e os investigadores não podem mudar papel, código nem e-mail.
+      allow update: if isAdmin()
+        || ((isOwner(userId) || isStaff())
+            && unchanged('role') && unchanged('assignedCode') && unchanged('email'));
+
       allow delete: if isAdmin();
     }
 
-    match /roles_admin/{adminId} {
-      allow get: if isSignedIn();
-      allow list: if isAdmin();
-      // Permite auto-atribuição para o protótipo (sincronização com JSON)
-      allow create, update: if isOwner(adminId) || isAdmin();
+    // --- Códigos de acesso (p01, r01...) -> e-mail, usados no login ---
+    // Leitura individual pública (é necessária antes de iniciar sessão);
+    // listagem proibida.
+    match /login_codes/{code} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email;
+      allow update: if false;
       allow delete: if isAdmin();
     }
 
-    match /roles_researcher/{researcherId} {
+    // --- Contadores para gerar códigos sequenciais ---
+    match /counters/{prefix} {
       allow get: if isSignedIn();
-      allow list: if isSignedIn() && (isResearcher() || isAdmin());
-      // Permite auto-atribuição para o protótipo (sincronização com JSON)
-      allow create, update: if isOwner(researcherId) || isAdmin();
-      allow delete: if isAdmin();
+      allow list: if false;
+      allow create: if isSignedIn() && prefix in ['p', 'r'] && request.resource.data.last == 1;
+      allow update: if isSignedIn() && request.resource.data.last == resource.data.last + 1;
+      allow delete: if false;
     }
 
-    match /patient_profiles/{patientUserId} {
-      allow get: if isSignedIn();
-      // Permite listagem para qualquer utilizador autenticado no protótipo para evitar erros de permissão
-      allow list: if isSignedIn();
-      
-      allow create: if isOwner(patientUserId) || isAdmin() || isResearcher();
-      allow update: if resource != null && (isOwner(patientUserId) || isAdmin() || isResearcher());
-      allow delete: if resource != null && isAdmin();
-
-      match /clinical_records/{recordId} {
-        allow get, list: if isSignedIn() && (isOwner(patientUserId) || isResearcher() || isAdmin());
-        allow create: if (isOwner(patientUserId) || isAdmin() || isResearcher());
-        allow update: if resource != null && (isOwner(patientUserId) || isAdmin() || isResearcher());
-        allow delete: if resource != null && isAdmin();
-      }
-
-      match /activity_logs/{logId} {
-        allow get, list: if isSignedIn() && (isOwner(patientUserId) || isResearcher() || isAdmin());
-        allow create: if (isOwner(patientUserId) || isAdmin() || isResearcher());
-        allow update: if resource != null && (isOwner(patientUserId) || isAdmin() || isResearcher());
-        allow delete: if resource != null && isAdmin();
-      }
-
-      match /audit_logs/{logId} {
-        allow get, list: if isAdmin() || isResearcher();
-        allow create: if isAdmin() || isResearcher();
-        allow update, delete: if isAdmin();
-      }
-    }
-    
-    match /chronic_diseases/{diseaseId} {
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if isAdmin();
+    // --- Registos clínicos ---
+    match /clinical_records/{recordId} {
+      allow read: if isStaff()
+        || (isSignedIn() && resource.data.patientProfileId == request.auth.uid);
+      allow create: if isStaff()
+        || (hasProfile() && request.resource.data.patientProfileId == request.auth.uid);
+      allow update, delete: if isAdmin();
     }
 
-    match /medications/{medicationId} {
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if isAdmin();
+    // --- Auditoria (imutável) ---
+    match /audit_logs/{logId} {
+      allow read: if isStaff();
+      allow create: if hasProfile() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
     }
 
+    // --- Mensagens de contacto ---
     match /contact_messages/{messageId} {
-      allow create: if true;
-      allow get, list, update, delete: if isAdmin();
+      allow create: if request.resource.data.keys().hasOnly(['name', 'email', 'phone', 'subject', 'message', 'createdAt'])
+        && request.resource.data.message is string
+        && request.resource.data.message.size() < 5000;
+      allow read, update, delete: if isAdmin();
     }
   }
 }

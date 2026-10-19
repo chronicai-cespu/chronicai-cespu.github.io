@@ -65,7 +65,7 @@ export default function ContactPage() {
       toast({
         variant: "destructive",
         title: "Erro no Envio",
-        description: "Não foi possível guardar a mensagem no JSON.",
+        description: "Não foi possível enviar a mensagem.",
       });
     } finally {
       setIsSubmitting(false);
@@ -86,7 +86,7 @@ export default function ContactPage() {
                 <AppLogo className="w-10 h-10" />
               </div>
             </div>
-            <CardTitle className="text-3xl font-bold font-headline text-primary">Formulário de Contacto (JSON)</CardTitle>
+            <CardTitle className="text-3xl font-bold font-headline text-primary">Formulário de Contacto</CardTitle>
             <CardDescription className="text-lg">
               As suas mensagens são guardadas localmente.
             </CardDescription>

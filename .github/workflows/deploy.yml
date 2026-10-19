@@ -1,0 +1,41 @@
+# Publica a app no Firebase Hosting (plano Spark, gratuito) a cada push no main.
+# Também publica as regras de segurança do Firestore.
+#
+# Requer o segredo FIREBASE_SERVICE_ACCOUNT (JSON da conta de serviço do projeto):
+# Consola Firebase → Definições do projeto → Contas de serviço → Gerar nova chave privada
+# GitHub → Settings → Secrets and variables → Actions → New repository secret
+name: Deploy para Firebase Hosting
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+          NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ vars.RECAPTCHA_SITE_KEY }}
+
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - name: Publicar Hosting e regras do Firestore
+        run: npx --yes firebase-tools@14 deploy --only hosting,firestore:rules --project studio-8989371642-d7cae --non-interactive

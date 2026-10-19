@@ -41,21 +41,21 @@ export default function AdminPage() {
       setUsers(data);
     } catch (e) {
       console.error(e);
-      toast({ variant: "destructive", title: "Erro", description: "Não foi possível carregar os utilizadores do ficheiro JSON." });
+      toast({ variant: "destructive", title: "Erro", description: "Não foi possível carregar os utilizadores." });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDelete = async (id: string, code: string) => {
-    if (code === 'admin2526') {
-      toast({ variant: "destructive", title: "Ação Bloqueada", description: "Não é possível remover a conta de administrador principal." });
+    if (id === userProfile?.id) {
+      toast({ variant: "destructive", title: "Ação Bloqueada", description: "Não pode remover a sua própria conta de administrador." });
       return;
     }
     if (window.confirm(`Apagar definitivamente ${code}?`)) {
       try {
         await deleteUser(id);
-        toast({ title: "Removido", description: "Utilizador apagado do ficheiro JSON." });
+        toast({ title: "Removido", description: "Perfil e código de acesso removidos. A conta deixa de conseguir entrar." });
         loadUsers();
       } catch (e) {
         toast({ variant: "destructive", title: "Erro", description: "Falha ao apagar o utilizador." });
@@ -67,7 +67,7 @@ export default function AdminPage() {
     if (!editingUser) return;
     try {
       await updateUser(editingUser.id, editingUser);
-      toast({ title: "Atualizado", description: "Dados guardados com sucesso no JSON." });
+      toast({ title: "Atualizado", description: "Dados guardados com sucesso." });
       setEditingUser(null);
       loadUsers();
     } catch (e: any) {
@@ -88,8 +88,8 @@ export default function AdminPage() {
     <div className="max-w-7xl mx-auto p-4 sm:p-8 space-y-8">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2"><ShieldAlert className="text-primary" /> Gestão de Utilizadores (JSON)</h1>
-          <p className="text-muted-foreground">Administração central de contas guardadas em ficheiros locais.</p>
+          <h1 className="text-3xl font-bold flex items-center gap-2"><ShieldAlert className="text-primary" /> Gestão de Utilizadores</h1>
+          <p className="text-muted-foreground">Administração central de contas. Aprove aqui os investigadores pendentes, alterando o papel para Investigador.</p>
         </div>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <Button variant="outline" onClick={loadUsers} className="flex-1 sm:flex-none"><RefreshCw className="mr-2 h-4 w-4" /> Atualizar</Button>
@@ -116,7 +116,7 @@ export default function AdminPage() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">A ler ficheiros JSON...</TableCell>
+                    <TableCell colSpan={5} className="h-24 text-center">A carregar utilizadores...</TableCell>
                   </TableRow>
                 ) : users.length === 0 ? (
                   <TableRow>
@@ -129,7 +129,7 @@ export default function AdminPage() {
                     <TableCell className="hidden md:table-cell text-muted-foreground">{user.email}</TableCell>
                     <TableCell>
                       <Badge variant={user.role === 'admin' ? 'destructive' : user.role === 'researcher' ? 'secondary' : 'outline'}>
-                        {user.role}
+                        {user.role === 'pending_researcher' ? 'investigador pendente' : user.role}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right space-x-1">
@@ -139,7 +139,7 @@ export default function AdminPage() {
                         variant="ghost" 
                         className="text-destructive" 
                         onClick={() => handleDelete(user.id, user.assignedCode)}
-                        disabled={user.assignedCode === 'admin2526'}
+                        disabled={user.id === userProfile?.id}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -164,16 +164,18 @@ export default function AdminPage() {
             </div>
             <div className="grid gap-2">
               <label className="text-sm font-bold">E-mail de Acesso</label>
-              <Input type="email" value={editingUser?.email || ''} onChange={e => setEditingUser({...editingUser, email: e.target.value})} />
+              <Input type="email" value={editingUser?.email || ''} disabled />
+              <p className="text-[11px] text-muted-foreground">O e-mail de acesso é gerido pelo Firebase Authentication e não pode ser alterado aqui.</p>
             </div>
             <div className="grid gap-2">
               <label className="text-sm font-bold">Papel no Sistema</label>
-              <Select value={editingUser?.role} onValueChange={v => setEditingUser({...editingUser, role: v})} disabled={editingUser?.assignedCode === 'admin2526'}>
+              <Select value={editingUser?.role} onValueChange={v => setEditingUser({...editingUser, role: v})} disabled={editingUser?.id === userProfile?.id}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="patient">Paciente</SelectItem>
+                  <SelectItem value="pending_researcher">Investigador (pendente)</SelectItem>
                   <SelectItem value="researcher">Investigador</SelectItem>
                   <SelectItem value="admin">Administrador</SelectItem>
                 </SelectContent>
@@ -181,7 +183,7 @@ export default function AdminPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleUpdate} className="w-full sm:w-auto"><Save className="mr-2 h-4 w-4" /> Guardar no JSON</Button>
+            <Button onClick={handleUpdate} className="w-full sm:w-auto"><Save className="mr-2 h-4 w-4" /> Guardar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

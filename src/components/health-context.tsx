@@ -2,11 +2,14 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { getUserProfile } from '@/lib/user-actions';
 
 export type UserProfile = {
   id: string;
   name: string;
-  role: 'patient' | 'admin' | 'researcher';
+  role: 'patient' | 'admin' | 'researcher' | 'pending_researcher';
   assignedCode: string;
   email?: string;
   mobileNumber?: string;
@@ -48,33 +51,39 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem('chronic_user');
-    if (stored) {
+    // A sessão é gerida pelo Firebase Authentication; o perfil vem do Firestore.
+    try { localStorage.removeItem('chronic_user'); } catch {}
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        setUserProfileState(null);
+        setIsLoading(false);
+        return;
+      }
       try {
-        const parsed = JSON.parse(stored);
-        if (parsed && parsed.id) {
-          setUserProfileState(parsed);
+        const profile = await getUserProfile(user.uid);
+        if (!profile || profile.role === 'pending_researcher') {
+          setUserProfileState(null);
+        } else {
+          setUserProfileState(profile);
         }
       } catch (e) {
-        localStorage.removeItem('chronic_user');
+        console.error('Erro ao carregar o perfil:', e);
+        setUserProfileState(null);
+      } finally {
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
+    });
+    return unsubscribe;
   }, []);
 
-  const logout = () => {
-    localStorage.removeItem('chronic_user');
+  const logout = async () => {
+    try { await signOut(auth); } catch {}
     setUserProfileState(null);
     window.location.href = '/login';
   };
 
   const setUserProfile = (p: UserProfile | null) => {
     setUserProfileState(p);
-    if (p) {
-      localStorage.setItem('chronic_user', JSON.stringify(p));
-    } else {
-      localStorage.removeItem('chronic_user');
-    }
   };
 
   const value = {

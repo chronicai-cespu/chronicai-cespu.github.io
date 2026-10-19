@@ -88,7 +88,7 @@ export default function AuditLogsPage() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">A ler histórico JSON...</TableCell>
+                    <TableCell colSpan={5} className="h-24 text-center">A carregar histórico...</TableCell>
                   </TableRow>
                 ) : logs.length === 0 ? (
                   <TableRow>

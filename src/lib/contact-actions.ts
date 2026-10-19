@@ -1,47 +1,32 @@
-
-'use server';
-
-import fs from 'fs/promises';
-import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
-
-const DATA_FILE = path.join(process.cwd(), 'src/lib/data/contact_messages.json');
-
-async function ensureFile() {
-  try {
-    await fs.access(DATA_FILE);
-  } catch {
-    await fs.mkdir(path.dirname(DATA_FILE), { recursive: true });
-    await fs.writeFile(DATA_FILE, '[]', 'utf8');
-  }
-}
+/**
+ * MENSAGENS DE CONTACTO - Cloud Firestore (`contact_messages`).
+ * Qualquer visitante pode enviar; só o administrador pode ler.
+ */
+import { addDoc, collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export async function saveContactMessage(message: any) {
-  await ensureFile();
+  const newMessage = {
+    name: String(message?.name || ''),
+    email: String(message?.email || ''),
+    phone: String(message?.phone || ''),
+    subject: String(message?.subject || ''),
+    message: String(message?.message || ''),
+    createdAt: new Date().toISOString(),
+  };
   try {
-    const data = await fs.readFile(DATA_FILE, 'utf8');
-    const allMessages = JSON.parse(data);
-    
-    const newMessage = {
-      ...message,
-      id: uuidv4(),
-      createdAt: new Date().toISOString()
-    };
-
-    allMessages.push(newMessage);
-    await fs.writeFile(DATA_FILE, JSON.stringify(allMessages, null, 2), 'utf8');
-    return newMessage;
-  } catch (error) {
-    throw new Error("Não foi possível enviar a mensagem.");
+    const ref = await addDoc(collection(db, 'contact_messages'), newMessage);
+    return { ...newMessage, id: ref.id };
+  } catch {
+    throw new Error('Não foi possível enviar a mensagem.');
   }
 }
 
 export async function getContactMessages() {
-  await ensureFile();
   try {
-    const data = await fs.readFile(DATA_FILE, 'utf8');
-    return JSON.parse(data).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  } catch (error) {
+    const snap = await getDocs(query(collection(db, 'contact_messages'), orderBy('createdAt', 'desc')));
+    return snap.docs.map((d) => ({ ...d.data(), id: d.id }));
+  } catch {
     return [];
   }
 }

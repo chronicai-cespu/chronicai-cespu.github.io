@@ -24,6 +24,7 @@ export default function RegisterPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registeredCode, setRegisteredCode] = useState<string | null>(null);
+  const [isPending, setIsPending] = useState(false);
   
   const router = useRouter();
   const { toast } = useToast();
@@ -36,6 +37,7 @@ export default function RegisterPage() {
     try {
       const newUser = await createUser(formData);
       setRegisteredCode(newUser.assignedCode);
+      setIsPending(newUser.role === 'pending_researcher');
       toast({ 
         title: "Conta Criada com Sucesso!", 
         description: `O seu código de acesso é: ${newUser.assignedCode}. Guarde-o bem.` 
@@ -71,6 +73,11 @@ export default function RegisterPage() {
             <p className="text-sm text-muted-foreground italic">
               Utilize este código ou o seu e-mail para fazer login. Por favor, guarde-o num local seguro.
             </p>
+            {isPending && (
+              <p className="text-sm font-bold text-orange-700 bg-orange-50 p-3 rounded-lg">
+                A sua conta de investigador fica pendente até ser aprovada pelo administrador.
+              </p>
+            )}
           </CardContent>
           <CardFooter className="pb-10 px-8">
             <Button asChild className="w-full h-14 text-xl rounded-full bg-primary shadow-lg transition-all active:scale-95 active:bg-primary/80">
@@ -116,7 +123,7 @@ export default function RegisterPage() {
                   <SelectItem value="researcher" className="py-3">
                     <div className="flex flex-col">
                       <span className="font-bold">Investigador</span>
-                      <span className="text-xs text-muted-foreground">Vou acompanhar estudos clínicos</span>
+                      <span className="text-xs text-muted-foreground">Vou acompanhar estudos clínicos (requer aprovação)</span>
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -169,7 +176,8 @@ export default function RegisterPage() {
                 <Input 
                   id="password"
                   type="password" 
-                  placeholder="Crie uma palavra-passe segura" 
+                  placeholder="Mínimo de 6 caracteres" 
+                  minLength={6}
                   className="h-12 text-base"
                   value={formData.password} 
                   onChange={e => setFormData({...formData, password: e.target.value})} 

@@ -1,5 +1,5 @@
 
-import type {Metadata} from 'next';
+import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { HealthProvider } from '@/components/health-context';
 import { Navigation } from '@/components/navigation';
@@ -8,9 +8,13 @@ import { Toaster } from '@/components/ui/toaster';
 export const metadata: Metadata = {
   title: 'ChronicAI - O Seu Companheiro de Saúde',
   description: 'Acompanhamento de saúde e assistente com IA para cuidados crónicos.',
-  manifest: '/manifest.json',
+  manifest: '/manifest.webmanifest',
+};
+
+export const viewport: Viewport = {
   themeColor: '#008ba3',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0',
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({

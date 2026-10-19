@@ -1,0 +1,93 @@
+
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "type": "object",
+      "description": "Utilizador central do sistema com papel e código atribuído.",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "description": "Nome completo do utilizador" },
+        "email": { "type": "string", "format": "email" },
+        "mobileNumber": { "type": "string" },
+        "role": { "type": "string", "enum": ["patient", "admin", "researcher"] },
+        "assignedCode": { "type": "string", "description": "Código pXX ou rXX" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "email", "role", "assignedCode"]
+    },
+    "PatientProfile": {
+      "title": "PatientProfile",
+      "type": "object",
+      "description": "Dados clínicos e pessoais do paciente.",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "age": { "type": "number" },
+        "birthDate": { "type": "string", "format": "date", "description": "Data de nascimento em formato DD/MM/AAAA" },
+        "gender": { "type": "string" },
+        "education": { "type": "string" },
+        "householdSize": { "type": "string" },
+        "healthUnit": { "type": "string" },
+        "weight": { "type": "number" },
+        "height": { "type": "number" },
+        "chronicDiseases": { "type": "array", "items": { "type": "string" } },
+        "assignedCode": { "type": "string" }
+      }
+    },
+    "DeletionLog": {
+      "title": "DeletionLog",
+      "type": "object",
+      "description": "Registo de auditoria de eliminação de dados clínicos.",
+      "properties": {
+        "originalRecord": { "type": "object" },
+        "reason": { "type": "string" },
+        "deletedBy": { "type": "string" },
+        "deletedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "ContactMessage": {
+      "title": "ContactMessage",
+      "type": "object",
+      "description": "Mensagem de contacto enviada via formulário web.",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "subject", "message"]
+    }
+  },
+  "auth": {
+    "providers": ["password"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/backend/entities/User" },
+      "description": "Perfil base de utilizador."
+    },
+    "/patient_profiles/{patientId}": {
+      "schema": { "$ref": "#/backend/entities/PatientProfile" },
+      "description": "Dados clínicos."
+    },
+    "/patient_profiles/{patientId}/deletion_logs/{logId}": {
+      "schema": { "$ref": "#/backend/entities/DeletionLog" },
+      "description": "Histórico de eliminações efetuadas por administradores."
+    },
+    "/roles_admin/{uid}": {
+      "schema": { "type": "object", "properties": {} },
+      "description": "Marcador de administrador."
+    },
+    "/roles_researcher/{uid}": {
+      "schema": { "type": "object", "properties": {} },
+      "description": "Marcador de investigador."
+    },
+    "/contact_messages/{messageId}": {
+      "schema": { "$ref": "#/backend/entities/ContactMessage" },
+      "description": "Mensagens de contacto recebidas."
+    }
+  }
+}

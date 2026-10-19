@@ -1,0 +1,154 @@
+
+'use server';
+
+import fs from 'fs/promises';
+import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+
+/**
+ * CENTRAL DATA MANAGEMENT - ChronicAI
+ * Todos os dados são persistidos na pasta src/lib/data/
+ */
+const DATA_DIR = path.join(process.cwd(), 'src/lib/data');
+
+const PATHS = {
+  admin: path.join(DATA_DIR, 'admins.json'),
+  researcher: path.join(DATA_DIR, 'researchers.json'),
+  patient: path.join(DATA_DIR, 'patients.json'),
+};
+
+const INITIAL_DATA = {
+  admin: [{
+    "id": "admin-id-01",
+    "name": "Administrador ChronicAI",
+    "email": "chronicai.cespu@gmail.com",
+    "password": "ditechAI2526",
+    "role": "admin",
+    "assignedCode": "admin2526",
+    "mobileNumber": "910000000",
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  }],
+  researcher: [],
+  patient: []
+};
+
+async function ensureDir() {
+  try {
+    await fs.access(DATA_DIR);
+  } catch {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+  }
+}
+
+async function readJson(filePath: string, type: keyof typeof INITIAL_DATA) {
+  await ensureDir();
+  try {
+    const content = await fs.readFile(filePath, 'utf8');
+    if (!content || content.trim() === '') return INITIAL_DATA[type];
+    return JSON.parse(content);
+  } catch (error) {
+    await writeJson(filePath, INITIAL_DATA[type]);
+    return INITIAL_DATA[type];
+  }
+}
+
+async function writeJson(filePath: string, data: any[]) {
+  await ensureDir();
+  await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
+}
+
+export async function getUsers() {
+  const [admins, researchers, patients] = await Promise.all([
+    readJson(PATHS.admin, 'admin'),
+    readJson(PATHS.researcher, 'researcher'),
+    readJson(PATHS.patient, 'patient')
+  ]);
+  return [...admins, ...researchers, ...patients];
+}
+
+export async function authenticateUser(identifier: string, pass: string) {
+  const cleanId = identifier.trim().toLowerCase();
+  const cleanPass = pass.trim();
+  
+  const users = await getUsers();
+  const user = users.find((u: any) => 
+    (u.email?.toLowerCase() === cleanId || 
+     u.assignedCode?.toLowerCase() === cleanId) && 
+    u.password === cleanPass
+  );
+  
+  if (!user) {
+    throw new Error("Credenciais inválidas. Verifique o código e a password.");
+  }
+  
+  const { password, ...safeUser } = user;
+  return safeUser;
+}
+
+export async function createUser(userData: any) {
+  const role: keyof typeof PATHS = userData.role;
+  const users = await readJson(PATHS[role], role as any);
+  
+  // Geração sequencial de códigos (p01, r01, etc.)
+  const prefix = role === 'patient' ? 'p' : role === 'researcher' ? 'r' : 'adm';
+  
+  let nextNum = 1;
+  if (users.length > 0) {
+    const numbers = users
+      .map((u: any) => {
+        const match = u.assignedCode.match(/\d+/);
+        return match ? parseInt(match[0]) : 0;
+      })
+      .filter((n: number) => !isNaN(n));
+    
+    if (numbers.length > 0) {
+      nextNum = Math.max(...numbers) + 1;
+    }
+  }
+
+  const code = role === 'admin' 
+    ? (userData.assignedCode || `adm${nextNum.toString().padStart(2, '0')}`)
+    : `${prefix}${nextNum.toString().padStart(2, '0')}`;
+
+  const newUser = {
+    ...userData,
+    id: uuidv4(),
+    assignedCode: code,
+    createdAt: new Date().toISOString(),
+    chronicDiseases: userData.role === 'patient' ? (userData.chronicDiseases || []) : undefined
+  };
+
+  users.push(newUser);
+  await writeJson(PATHS[role], users);
+  return newUser;
+}
+
+export async function updateUser(userId: string, updates: any) {
+  const allUsers = await getUsers();
+  const originalUser = allUsers.find(u => u.id === userId);
+  if (!originalUser) throw new Error("Utilizador não encontrado.");
+
+  const role: keyof typeof PATHS = originalUser.role;
+  const users = await readJson(PATHS[role], role as any);
+  const index = users.findIndex((u: any) => u.id === userId);
+
+  if (index === -1) throw new Error("Erro na integridade dos dados.");
+
+  const { id, role: r, assignedCode, ...safeUpdates } = updates;
+
+  users[index] = { ...users[index], ...safeUpdates };
+  await writeJson(PATHS[role], users);
+  return users[index];
+}
+
+export async function deleteUser(userId: string) {
+  const allUsers = await getUsers();
+  const user = allUsers.find(u => u.id === userId);
+  if (!user) return;
+
+  const role: keyof typeof PATHS = user.role;
+  const users = await readJson(PATHS[role], role as any);
+  const filtered = users.filter((u: any) => u.id !== userId);
+  
+  await writeJson(PATHS[role], filtered);
+}

@@ -1,0 +1,123 @@
+[
+  {
+    "userId": "researcher-id-01",
+    "userName": "Investigador DiTech",
+    "userRole": "researcher",
+    "actionType": "EDIÇÃO_PERFIL_PACIENTE",
+    "targetId": "patient-id-01",
+    "targetName": "Maria A. Silva",
+    "details": "Justificação: Nome incompleto",
+    "id": "4d6cf301-ceec-4cbe-9d3c-78f2a22e1675",
+    "timestamp": "2026-06-02T14:01:51.776Z"
+  },
+  {
+    "userId": "b7a448b3-ee43-4e3c-885f-a188ef20b2e5",
+    "userName": "Liliana",
+    "userRole": "researcher",
+    "actionType": "CRIAÇÃO_REGISTO_SAÚDE",
+    "targetId": "patient-id-02",
+    "targetName": "João Pereira",
+    "details": "Tipo: activity, Valor: corrida (5 min), Notas: N/A",
+    "id": "7e141521-dd40-4029-9957-00ab98b88e74",
+    "timestamp": "2026-06-02T14:03:24.662Z"
+  },
+  {
+    "userId": "b7a448b3-ee43-4e3c-885f-a188ef20b2e5",
+    "userName": "Liliana",
+    "userRole": "researcher",
+    "actionType": "CRIAÇÃO_REGISTO_SAÚDE",
+    "targetId": "patient-id-01",
+    "targetName": "Maria A. Silva",
+    "details": "Tipo: WEIGHT, Valor: 50 kg, Estado: 😢 Triste, Notas: N/A",
+    "id": "009be641-823b-4c77-8838-751c32144472",
+    "timestamp": "2026-06-02T14:06:38.533Z"
+  },
+  {
+    "userId": "patient-id-01",
+    "userName": "Maria A. Silva",
+    "userRole": "patient",
+    "actionType": "AUTO_REGISTO_SAÚDE",
+    "targetId": "patient-id-01",
+    "targetName": "Maria A. Silva",
+    "details": "Tipo: ACTIVITY, Valor: passeio (60 min), Estado: 😊 Feliz, Notas: satisfeita",
+    "id": "196b9bd0-28a5-4c7e-a942-8428c625cf11",
+    "timestamp": "2026-06-02T14:11:08.321Z"
+  },
+  {
+    "userId": "admin-id-01",
+    "userName": "Administrador ChronicAI",
+    "userRole": "admin",
+    "actionType": "EDIÇÃO_REGISTO_SAÚDE",
+    "targetId": "patient-id-01",
+    "targetName": "Maria A. Silva",
+    "details": "Edição Admin - Original: [52 kg, Mood: pensativo], Novo: [55, Mood: pensativo], Notas: ",
+    "id": "1fa6cdf7-2e09-48cc-9ab9-76a9931a6b0e",
+    "timestamp": "2026-06-02T14:15:05.677Z"
+  },
+  {
+    "userId": "patient-id-01",
+    "userName": "Maria A. Silva",
+    "userRole": "patient",
+    "actionType": "AUTO_REGISTO_SAÚDE",
+    "targetId": "patient-id-01",
+    "targetName": "Maria A. Silva",
+    "details": "Tipo: BP, Valor: 72/41 mmHg, Estado: 😢 Triste, Notas: N/A",
+    "id": "4bd1fede-9340-4ba2-b0cc-8ec2d6f5eb91",
+    "timestamp": "2026-06-02T14:20:25.053Z"
+  },
+  {
+    "userId": "researcher-id-01",
+    "userName": "Anna",
+    "userRole": "researcher",
+    "actionType": "CRIAÇÃO_REGISTO_SAÚDE",
+    "targetId": "patient-id-01",
+    "targetName": "Maria A. Silva",
+    "details": "Tipo: BP, Valor: 127/76 mmHg, Estado: N/A, Notas: N/A",
+    "id": "338620d3-3152-4444-9274-b97d17abadfa",
+    "timestamp": "2026-06-02T14:48:49.945Z"
+  },
+  {
+    "userId": "admin-id-01",
+    "userName": "Administrador ChronicAI",
+    "userRole": "admin",
+    "actionType": "EDIÇÃO_REGISTO_SAÚDE",
+    "targetId": "patient-id-01",
+    "targetName": "Maria A. Silva",
+    "details": "Edição Admin - Original: [127/76 mmHg, Mood: null], Novo: [, Mood: null], Notas: ",
+    "id": "d8090048-9f52-40bc-a093-78b01ff292e3",
+    "timestamp": "2026-06-02T15:30:52.386Z"
+  },
+  {
+    "userId": "patient-id-03",
+    "userName": "Isabel M. Nunes",
+    "userRole": "patient",
+    "actionType": "ATUALIZAÇÃO_PERFIL_SAÚDE",
+    "targetId": "patient-id-03",
+    "targetName": "Isabel M. Nunes",
+    "details": "O paciente atualizou o seu questionário de saúde e biometria no ficheiro JSON.",
+    "id": "db261f5d-9958-46aa-95bc-f1b108348e4c",
+    "timestamp": "2026-06-03T11:03:52.802Z"
+  },
+  {
+    "userId": "884f355b-ed0e-42a5-ad01-df7c6fecafb2",
+    "userName": "Manuel Chaves",
+    "userRole": "patient",
+    "actionType": "ATUALIZAÇÃO_PERFIL_SAÚDE",
+    "targetId": "884f355b-ed0e-42a5-ad01-df7c6fecafb2",
+    "targetName": "Manuel Chaves",
+    "details": "O paciente completou/atualizou o seu questionário de saúde obrigatório.",
+    "id": "3de283ba-8b2f-4c84-8fb4-fd68adc14961",
+    "timestamp": "2026-06-03T14:53:39.538Z"
+  },
+  {
+    "userId": "admin-id-01",
+    "userName": "Administrador ChronicAI",
+    "userRole": "admin",
+    "actionType": "EDIÇÃO_REGISTO_SAÚDE",
+    "targetId": "patient-id-01",
+    "targetName": "Maria A. Silva",
+    "details": "Edição Admin - Original: [72/41 mmHg, Mood: triste], Novo: [72/41 mmHg, Mood: feliz], Notas: ",
+    "id": "fe43774f-4561-41d9-aa5a-90a3829fbaf8",
+    "timestamp": "2026-06-03T14:55:23.680Z"
+  }
+]

@@ -46,7 +46,7 @@ Tudo na [consola do Firebase](https://console.firebase.google.com/), projeto `st
 4. **Publicação automática:**
    - *Definições do projeto* → *Contas de serviço* → **Gerar nova chave privada** (descarrega um ficheiro JSON).
    - No GitHub: *Settings → Secrets and variables → Actions → New repository secret*, nome **`FIREBASE_SERVICE_ACCOUNT`**, valor = conteúdo completo do ficheiro JSON. Apague o ficheiro do computador a seguir.
-   - Em *Actions*, execute o workflow **Deploy para Firebase Hosting** (ou faça um `push` para o `main`). A app fica em https://studio-8989371642-d7cae.web.app e as regras do Firestore são publicadas ao mesmo tempo.
+   - Em *Actions*, execute o workflow **Deploy para Firebase Hosting** (ou faça um `push` para o `main`); o workflow chama-se **Deploy da app**. A app fica em https://studio-8989371642-d7cae.web.app e as regras do Firestore são publicadas ao mesmo tempo.
 5. **Primeiro administrador:** registe uma conta em `/register`. Depois, em *Firestore* → coleção `users`, abra o documento dessa conta e altere o campo `role` para `admin`.
 6. Confirme em `/setup` que o Firestore, a sessão e a IA respondem.
 
@@ -58,6 +58,16 @@ Impede que outros sites usem a quota gratuita da IA.
 2. Consola Firebase → **App Check** → registe a app web com essa chave (chave secreta).
 3. No GitHub: *Settings → Secrets and variables → Actions → Variables* → nova variável **`RECAPTCHA_SITE_KEY`** com a chave do site.
 4. Depois de confirmar que a app funciona, ative a *aplicação obrigatória (enforce)* do App Check para o AI Logic.
+
+## Endereço no GitHub Pages (opcional)
+
+A mesma app pode ser publicada em `https://chronicai-cespu.github.io`, além do Firebase Hosting:
+
+1. Tornar o repositório público e mudar-lhe o nome para `chronicai-cespu.github.io` (*Settings → General*).
+2. *Settings → Pages → Source*: **GitHub Actions**.
+3. *Settings → Secrets and variables → Actions → Variables*: criar `GITHUB_PAGES` = `true`.
+4. Firebase → *Authentication → Configurações → Domínios autorizados*: adicionar `chronicai-cespu.github.io`.
+5. Correr o workflow **Deploy da app**.
 
 ## Desenvolvimento local
 

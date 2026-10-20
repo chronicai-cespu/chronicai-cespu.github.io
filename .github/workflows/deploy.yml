@@ -37,15 +37,25 @@ jobs:
         with:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
-      - name: Publicar Hosting e regras do Firestore
+      - name: Publicar o site (Firebase Hosting)
         run: |
           set -o pipefail
-          if ! npx --yes firebase-tools@14 deploy --only hosting,firestore:rules \
+          if ! npx --yes firebase-tools@14 deploy --only hosting \
               --project studio-8989371642-d7cae --non-interactive 2>&1 | tee deploy.log; then
-            # Mostra as linhas de erro como anotações (visíveis no resumo da execução)
             grep -iE "error|denied|permission|disabled|not enabled|403|404" deploy.log \
               | head -15 | sed 's/^/::error::/'
-            cat firebase-debug.log 2>/dev/null | grep -iE "error|denied|permission|disabled|has not been used" \
-              | head -10 | sed 's/^/::error::debug: /'
+            exit 1
+          fi
+
+      # As regras do Firestore exigem permissões extra na conta de serviço.
+      # Se falhar, publique o ficheiro firestore.rules na consola
+      # (Firestore → Regras → colar → Publicar); o site fica publicado na mesma.
+      - name: Publicar regras do Firestore (opcional)
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          if ! npx --yes firebase-tools@14 deploy --only firestore:rules \
+              --project studio-8989371642-d7cae --non-interactive 2>&1 | tee rules.log; then
+            echo "::warning::Regras não publicadas automaticamente. Publique firestore.rules na consola do Firebase."
             exit 1
           fi

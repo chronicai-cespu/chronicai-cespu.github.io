@@ -38,4 +38,14 @@ jobs:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
       - name: Publicar Hosting e regras do Firestore
-        run: npx --yes firebase-tools@14 deploy --only hosting,firestore:rules --project studio-8989371642-d7cae --non-interactive
+        run: |
+          set -o pipefail
+          if ! npx --yes firebase-tools@14 deploy --only hosting,firestore:rules \
+              --project studio-8989371642-d7cae --non-interactive 2>&1 | tee deploy.log; then
+            # Mostra as linhas de erro como anotações (visíveis no resumo da execução)
+            grep -iE "error|denied|permission|disabled|not enabled|403|404" deploy.log \
+              | head -15 | sed 's/^/::error::/'
+            cat firebase-debug.log 2>/dev/null | grep -iE "error|denied|permission|disabled|has not been used" \
+              | head -10 | sed 's/^/::error::debug: /'
+            exit 1
+          fi

@@ -21,7 +21,7 @@ export default function SetupPage() {
     const results: Check[] = [];
 
     try {
-      await getDoc(doc(db, 'login_codes', '__diagnostico__'));
+      await getDoc(doc(db, 'login_codes', 'diagnostico'));
       results.push({ label: 'Cloud Firestore', ok: true, detail: 'Ligação e regras de segurança ativas.' });
     } catch (e: any) {
       results.push({ label: 'Cloud Firestore', ok: false, detail: e?.message || 'Sem ligação.' });

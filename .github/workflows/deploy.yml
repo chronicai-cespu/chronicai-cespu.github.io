@@ -1,7 +1,7 @@
 # Publica a app a cada push no main:
 #  - Firebase Hosting (https://studio-8989371642-d7cae.web.app)
-#  - GitHub Pages, se a variável de repositório GITHUB_PAGES = true
-#    (Settings → Pages → Source: GitHub Actions)
+#  - GitHub Pages (https://chronicai-cespu.github.io)
+#    Requer Settings → Pages → Source: GitHub Actions
 #
 # Requer o segredo FIREBASE_SERVICE_ACCOUNT (JSON da conta de serviço do projeto):
 # Consola Firebase → Definições do projeto → Contas de serviço → Gerar nova chave privada
@@ -41,7 +41,6 @@ jobs:
           NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ vars.RECAPTCHA_SITE_KEY }}
 
       - name: Guardar o site para o GitHub Pages
-        if: vars.GITHUB_PAGES == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
           path: out
@@ -75,7 +74,6 @@ jobs:
 
   github-pages:
     needs: deploy
-    if: vars.GITHUB_PAGES == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

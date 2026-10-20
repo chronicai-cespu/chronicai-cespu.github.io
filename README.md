@@ -68,9 +68,8 @@ A mesma app pode ser publicada em `https://chronicai-cespu.github.io`, além do 
 
 1. Tornar o repositório público e mudar-lhe o nome para `chronicai-cespu.github.io` (*Settings → General*).
 2. *Settings → Pages → Source*: **GitHub Actions**.
-3. *Settings → Secrets and variables → Actions → Variables*: criar `GITHUB_PAGES` = `true`.
-4. Firebase → *Authentication → Configurações → Domínios autorizados*: adicionar `chronicai-cespu.github.io`.
-5. Correr o workflow **Deploy da app**.
+3. Firebase → *Authentication → Configurações → Domínios autorizados*: adicionar `chronicai-cespu.github.io`.
+4. Correr o workflow **Deploy da app**.
 
 ## Desenvolvimento local
 

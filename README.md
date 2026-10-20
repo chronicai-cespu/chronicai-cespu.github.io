@@ -50,14 +50,17 @@ Tudo na [consola do Firebase](https://console.firebase.google.com/), projeto `st
 5. **Primeiro administrador:** registe uma conta em `/register`. Depois, em *Firestore* → coleção `users`, abra o documento dessa conta e altere o campo `role` para `admin`.
 6. Confirme em `/setup` que o Firestore, a sessão e a IA respondem.
 
-### Opcional: App Check (recomendado)
+### Proteção da quota da IA
 
-Impede que outros sites usem a quota gratuita da IA.
+O App Check deixou de estar disponível sem faturação: o reCAPTCHA clássico foi descontinuado e o
+substituto (Google Cloud Fraud Defense) exige um projeto com conta de faturação. A app suporta-o
+(variável `RECAPTCHA_SITE_KEY`) caso um dia o projeto passe a ter faturação.
 
-1. Crie uma chave **reCAPTCHA v3** em https://www.google.com/recaptcha/admin com o domínio `studio-8989371642-d7cae.web.app`.
-2. Consola Firebase → **App Check** → registe a app web com essa chave (chave secreta).
-3. No GitHub: *Settings → Secrets and variables → Actions → Variables* → nova variável **`RECAPTCHA_SITE_KEY`** com a chave do site.
-4. Depois de confirmar que a app funciona, ative a *aplicação obrigatória (enforce)* do App Check para o AI Logic.
+Sem faturação não há risco de custos: se a quota gratuita da IA se esgotar, o assistente pára até ao dia seguinte.
+Proteção leve e gratuita: restringir a chave de API do navegador aos domínios da app
+(Google Cloud → *APIs e serviços → Credenciais → Browser key → Referenciadores HTTP*):
+`https://studio-8989371642-d7cae.web.app/*`, `https://studio-8989371642-d7cae.firebaseapp.com/*`,
+`https://chronicai-cespu.github.io/*` e `http://localhost:9002/*`.
 
 ## Endereço no GitHub Pages (opcional)
 
